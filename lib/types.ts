@@ -51,6 +51,11 @@ export interface Listing {
   project_name?: string;
   posted_by?: "owner" | "agent" | "builder";
   amenities?: string[];
+  view_count?: number;
+  completion_count?: number;
+  share_count?: number;
+  call_count?: number;
+  whatsapp_count?: number;
 }
 
 export interface PropertyEnquiry {
