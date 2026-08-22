@@ -11,6 +11,10 @@ export function generateMetadata(): Metadata {
   const description = "Discover reviewed property walkthroughs. Post a short video, get approved, and connect directly.";
   return {
     metadataBase: new URL(origin), title, description,
+    icons: {
+      icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+      shortcut: "/favicon.svg",
+    },
     openGraph: { title, description, type:"website", url:origin, images:[{url:`${origin}/og.png`,width:1792,height:933,alt:"ReelEstate — Property, in motion"}] },
     twitter: { card:"summary_large_image", title, description, images:[`${origin}/og.png`] },
   };
