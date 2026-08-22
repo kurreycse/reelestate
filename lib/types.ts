@@ -39,4 +39,30 @@ export interface Listing {
   security_deposit_minor?: number;
   maintenance_minor?: number;
   tenant_preference?: "any" | "family" | "bachelor" | "company";
+  bedrooms?: number;
+  bathrooms?: number;
+  carpet_area_sqft?: number;
+  builtup_area_sqft?: number;
+  property_age_years?: number;
+  floor_number?: number;
+  total_floors?: number;
+  parking_spaces?: number;
+  facing?: "north" | "north_east" | "east" | "south_east" | "south" | "south_west" | "west" | "north_west";
+  project_name?: string;
+  posted_by?: "owner" | "agent" | "builder";
+  amenities?: string[];
+}
+
+export interface PropertyEnquiry {
+  id: string;
+  listing_id: string;
+  owner_id: string;
+  name: string;
+  phone_e164: string;
+  email?: string;
+  message: string;
+  preferred_visit_date?: string;
+  status: "new" | "contacted" | "closed" | "spam";
+  created_at: string;
+  listing?: Pick<Listing, "title" | "locality" | "city">;
 }
