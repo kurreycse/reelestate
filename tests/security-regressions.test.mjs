@@ -65,6 +65,8 @@ test("PII retention and server-side media validation remain enabled", () => {
   assert.match(finalizer, /video_duration_invalid/);
   assert.match(finalizer, /admin\.auth\.getUser\(token\)/);
   assert.match(finalizer, /content-range/);
+  assert.doesNotMatch(finalizer, /!response\.headers\.get\("content-range"\)/);
+  assert.match(finalizer, /data\.byteLength>4\*1024\*1024\+1024/);
   assert.match(portal, /submissionError\(error\)/);
 });
 
