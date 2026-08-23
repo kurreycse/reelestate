@@ -115,6 +115,23 @@ test("listing creation and dashboard reads use restricted interfaces", () => {
   assert.match(inactiveGuards, /can_read_property_video/);
 });
 
+test("rejected listings can be securely edited and resubmitted", () => {
+  const portal = read("app/Portal.tsx");
+  const finalizer = read(
+    "supabase/functions/finalize-property-listing/index.ts",
+  );
+  const migration = read(
+    "supabase/migrations/202608230009_rejected_listing_resubmission.sql",
+  );
+  assert.match(portal, /Edit &amp; resubmit/);
+  assert.match(portal, /initial=\{editing \|\| undefined\}/);
+  assert.match(portal, /upsert: Boolean\(initial\)/);
+  assert.match(finalizer, /resubmit_validated_listing/);
+  assert.match(finalizer, /existing\.status!=="rejected"/);
+  assert.match(migration, /status='pending_review'/);
+  assert.match(migration, /rejection_category=null,rejection_note=null/);
+});
+
 test("listing submission and moderation use audited notification templates", () => {
   const portal = read("app/Portal.tsx");
   const finalizer = read(

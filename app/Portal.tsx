@@ -1129,9 +1129,11 @@ function Marketplace({ onRequireLogin }: { onRequireLogin: () => void }) {
 function PostForm({
   user,
   onDone,
+  initial,
 }: {
   user: Session["user"];
   onDone: () => void;
+  initial?: Listing;
 }) {
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -1140,12 +1142,22 @@ function PostForm({
   const [poster, setPoster] = useState<Blob | null>(null);
   const [duration, setDuration] = useState(0);
   const [preview, setPreview] = useState("");
-  const [purpose, setPurpose] = useState<"sale" | "rent">("sale");
-  const [propertyType, setPropertyType] = useState("Apartment");
-  const [propertyCity, setPropertyCity] = useState<SupportedCity>("Raipur");
-  const [propertyLocality, setPropertyLocality] = useState<string>(
-    CITY_LOCALITIES.Raipur[0],
+  const [purpose, setPurpose] = useState<"sale" | "rent">(
+    initial?.purpose || "sale",
   );
+  const [propertyType, setPropertyType] = useState(
+    initial?.property_type || "Apartment",
+  );
+  const initialCity = initial?.city === "Bangalore" ? "Bangalore" : "Raipur";
+  const initialLocality =
+    initial && CITY_LOCALITIES[initialCity].includes(initial.locality as never)
+      ? initial.locality
+      : initial
+        ? "__custom__"
+        : CITY_LOCALITIES.Raipur[0];
+  const [propertyCity, setPropertyCity] = useState<SupportedCity>(initialCity);
+  const [propertyLocality, setPropertyLocality] =
+    useState<string>(initialLocality);
   const select = (file?: File) => {
     if (!file) return;
     setError("");
@@ -1210,13 +1222,16 @@ function PostForm({
     setProgress(12);
     setError("");
     const form = new FormData(e.currentTarget);
-    const id = crypto.randomUUID();
+    const id = initial?.id || crypto.randomUUID();
     const ext = video.name.split(".").pop()?.toLowerCase() || "mp4";
-    const path = `${user.id}/${id}.${ext}`;
-    const posterPath = `${user.id}/${id}.jpg`;
+    const path = initial?.video_path || `${user.id}/${id}.${ext}`;
+    const posterPath = initial?.poster_path || `${user.id}/${id}.jpg`;
     const upload = await supabase.storage
       .from("property-videos")
-      .upload(path, video, { contentType: video.type, upsert: false });
+      .upload(path, video, {
+        contentType: video.type,
+        upsert: Boolean(initial),
+      });
     if (upload.error) {
       setError("The video could not be uploaded. Please try again.");
       setBusy(false);
@@ -1225,9 +1240,13 @@ function PostForm({
     setProgress(55);
     const posterUpload = await supabase.storage
       .from("property-posters")
-      .upload(posterPath, poster, { contentType: "image/jpeg", upsert: false });
+      .upload(posterPath, poster, {
+        contentType: "image/jpeg",
+        upsert: Boolean(initial),
+      });
     if (posterUpload.error) {
-      await supabase.storage.from("property-videos").remove([path]);
+      if (!initial)
+        await supabase.storage.from("property-videos").remove([path]);
       setError("The thumbnail could not be uploaded. Please try again.");
       setBusy(false);
       return;
@@ -1280,10 +1299,11 @@ function PostForm({
       { body: payload },
     );
     if (error) {
-      await Promise.all([
-        supabase.storage.from("property-videos").remove([path]),
-        supabase.storage.from("property-posters").remove([posterPath]),
-      ]);
+      if (!initial)
+        await Promise.all([
+          supabase.storage.from("property-videos").remove([path]),
+          supabase.storage.from("property-posters").remove([posterPath]),
+        ]);
       setError(await submissionError(error));
       setBusy(false);
       return;
@@ -1295,11 +1315,13 @@ function PostForm({
     <section className="workspace">
       <header className="section-head">
         <div>
-          <span className="eyebrow">Create a listing</span>
+          <span className="eyebrow">
+            {initial ? "Correct and resubmit" : "Create a listing"}
+          </span>
           <h1>
-            Show the space,
+            {initial ? "Address the feedback," : "Show the space,"}
             <br />
-            <em>not just the specs.</em>
+            <em>{initial ? "then send it back." : "not just the specs."}</em>
           </h1>
         </div>
         <div className="review-note">
@@ -1344,6 +1366,7 @@ function PostForm({
               Listing title
               <input
                 name="title"
+                defaultValue={initial?.title}
                 placeholder="Sunlit 3 BHK with garden view"
                 required
                 minLength={5}
@@ -1379,6 +1402,7 @@ function PostForm({
               {purpose === "sale" ? "Total sale price (₹)" : "Monthly rent (₹)"}
               <input
                 name="price"
+                defaultValue={initial ? initial.price_minor / 100 : undefined}
                 type="number"
                 min="1"
                 placeholder={purpose === "sale" ? "8500000" : "25000"}
@@ -1387,7 +1411,11 @@ function PostForm({
             </label>
             <label>
               Posted by
-              <select name="posted_by" required>
+              <select
+                name="posted_by"
+                defaultValue={initial?.posted_by || "owner"}
+                required
+              >
                 <option value="owner">Property owner</option>
                 <option value="agent">Real-estate agent</option>
                 <option value="builder">Builder / developer</option>
@@ -1397,6 +1425,7 @@ function PostForm({
               Project / society name
               <input
                 name="project_name"
+                defaultValue={initial?.project_name}
                 maxLength={120}
                 placeholder="Optional"
               />
@@ -1438,6 +1467,7 @@ function PostForm({
                 New locality
                 <input
                   name="locality"
+                  defaultValue={initial?.locality}
                   placeholder="Enter locality name"
                   minLength={2}
                   maxLength={150}
@@ -1454,6 +1484,7 @@ function PostForm({
                 Bedrooms
                 <input
                   name="bedrooms"
+                  defaultValue={initial?.bedrooms}
                   type="number"
                   min="0"
                   max="20"
@@ -1466,6 +1497,7 @@ function PostForm({
                 Bathrooms
                 <input
                   name="bathrooms"
+                  defaultValue={initial?.bathrooms}
                   type="number"
                   min="0"
                   max="20"
@@ -1479,6 +1511,7 @@ function PostForm({
                 : "Carpet area (sq.ft.)"}
               <input
                 name="carpet_area"
+                defaultValue={initial?.carpet_area_sqft}
                 type="number"
                 min="1"
                 placeholder="1250"
@@ -1491,6 +1524,7 @@ function PostForm({
                   Built-up area (sq.ft.)
                   <input
                     name="builtup_area"
+                    defaultValue={initial?.builtup_area_sqft}
                     type="number"
                     min="1"
                     placeholder="1500"
@@ -1500,41 +1534,47 @@ function PostForm({
                   Property age (years)
                   <input
                     name="property_age"
+                    defaultValue={initial?.property_age_years ?? 0}
                     type="number"
                     min="0"
                     max="200"
-                    defaultValue="0"
                   />
                 </label>
                 <label>
                   Floor number
                   <input
                     name="floor"
+                    defaultValue={initial?.floor_number ?? 0}
                     type="number"
                     min="-5"
                     max="200"
-                    defaultValue="0"
                   />
                 </label>
                 <label>
                   Total floors
-                  <input name="total_floors" type="number" min="0" max="200" />
+                  <input
+                    name="total_floors"
+                    type="number"
+                    min="0"
+                    max="200"
+                    defaultValue={initial?.total_floors}
+                  />
                 </label>
                 <label>
                   Parking spaces
                   <input
                     name="parking"
+                    defaultValue={initial?.parking_spaces ?? 0}
                     type="number"
                     min="0"
                     max="50"
-                    defaultValue="0"
                   />
                 </label>
               </>
             )}
             <label>
               Facing
-              <select name="facing">
+              <select name="facing" defaultValue={initial?.facing || ""}>
                 <option value="">Not specified</option>
                 {[
                   "north",
@@ -1555,7 +1595,11 @@ function PostForm({
             {propertyType !== "Plot" && (
               <label>
                 Furnishing
-                <select name="furnishing" required>
+                <select
+                  name="furnishing"
+                  defaultValue={initial?.furnishing_status || "unfurnished"}
+                  required
+                >
                   <option value="unfurnished">Unfurnished</option>
                   <option value="semi_furnished">Semi-furnished</option>
                   <option value="fully_furnished">Fully furnished</option>
@@ -1566,7 +1610,11 @@ function PostForm({
               <>
                 <label>
                   Ownership type
-                  <select name="ownership" required>
+                  <select
+                    name="ownership"
+                    defaultValue={initial?.ownership_type || "freehold"}
+                    required
+                  >
                     <option value="freehold">Freehold</option>
                     <option value="leasehold">Leasehold</option>
                     <option value="power_of_attorney">Power of attorney</option>
@@ -1577,7 +1625,11 @@ function PostForm({
                 </label>
                 <label>
                   Possession status
-                  <select name="possession" required>
+                  <select
+                    name="possession"
+                    defaultValue={initial?.possession_status || "ready_to_move"}
+                    required
+                  >
                     <option value="ready_to_move">Ready to move</option>
                     <option value="under_construction">
                       Under construction
@@ -1591,6 +1643,11 @@ function PostForm({
                   Security deposit (₹)
                   <input
                     name="security_deposit"
+                    defaultValue={
+                      initial?.security_deposit_minor != null
+                        ? initial.security_deposit_minor / 100
+                        : undefined
+                    }
                     type="number"
                     min="0"
                     placeholder="50000"
@@ -1599,21 +1656,34 @@ function PostForm({
                 </label>
                 <label>
                   Available from
-                  <input name="available_from" type="date" required />
+                  <input
+                    name="available_from"
+                    type="date"
+                    defaultValue={initial?.available_from}
+                    required
+                  />
                 </label>
                 <label>
                   Monthly maintenance (₹)
                   <input
                     name="maintenance"
+                    defaultValue={
+                      initial?.maintenance_minor != null
+                        ? initial.maintenance_minor / 100
+                        : 0
+                    }
                     type="number"
                     min="0"
-                    defaultValue="0"
                   />
                 </label>
                 {!["Plot", "Commercial"].includes(propertyType) && (
                   <label>
                     Preferred tenant
-                    <select name="tenant_preference" required>
+                    <select
+                      name="tenant_preference"
+                      defaultValue={initial?.tenant_preference || "any"}
+                      required
+                    >
                       <option value="any">Any</option>
                       <option value="family">Family</option>
                       <option value="bachelor">Bachelor</option>
@@ -1638,7 +1708,12 @@ function PostForm({
                 "Clubhouse",
               ].map((value) => (
                 <label key={value}>
-                  <input type="checkbox" name="amenities" value={value} />
+                  <input
+                    type="checkbox"
+                    name="amenities"
+                    value={value}
+                    defaultChecked={initial?.amenities?.includes(value)}
+                  />
                   {value}
                 </label>
               ))}
@@ -1648,6 +1723,7 @@ function PostForm({
             Description
             <textarea
               name="description"
+              defaultValue={initial?.description}
               placeholder="What makes this property special? Mention the layout, light, amenities and surroundings."
               minLength={20}
               maxLength={2000}
@@ -1659,13 +1735,16 @@ function PostForm({
               Contact number
               <input
                 name="phone"
-                defaultValue={user.phone || "+91 "}
+                defaultValue={initial?.contact_phone || user.phone || "+91 "}
                 required
               />
             </label>
             <label>
               Preferred contact
-              <select name="contact">
+              <select
+                name="contact"
+                defaultValue={initial?.contact_preference || "both"}
+              >
                 <option value="both">Call or WhatsApp</option>
                 <option value="call">Call only</option>
                 <option value="whatsapp">WhatsApp only</option>
@@ -1685,7 +1764,11 @@ function PostForm({
           )}
           <button className="primary submit" disabled={busy}>
             {busy ? <Loader2 className="spin" /> : <Send />}{" "}
-            {busy ? "Uploading…" : "Submit for review"}
+            {busy
+              ? "Uploading…"
+              : initial
+                ? "Resubmit for review"
+                : "Submit for review"}
           </button>
         </div>
       </form>
@@ -1795,11 +1878,13 @@ function Dashboard({
   items,
   enquiries,
   onPost,
+  onEdit,
   onRefresh,
 }: {
   items: Listing[];
   enquiries: PropertyEnquiry[];
   onPost: () => void;
+  onEdit: (listing: Listing) => void;
   onRefresh: () => void;
 }) {
   return (
@@ -1888,9 +1973,13 @@ function Dashboard({
                     year: "numeric",
                   })}
                 </small>
-                <button className="icon-btn">
+                {x.status === "rejected" ? (
+                  <button className="primary" onClick={() => onEdit(x)}>
+                    Edit &amp; resubmit
+                  </button>
+                ) : (
                   <MoreHorizontal />
-                </button>
+                )}
               </div>
             </article>
           ))}
@@ -2072,6 +2161,7 @@ export default function Portal() {
   const [enquiries, setEnquiries] = useState<PropertyEnquiry[]>([]);
   const [queue, setQueue] = useState<Listing[]>([]);
   const [analyticsItems, setAnalyticsItems] = useState<Listing[]>([]);
+  const [editing, setEditing] = useState<Listing | null>(null);
   const load = useCallback(async () => {
     if (session?.user) {
       const [{ data: own }, { data: p }, { data: leadData }] =
@@ -2262,9 +2352,12 @@ export default function Portal() {
         <Marketplace onRequireLogin={() => setLogin(true)} />
       ) : view === "post" && session ? (
         <PostForm
+          key={editing?.id || "new"}
           user={session.user}
+          initial={editing || undefined}
           onDone={() => {
             load();
+            setEditing(null);
             setView("dashboard");
           }}
         />
@@ -2272,7 +2365,14 @@ export default function Portal() {
         <Dashboard
           items={mine}
           enquiries={enquiries}
-          onPost={() => guarded("post")}
+          onPost={() => {
+            setEditing(null);
+            guarded("post");
+          }}
+          onEdit={(listing) => {
+            setEditing(listing);
+            setView("post");
+          }}
           onRefresh={load}
         />
       ) : view === "admin" && isStaff ? (
