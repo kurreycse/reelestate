@@ -90,7 +90,7 @@ function safeAuthError(code?: string) {
       return "Authentication could not be completed. Please try again.";
   }
 }
-const OTP_SEND_LIMIT = 5;
+const OTP_SEND_LIMIT = 10;
 const OTP_WINDOW_MS = 30 * 60 * 1000;
 const OTP_ATTEMPTS_KEY = "reelestate-otp-send-attempts";
 function recentOtpAttempts(now = Date.now()) {
@@ -191,7 +191,7 @@ function LoginModal({ onClose }: { onClose: () => void }) {
       );
       setResendIn(wait);
       setError(
-        `Five OTP requests are allowed every 30 minutes. Try again in ${Math.ceil(wait / 60)} minute(s).`,
+        `Ten OTP requests are allowed every 30 minutes. Try again in ${Math.ceil(wait / 60)} minute(s).`,
       );
       return false;
     }
@@ -221,7 +221,7 @@ function LoginModal({ onClose }: { onClose: () => void }) {
       if (rateLimited) {
         setResendIn(30 * 60);
         setError(
-          "Five OTP requests are allowed every 30 minutes. Please try again later.",
+          "Ten OTP requests are allowed every 30 minutes. Please try again later.",
         );
       } else
         setError("The verification code could not be sent. Please try again.");

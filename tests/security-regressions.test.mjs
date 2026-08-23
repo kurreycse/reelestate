@@ -16,7 +16,7 @@ test("authentication errors are mapped and sessions are refresh-safe but tab-sco
   assert.match(client, /-auth-token/);
   assert.match(portal, /Resend OTP in/);
   assert.match(portal, /updatedAttempts\.length >= OTP_SEND_LIMIT/);
-  assert.match(portal, /OTP_SEND_LIMIT = 5/);
+  assert.match(portal, /OTP_SEND_LIMIT = 10/);
   assert.match(portal, /OTP_WINDOW_MS = 30 \* 60 \* 1000/);
   assert.match(portal, /request-phone-otp/);
   assert.match(portal, /supabase\.auth\.signInWithPassword/);
@@ -25,7 +25,7 @@ test("authentication errors are mapped and sessions are refresh-safe but tab-sco
   assert.match(portal, /New user\? Create account/);
   assert.match(portal, /password\.length < 8/);
   const otpFunction = read("supabase/functions/request-phone-otp/index.ts");
-  assert.match(otpFunction, /p_limit:5,p_window_seconds:1800/);
+  assert.match(otpFunction, /p_limit:10,p_window_seconds:1800/);
   assert.match(otpFunction, /crypto\.subtle\.digest/);
   assert.match(otpFunction, /create_user:purpose==="register"/);
   assert.match(portal, /Forgot password\? Reset it with OTP/);
