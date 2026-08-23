@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { notifyListing } from "../_shared/notifications.ts";
 
 const origins=new Set(["https://reelestate.co.in","https://www.reelestate.co.in","http://localhost:3000","http://localhost:5173","http://localhost:5174"]);
 const cors=(origin:string|null)=>({"access-control-allow-origin":origin&&origins.has(origin)?origin:"https://reelestate.co.in","access-control-allow-headers":"authorization, x-client-info, apikey, content-type","access-control-allow-methods":"POST, OPTIONS",vary:"Origin"});
@@ -49,6 +50,6 @@ Deno.serve(async request=>{
     const amenities=Array.isArray(data.amenities)?data.amenities.map(String):[];if(amenities.length>8||amenities.some(value=>!allowed.has(value)))return json({error:"invalid_amenities"},400,origin);
     const [{data:videoSigned},{data:posterSigned}]=await Promise.all([admin.storage.from("property-videos").createSignedUrl(videoPath,300),admin.storage.from("property-posters").createSignedUrl(posterPath,300)]);if(!videoSigned?.signedUrl||!posterSigned?.signedUrl)return json({error:"media_not_found"},400,origin);
     const [video]=await Promise.all([inspect(videoSigned.signedUrl,200*1024*1024,"video"),inspect(posterSigned.signedUrl,5*1024*1024,"poster")]);data.video_duration_seconds=video.duration;data.title=title;data.description=description;data.city=city;data.locality=locality;data.contact_phone=phone;data.amenities=amenities;
-    const {data:listingId,error}=await admin.rpc("create_validated_listing",{p_owner_id:user.id,p_data:data});if(error)throw error;return json({accepted:true,listing_id:listingId},201,origin);
+    const {data:listingId,error}=await admin.rpc("create_validated_listing",{p_owner_id:user.id,p_data:data});if(error)throw error;await notifyListing(admin,"listing_submitted",{id:String(listingId),owner_id:user.id,title,city,locality});return json({accepted:true,listing_id:listingId},201,origin);
   }catch(error){const code=error instanceof Error?error.message:"validation_failed";console.error("Listing finalization failed",code);const safe=code.includes("invalid")||code.includes("unavailable")||code.includes("failed")||code.includes("not_found")?code:"listing_submission_failed";return json({error:safe},400,origin)}
 });

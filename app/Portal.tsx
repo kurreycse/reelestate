@@ -1903,11 +1903,12 @@ function Admin({
   async function decide(decision: "approve" | "reject") {
     if (!selected) return;
     setBusy(true);
-    const { error } = await supabase.rpc("moderate_listing", {
-      p_listing_id: selected.id,
-      p_decision: decision,
-      p_category: decision === "reject" ? "listing_quality" : null,
-      p_note: note || null,
+    const { error } = await supabase.functions.invoke("moderate-listing", {
+      body: {
+        listing_id: selected.id,
+        decision,
+        note: note || null,
+      },
     });
     setBusy(false);
     if (!error) {

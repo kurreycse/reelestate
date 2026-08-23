@@ -54,7 +54,10 @@ test("posting fields adapt to the selected property type", () => {
 test("property badges cannot cover or intercept the video play control", () => {
   const css = read("app/globals.css");
   assert.match(css, /\.tile-play\{z-index:4\}/);
-  assert.match(css, /\.video-tag,\.reviewed-tag\{top:12px;bottom:auto;pointer-events:none\}/);
+  assert.match(
+    css,
+    /\.video-tag,\.reviewed-tag\{top:12px;bottom:auto;pointer-events:none\}/,
+  );
 });
 
 test("profile registration derives identity from the verified auth user", () => {
@@ -92,6 +95,23 @@ test("listing creation and dashboard reads use restricted interfaces", () => {
   assert.match(migration, /public\.is_active_user\(\)/);
   assert.match(inactiveGuards, /enquiries_owner_select/);
   assert.match(inactiveGuards, /can_read_property_video/);
+});
+
+test("listing submission and moderation use audited notification templates", () => {
+  const portal = read("app/Portal.tsx");
+  const finalizer = read(
+    "supabase/functions/finalize-property-listing/index.ts",
+  );
+  const moderator = read("supabase/functions/moderate-listing/index.ts");
+  const notifications = read("supabase/functions/_shared/notifications.ts");
+  assert.match(portal, /functions\.invoke\("moderate-listing"/);
+  assert.match(finalizer, /notifyListing\(admin,"listing_submitted"/);
+  assert.match(moderator, /"listing_approved":"listing_rejected"/);
+  assert.match(notifications, /New property awaiting review/);
+  assert.match(notifications, /Your property is approved/);
+  assert.match(notifications, /Your property needs changes/);
+  assert.match(notifications, /RESEND_API_KEY/);
+  assert.match(notifications, /TWILIO_AUTH_TOKEN/);
 });
 
 test("public functions use atomic rate limiting and trusted proxy precedence", () => {
