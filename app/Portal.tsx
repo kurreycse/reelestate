@@ -153,7 +153,12 @@ async function submissionError(error: unknown) {
   }
 }
 function LoginModal({ onClose }: { onClose: () => void }) {
-  const [mode, setMode] = useState<"login" | "otp" | "profile">("login");
+  const [mode, setMode] = useState<
+    "login" | "otp" | "profile" | "reset-password"
+  >("login");
+  const [otpPurpose, setOtpPurpose] = useState<"login" | "register" | "reset">(
+    "login",
+  );
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -176,7 +181,7 @@ function LoginModal({ onClose }: { onClose: () => void }) {
     );
     return () => window.clearTimeout(timer);
   }, [resendIn]);
-  async function requestOtp() {
+  async function requestOtp(purpose = otpPurpose) {
     const now = Date.now();
     const attempts = recentOtpAttempts(now);
     if (attempts.length >= OTP_SEND_LIMIT) {
@@ -195,7 +200,7 @@ function LoginModal({ onClose }: { onClose: () => void }) {
     setBusy(true);
     setError("");
     const { error } = await supabase.functions.invoke("request-phone-otp", {
-      body: { phone: normalized },
+      body: { phone: normalized, purpose },
     });
     setBusy(false);
     if (error) {
@@ -230,8 +235,11 @@ function LoginModal({ onClose }: { onClose: () => void }) {
     );
     return true;
   }
-  async function startOtp() {
-    if (await requestOtp()) setMode("otp");
+  async function startOtp(purpose: "login" | "register" | "reset") {
+    setOtpPurpose(purpose);
+    setPassword("");
+    setConfirmPassword("");
+    if (await requestOtp(purpose)) setMode("otp");
   }
   async function loginWithPassword(e: FormEvent) {
     e.preventDefault();
@@ -282,8 +290,35 @@ function LoginModal({ onClose }: { onClose: () => void }) {
       .eq("id", data.user?.id)
       .maybeSingle();
     setBusy(false);
-    if (profile) onClose();
+    if (otpPurpose === "reset") {
+      if (!profile) {
+        await supabase.auth.signOut();
+        setError("No account was found for this mobile number.");
+        setMode("login");
+      } else setMode("reset-password");
+    } else if (profile) onClose();
     else setMode("profile");
+  }
+  async function resetPassword(e: FormEvent) {
+    e.preventDefault();
+    if (password.length < 8) {
+      setError("Use a password with at least 8 characters.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("The passwords do not match.");
+      return;
+    }
+    setBusy(true);
+    setError("");
+    const { error } = await supabase.auth.updateUser({ password });
+    setBusy(false);
+    if (error) {
+      console.warn("Password reset failed", { code: error.code });
+      setError(
+        "Your password could not be updated. Request a new OTP and try again.",
+      );
+    } else onClose();
   }
   async function finish(e: FormEvent) {
     e.preventDefault();
@@ -336,7 +371,9 @@ function LoginModal({ onClose }: { onClose: () => void }) {
         <h2 id="auth-title">
           {mode === "profile"
             ? "Tell us about you"
-            : "Your next move starts here."}
+            : mode === "reset-password"
+              ? "Create a new password"
+              : "Your next move starts here."}
         </h2>
         {mode === "login" && (
           <form onSubmit={loginWithPassword}>
@@ -369,22 +406,29 @@ function LoginModal({ onClose }: { onClose: () => void }) {
               className="primary full"
               disabled={busy || phoneDigits.length < 10 || !password}
             >
-              {busy ? <Loader2 className="spin" /> : <Check size={18} />} Log
-              in
+              {busy ? <Loader2 className="spin" /> : <Check size={18} />} Log in
             </button>
             <button
               type="button"
               className="back-link auth-option"
               disabled={busy || phoneDigits.length < 10}
-              onClick={startOtp}
+              onClick={() => startOtp("login")}
             >
-              Forgot password? Log in with OTP
+              Log in with OTP
             </button>
             <button
               type="button"
               className="back-link auth-option"
               disabled={busy || phoneDigits.length < 10}
-              onClick={startOtp}
+              onClick={() => startOtp("reset")}
+            >
+              Forgot password? Reset it with OTP
+            </button>
+            <button
+              type="button"
+              className="back-link auth-option"
+              disabled={busy || phoneDigits.length < 10}
+              onClick={() => startOtp("register")}
             >
               New user? Create account
             </button>
@@ -503,6 +547,40 @@ function LoginModal({ onClose }: { onClose: () => void }) {
             <button className="primary full" disabled={busy}>
               {busy ? <Loader2 className="spin" /> : <Check size={18} />}{" "}
               Complete registration
+            </button>
+          </form>
+        )}
+        {mode === "reset-password" && (
+          <form onSubmit={resetPassword}>
+            <p className="modal-intro">
+              Your phone is verified. Set a new password for future logins.
+            </p>
+            <label>
+              New password
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="new-password"
+                minLength={8}
+                required
+              />
+            </label>
+            <label>
+              Confirm new password
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                autoComplete="new-password"
+                minLength={8}
+                required
+              />
+            </label>
+            <small>Use at least 8 characters.</small>
+            <button className="primary full" disabled={busy}>
+              {busy ? <Loader2 className="spin" /> : <Check size={18} />} Update
+              password
             </button>
           </form>
         )}
