@@ -12,17 +12,16 @@ Deno.serve(async request=>{
   if(request.method!=="POST")return json({error:"method_not_allowed"},405,origin);
   if(origin&&!allowedOrigins.has(origin))return json({error:"origin_not_allowed"},403,origin);
   try{
-    if(Number(request.headers.get("content-length")||0)>2000)return json({error:"payload_too_large"},413,origin);
-    const body=await request.json() as Record<string,unknown>;
+    const raw=await request.text();if(new TextEncoder().encode(raw).byteLength>2000)return json({error:"payload_too_large"},413,origin);
+    const body=JSON.parse(raw) as Record<string,unknown>;
     const listingId=String(body.listing_id||"");const eventType=String(body.event_type||"");const visitorId=String(body.visitor_id||"");
     if(!/^[0-9a-f-]{36}$/i.test(listingId)||!eventTypes.has(eventType)||!/^[0-9a-f-]{36}$/i.test(visitorId))return json({error:"invalid_event"},400,origin);
     const url=Deno.env.get("SUPABASE_URL");const key=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");if(!url||!key)return json({error:"server_not_configured"},500,origin);
-    const admin=createClient(url,key,{auth:{persistSession:false}});const forwarded=request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()||"unknown";
+    const admin=createClient(url,key,{auth:{persistSession:false}});const forwarded=request.headers.get("cf-connecting-ip")||request.headers.get("x-real-ip")||request.headers.get("x-forwarded-for")?.split(",").at(-1)?.trim()||"unknown";
     const [sessionHash,ipHash]=await Promise.all([hash(`${visitorId}:${key.slice(-32)}`),hash(`${forwarded}:${key.slice(-24)}`)]);
-    const since=new Date(Date.now()-60*60*1000).toISOString();const {count}=await admin.from("engagement_events").select("id",{count:"exact",head:true}).eq("ip_hash",ipHash).gte("created_at",since);
-    if((count||0)>=120)return json({error:"rate_limit_exceeded"},429,origin);
+    const {data:allowed,error:rateError}=await admin.rpc("consume_rate_limit",{p_key:`engagement:${ipHash}`,p_limit:120,p_window_seconds:3600});if(rateError)throw rateError;
+    if(!allowed)return json({error:"rate_limit_exceeded"},429,origin);
     const {data,error}=await admin.rpc("record_engagement_event",{p_listing_id:listingId,p_event_type:eventType,p_session_hash:sessionHash,p_ip_hash:ipHash});if(error)throw error;
     return json({accepted:true,counted:Boolean(data)},202,origin);
   }catch(error){console.error("Engagement recording failed",error instanceof Error?error.message:error);return json({error:"event_failed"},500,origin)}
 });
-
