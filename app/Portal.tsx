@@ -90,6 +90,22 @@ function safeAuthError(code?: string) {
       return "Authentication could not be completed. Please try again.";
   }
 }
+const OTP_SEND_LIMIT = 5;
+const OTP_WINDOW_MS = 30 * 60 * 1000;
+const OTP_ATTEMPTS_KEY = "reelestate-otp-send-attempts";
+function recentOtpAttempts(now = Date.now()) {
+  try {
+    const stored = JSON.parse(localStorage.getItem(OTP_ATTEMPTS_KEY) || "[]");
+    return Array.isArray(stored)
+      ? stored.filter(
+          (value): value is number =>
+            typeof value === "number" && value > now - OTP_WINDOW_MS,
+        )
+      : [];
+  } catch {
+    return [];
+  }
+}
 async function submissionError(error: unknown) {
   let code = "";
   try {
@@ -158,17 +174,57 @@ function LoginModal({ onClose }: { onClose: () => void }) {
     return () => window.clearTimeout(timer);
   }, [resendIn]);
   async function requestOtp() {
+    const now = Date.now();
+    const attempts = recentOtpAttempts(now);
+    if (attempts.length >= OTP_SEND_LIMIT) {
+      const wait = Math.max(
+        1,
+        Math.ceil((attempts[0] + OTP_WINDOW_MS - now) / 1000),
+      );
+      setResendIn(wait);
+      setError(
+        `Five OTP requests are allowed every 30 minutes. Try again in ${Math.ceil(wait / 60)} minute(s).`,
+      );
+      return false;
+    }
+    const updatedAttempts = [...attempts, now];
+    localStorage.setItem(OTP_ATTEMPTS_KEY, JSON.stringify(updatedAttempts));
     setBusy(true);
     setError("");
-    const { error } = await supabase.auth.signInWithOtp({ phone: normalized });
+    const { error } = await supabase.functions.invoke("request-phone-otp", {
+      body: { phone: normalized },
+    });
     setBusy(false);
     if (error) {
-      console.warn("OTP request failed", { code: error.code });
-      setError(safeAuthError(error.code));
+      console.warn("OTP request failed");
+      let rateLimited = false;
+      try {
+        rateLimited =
+          (
+            (await (error as { context?: Response }).context
+              ?.clone()
+              .json()) as {
+              error?: string;
+            }
+          )?.error === "otp_rate_limited";
+      } catch {
+        /* invalid provider response */
+      }
+      if (rateLimited) {
+        setResendIn(30 * 60);
+        setError(
+          "Five OTP requests are allowed every 30 minutes. Please try again later.",
+        );
+      } else
+        setError("The verification code could not be sent. Please try again.");
       return false;
     }
     setOtp("");
-    setResendIn(30);
+    setResendIn(
+      updatedAttempts.length >= OTP_SEND_LIMIT
+        ? Math.ceil((updatedAttempts[0] + OTP_WINDOW_MS - now) / 1000)
+        : 30,
+    );
     return true;
   }
   async function sendOtp(e: FormEvent) {
@@ -299,7 +355,11 @@ function LoginModal({ onClose }: { onClose: () => void }) {
               disabled={busy || resendIn > 0}
               onClick={resendOtp}
             >
-              {resendIn > 0 ? `Resend OTP in ${resendIn}s` : "Resend OTP"}
+              {resendIn >= 60
+                ? `Retry in ${Math.ceil(resendIn / 60)} min`
+                : resendIn > 0
+                  ? `Resend OTP in ${resendIn}s`
+                  : "Resend OTP"}
             </button>
           </form>
         )}
@@ -1993,7 +2053,6 @@ export default function Portal() {
   const [authReady, setAuthReady] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [login, setLogin] = useState(false);
-  const [mfaRequired, setMfaRequired] = useState(false);
   const [menu, setMenu] = useState(false);
   const [mine, setMine] = useState<Listing[]>([]);
   const [enquiries, setEnquiries] = useState<PropertyEnquiry[]>([]);
@@ -2027,31 +2086,22 @@ export default function Portal() {
       );
       setProfile(p as Profile | null);
       if (p && ["moderator", "admin"].includes(p.role)) {
-        const { data: aal } =
-          await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-        if (aal?.currentLevel !== "aal2") {
-          setMfaRequired(true);
-          setQueue([]);
-          setAnalyticsItems([]);
-        } else {
-          setMfaRequired(false);
-          const [{ data: pending }, { data: performance }] = await Promise.all([
-            supabase.rpc("get_staff_review_queue"),
-            supabase.rpc("get_staff_listing_performance"),
-          ]);
-          const signed = await Promise.all(
-            (pending || []).map(async (x: Listing) => ({
-              ...x,
-              video_url: (
-                await supabase.storage
-                  .from("property-videos")
-                  .createSignedUrl(x.video_path, 3600)
-              ).data?.signedUrl,
-            })),
-          );
-          setQueue(signed);
-          setAnalyticsItems((performance || []) as unknown as Listing[]);
-        }
+        const [{ data: pending }, { data: performance }] = await Promise.all([
+          supabase.rpc("get_staff_review_queue"),
+          supabase.rpc("get_staff_listing_performance"),
+        ]);
+        const signed = await Promise.all(
+          (pending || []).map(async (x: Listing) => ({
+            ...x,
+            video_url: (
+              await supabase.storage
+                .from("property-videos")
+                .createSignedUrl(x.video_path, 3600)
+            ).data?.signedUrl,
+          })),
+        );
+        setQueue(signed);
+        setAnalyticsItems((performance || []) as unknown as Listing[]);
       }
     } else {
       setMine([]);
@@ -2059,7 +2109,6 @@ export default function Portal() {
       setQueue([]);
       setAnalyticsItems([]);
       setProfile(null);
-      setMfaRequired(false);
     }
   }, [session]);
   useEffect(() => {
@@ -2209,15 +2258,7 @@ export default function Portal() {
           </button>
         ))}
       </nav>
-      {login && <LoginModal onClose={() => setLogin(false)} />}{" "}
-      {mfaRequired && (
-        <StaffMfaModal
-          onVerified={() => {
-            setMfaRequired(false);
-            void load();
-          }}
-        />
-      )}
+      {login && <LoginModal onClose={() => setLogin(false)} />}
     </main>
   );
 }

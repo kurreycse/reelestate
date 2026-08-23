@@ -15,7 +15,14 @@ test("authentication errors are mapped and sessions are refresh-safe but tab-sco
   assert.doesNotMatch(client, /storage:\s*window\.localStorage/);
   assert.match(client, /-auth-token/);
   assert.match(portal, /Resend OTP in/);
-  assert.match(portal, /setResendIn\(30\)/);
+  assert.match(portal, /updatedAttempts\.length >= OTP_SEND_LIMIT/);
+  assert.match(portal, /OTP_SEND_LIMIT = 5/);
+  assert.match(portal, /OTP_WINDOW_MS = 30 \* 60 \* 1000/);
+  assert.match(portal, /request-phone-otp/);
+  const otpFunction = read("supabase/functions/request-phone-otp/index.ts");
+  assert.match(otpFunction, /p_limit:5,p_window_seconds:1800/);
+  assert.match(otpFunction, /crypto\.subtle\.digest/);
+  assert.doesNotMatch(portal, /mfaRequired/);
 });
 
 test("publisher-interest link is hidden for authenticated users", () => {
