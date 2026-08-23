@@ -31,6 +31,9 @@ test("authentication errors are mapped and sessions are refresh-safe but tab-sco
   assert.match(portal, /Forgot password\? Reset it with OTP/);
   assert.match(portal, /mode === "reset-password"/);
   assert.match(portal, /Your phone is verified\. Set a new password/);
+  assert.match(portal, /const hasValidPhone/);
+  assert.match(portal, /if \(!hasValidPhone\)/);
+  assert.match(portal, /Required for password login, OTP login, password reset/);
   assert.doesNotMatch(portal, /mfaRequired/);
 });
 
