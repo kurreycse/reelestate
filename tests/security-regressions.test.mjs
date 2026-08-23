@@ -51,6 +51,12 @@ test("posting fields adapt to the selected property type", () => {
   assert.match(portal, /\["Plot", "Commercial"\]\.includes\(propertyType\)/);
 });
 
+test("property badges cannot cover or intercept the video play control", () => {
+  const css = read("app/globals.css");
+  assert.match(css, /\.tile-play\{z-index:4\}/);
+  assert.match(css, /\.video-tag,\.reviewed-tag\{top:12px;bottom:auto;pointer-events:none\}/);
+});
+
 test("profile registration derives identity from the verified auth user", () => {
   const portal = read("app/Portal.tsx");
   const migration = read(
