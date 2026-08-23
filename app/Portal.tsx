@@ -2118,6 +2118,15 @@ export default function Portal() {
     });
     const { data } = supabase.auth.onAuthStateChange((_e, s) => {
       setSession(s);
+      if (!s) {
+        setView("feed");
+        setMenu(false);
+        setProfile(null);
+        setMine([]);
+        setEnquiries([]);
+        setQueue([]);
+        setAnalyticsItems([]);
+      }
       setAuthReady(true);
     });
     return () => data.subscription.unsubscribe();
@@ -2140,13 +2149,26 @@ export default function Portal() {
     setView(next);
     setMenu(false);
   }
+  async function logout() {
+    setView("feed");
+    setMenu(false);
+    setProfile(null);
+    setMine([]);
+    setEnquiries([]);
+    setQueue([]);
+    setAnalyticsItems([]);
+    setSession(null);
+    await supabase.auth.signOut();
+  }
+  const isStaff = Boolean(
+    session && profile && ["moderator", "admin"].includes(profile.role),
+  );
   const nav = [
     { id: "feed" as View, label: "Discover", icon: Home },
     { id: "post" as View, label: "Post", icon: Plus },
     { id: "dashboard" as View, label: "My posts", icon: Video },
   ];
-  if (profile && ["moderator", "admin"].includes(profile.role))
-    nav.push({ id: "admin", label: "Review", icon: ShieldCheck });
+  if (isStaff) nav.push({ id: "admin", label: "Review", icon: ShieldCheck });
   return (
     <main className="app-shell">
       <header className="topbar">
@@ -2195,7 +2217,7 @@ export default function Portal() {
                   <button onClick={() => guarded("dashboard")}>
                     <UserRound /> My posts
                   </button>
-                  <button onClick={() => supabase.auth.signOut()}>
+                  <button onClick={() => void logout()}>
                     <LogOut /> Sign out
                   </button>
                 </div>
@@ -2232,20 +2254,22 @@ export default function Portal() {
             setView("dashboard");
           }}
         />
-      ) : view === "dashboard" ? (
+      ) : view === "dashboard" && session ? (
         <Dashboard
           items={mine}
           enquiries={enquiries}
           onPost={() => guarded("post")}
           onRefresh={load}
         />
-      ) : view === "admin" ? (
+      ) : view === "admin" && isStaff ? (
         <Admin
           items={queue}
           analyticsItems={analyticsItems}
           onDecision={load}
         />
-      ) : null}
+      ) : (
+        <Marketplace onRequireLogin={() => setLogin(true)} />
+      )}
       <nav className="bottom-nav">
         {nav.map((n) => (
           <button

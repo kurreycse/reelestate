@@ -31,6 +31,19 @@ test("publisher-interest link is hidden for authenticated users", () => {
   assert.match(portal, /className="interest-compact"/);
 });
 
+test("logout clears privileged state and moderation rendering requires staff", () => {
+  const portal = read("app/Portal.tsx");
+  assert.match(portal, /async function logout\(\)/);
+  assert.match(portal, /setView\("feed"\)/);
+  assert.match(portal, /setQueue\(\[\]\)/);
+  assert.match(portal, /view === "admin" && isStaff/);
+  assert.match(portal, /view === "dashboard" && session/);
+  assert.doesNotMatch(
+    portal,
+    /onClick=\{\(\) => supabase\.auth\.signOut\(\)\}/,
+  );
+});
+
 test("posting fields adapt to the selected property type", () => {
   const portal = read("app/Portal.tsx");
   assert.match(portal, /setPropertyType\(e\.target\.value\)/);
