@@ -153,8 +153,10 @@ async function submissionError(error: unknown) {
   }
 }
 function LoginModal({ onClose }: { onClose: () => void }) {
-  const [mode, setMode] = useState<"phone" | "otp" | "profile">("phone");
+  const [mode, setMode] = useState<"login" | "otp" | "profile">("login");
   const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [otp, setOtp] = useState("");
   const [first, setFirst] = useState("");
   const [last, setLast] = useState("");
@@ -228,9 +230,33 @@ function LoginModal({ onClose }: { onClose: () => void }) {
     );
     return true;
   }
-  async function sendOtp(e: FormEvent) {
-    e.preventDefault();
+  async function startOtp() {
     if (await requestOtp()) setMode("otp");
+  }
+  async function loginWithPassword(e: FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setError("");
+    const { data, error } = await supabase.auth.signInWithPassword({
+      phone: normalized,
+      password,
+    });
+    if (error) {
+      console.warn("Password login failed", { code: error.code });
+      setError(
+        "The mobile number or password is incorrect. You can also log in with an OTP.",
+      );
+      setBusy(false);
+      return;
+    }
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("id", data.user.id)
+      .maybeSingle();
+    setBusy(false);
+    if (profile) onClose();
+    else setMode("profile");
   }
   async function resendOtp() {
     await requestOtp();
@@ -261,8 +287,25 @@ function LoginModal({ onClose }: { onClose: () => void }) {
   }
   async function finish(e: FormEvent) {
     e.preventDefault();
+    if (password.length < 8) {
+      setError("Use a password with at least 8 characters.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("The passwords do not match.");
+      return;
+    }
     setBusy(true);
     setError("");
+    const { error: passwordError } = await supabase.auth.updateUser({
+      password,
+    });
+    if (passwordError) {
+      console.warn("Password setup failed", { code: passwordError.code });
+      setBusy(false);
+      setError("Your password could not be saved. Please try again.");
+      return;
+    }
     const { error } = await supabase.rpc("complete_phone_registration", {
       p_first_name: first,
       p_last_name: last,
@@ -295,8 +338,8 @@ function LoginModal({ onClose }: { onClose: () => void }) {
             ? "Tell us about you"
             : "Your next move starts here."}
         </h2>
-        {mode === "phone" && (
-          <form onSubmit={sendOtp}>
+        {mode === "login" && (
+          <form onSubmit={loginWithPassword}>
             <label>
               Mobile number
               <input
@@ -312,12 +355,38 @@ function LoginModal({ onClose }: { onClose: () => void }) {
               Indian 10-digit numbers automatically receive the +91 country
               code.
             </small>
+            <label>
+              Password
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+                required
+              />
+            </label>
             <button
               className="primary full"
-              disabled={busy || phoneDigits.length < 10}
+              disabled={busy || phoneDigits.length < 10 || !password}
             >
-              {busy ? <Loader2 className="spin" /> : <Send size={18} />} Send
-              OTP
+              {busy ? <Loader2 className="spin" /> : <Check size={18} />} Log
+              in
+            </button>
+            <button
+              type="button"
+              className="back-link auth-option"
+              disabled={busy || phoneDigits.length < 10}
+              onClick={startOtp}
+            >
+              Forgot password? Log in with OTP
+            </button>
+            <button
+              type="button"
+              className="back-link auth-option"
+              disabled={busy || phoneDigits.length < 10}
+              onClick={startOtp}
+            >
+              New user? Create account
             </button>
           </form>
         )}
@@ -326,7 +395,7 @@ function LoginModal({ onClose }: { onClose: () => void }) {
             <button
               type="button"
               className="back-link"
-              onClick={() => setMode("phone")}
+              onClick={() => setMode("login")}
             >
               <ArrowLeft size={15} /> Change number
             </button>
@@ -405,9 +474,31 @@ function LoginModal({ onClose }: { onClose: () => void }) {
                 pattern="@?[A-Za-z0-9._]{1,30}"
               />
             </label>
+            <label>
+              Create password
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="new-password"
+                minLength={8}
+                required
+              />
+            </label>
+            <label>
+              Confirm password
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                autoComplete="new-password"
+                minLength={8}
+                required
+              />
+            </label>
             <small>
-              Your email is used for account communication and does not need
-              verification.
+              Use at least 8 characters. Your email is used for account
+              communication and does not need verification.
             </small>
             <button className="primary full" disabled={busy}>
               {busy ? <Loader2 className="spin" /> : <Check size={18} />}{" "}

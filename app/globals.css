@@ -20,3 +20,4 @@
 .delete-enquiry{border:0;background:none;color:#983224;display:flex;align-items:center;gap:6px;padding:7px 0;font-size:11px;font-weight:750}.delete-enquiry svg{width:14px}
 .tile-play{z-index:4}.video-tag,.reviewed-tag{top:12px;bottom:auto;pointer-events:none}.tile-play:focus-visible{outline:3px solid #fff;outline-offset:3px}
 .reviewed-video-label{left:auto;right:16px;top:16px;bottom:auto;z-index:2;pointer-events:none}
+.auth-option{width:100%;justify-content:center;padding:14px 0 0;font-weight:700}.auth-option+.auth-option{padding-top:9px}
