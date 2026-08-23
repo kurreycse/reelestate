@@ -14,6 +14,17 @@ test("authentication errors are mapped and sessions are not persisted", () => {
   assert.match(client, /-auth-token/);
 });
 
+test("profile registration derives identity from the verified auth user", () => {
+  const portal = read("app/Portal.tsx");
+  const migration = read("supabase/migrations/202608230004_secure_profile_registration.sql");
+  assert.match(portal, /rpc\("complete_phone_registration"/);
+  assert.doesNotMatch(portal, /from\("profiles"\)\.insert/);
+  assert.match(migration, /from auth\.users/);
+  assert.match(migration, /phone_confirmed_at is not null/);
+  assert.match(migration, /grant execute on function public\.complete_phone_registration\(text,text,text\) to authenticated/);
+  assert.doesNotMatch(migration, /p_phone/);
+});
+
 test("listing creation and dashboard reads use restricted interfaces", () => {
   const portal = read("app/Portal.tsx");
   const migration = read("supabase/migrations/202608230001_security_remediation.sql");
