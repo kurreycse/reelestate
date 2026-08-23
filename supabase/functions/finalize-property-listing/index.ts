@@ -15,6 +15,14 @@ function mediaDuration(chunks:Uint8Array[]){
   return 0;
 }
 
+async function inspectVideoStream(url:string,expectedSize:number,maxSize:number){
+  const response=await fetch(url);if(!response.ok||!response.body)throw new Error("video_read_failed");
+  const reader=response.body.getReader();let total=0;let carry=new Uint8Array();let signature="";let hasVideoCodec=false;let hasAudioTrack=false;let hasAudioCodec=false;let duration=0;
+  while(true){const {done,value}=await reader.read();if(done)break;if(!value)continue;total+=value.byteLength;if(total>maxSize){await reader.cancel();throw new Error("video_size_invalid")}if(!signature)signature=ascii(value.slice(0,64));const combined=new Uint8Array(carry.byteLength+value.byteLength);combined.set(carry);combined.set(value,carry.byteLength);const text=ascii(combined);hasVideoCodec||=text.includes("avc1")||text.includes("avc3");hasAudioTrack||=text.includes("soun");hasAudioCodec||=text.includes("mp4a");if(!duration)duration=mediaDuration([combined]);carry=combined.slice(Math.max(0,combined.byteLength-64));}
+  if(!total||Math.abs(total-expectedSize)>1024)throw new Error("video_read_failed");
+  if(!signature.includes("ftyp"))throw new Error("video_container_invalid");if(!hasVideoCodec)throw new Error("video_codec_invalid");if(hasAudioTrack&&!hasAudioCodec)throw new Error("audio_codec_invalid");if(!Number.isFinite(duration)||duration<1)throw new Error("video_duration_invalid");return {size:total,duration:Math.ceil(duration)};
+}
+
 async function inspect(url:string,maxSize:number,kind:"video"|"poster"){
   const head=await fetch(url,{method:"HEAD"});if(!head.ok)throw new Error(`${kind}_unavailable`);
   let size=Number(head.headers.get("content-length")||0);const type=(head.headers.get("content-type")||"").split(";")[0].toLowerCase();
@@ -24,10 +32,7 @@ async function inspect(url:string,maxSize:number,kind:"video"|"poster"){
     if(type!=="image/jpeg")throw new Error("poster_type_invalid");const response=await fetch(url,{headers:{range:"bytes=0-15"}});const data=new Uint8Array(await response.arrayBuffer());if(data[0]!==0xff||data[1]!==0xd8||data[2]!==0xff)throw new Error("poster_content_invalid");return {size,duration:0};
   }
   if(!["video/mp4","video/quicktime","application/octet-stream"].includes(type))throw new Error("video_type_invalid");
-  const chunkSize=Math.min(size,4*1024*1024);const ranges=[[0,chunkSize-1],...[size>chunkSize?[[Math.max(0,size-chunkSize),size-1]]:[]]] as [number,number][];
-  const chunks=await Promise.all(ranges.map(async([start,end])=>{const response=await fetch(url,{headers:{range:`bytes=${start}-${end}`}});const length=Number(response.headers.get("content-length")||0);if(!response.ok||length>4*1024*1024+1024)throw new Error("video_read_failed");const data=new Uint8Array(await response.arrayBuffer());if(data.byteLength>4*1024*1024+1024)throw new Error("video_read_failed");return data}));
-  const signature=ascii(chunks[0].slice(0,64));if(!signature.includes("ftyp"))throw new Error("video_container_invalid");const text=chunks.map(ascii).join("");if(!text.includes("avc1")&&!text.includes("avc3"))throw new Error("video_codec_invalid");if(text.includes("soun")&&!text.includes("mp4a"))throw new Error("audio_codec_invalid");
-  const duration=mediaDuration(chunks);if(!Number.isFinite(duration)||duration<1)throw new Error("video_duration_invalid");return {size,duration:Math.ceil(duration)};
+  return inspectVideoStream(url,size,maxSize);
 }
 
 Deno.serve(async request=>{

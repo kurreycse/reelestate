@@ -11,6 +11,7 @@ Security invariants:
 
 - Browser authentication is memory-only; a reload requires a new mobile OTP and no refresh token is retained in local storage.
 - Listing rows are created only by `finalize-property-listing`, which validates the JWT, active profile, private-object paths, size, JPEG signature, MP4/MOV container, H.264 video, AAC audio when present, and records the measured duration. Video duration has no maximum; the 200 MB size limit remains.
+- Video inspection uses a bounded streaming read, so validation does not depend on signed Storage URLs honoring HTTP range requests and does not buffer the whole video in Edge Function memory.
 - Owners and staff read listings through scoped RPCs. Direct `authenticated` and `anon` table selection is revoked.
 - Public Edge Functions consume atomic database rate-limit buckets using trusted proxy-header precedence.
 - Enquiry and publisher-interest PII is purged after 180 days by the `reelestate-private-data-retention` cron job; owners can delete enquiries earlier.
