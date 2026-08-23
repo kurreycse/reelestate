@@ -58,6 +58,10 @@ test("property badges cannot cover or intercept the video play control", () => {
     css,
     /\.video-tag,\.reviewed-tag\{top:12px;bottom:auto;pointer-events:none\}/,
   );
+  assert.match(
+    css,
+    /\.reviewed-video-label\{left:auto;right:16px;top:16px;bottom:auto;z-index:2;pointer-events:none\}/,
+  );
 });
 
 test("profile registration derives identity from the verified auth user", () => {
