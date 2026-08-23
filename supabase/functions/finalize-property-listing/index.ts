@@ -17,14 +17,15 @@ function mediaDuration(chunks:Uint8Array[]){
 
 async function inspect(url:string,maxSize:number,kind:"video"|"poster"){
   const head=await fetch(url,{method:"HEAD"});if(!head.ok)throw new Error(`${kind}_unavailable`);
-  const size=Number(head.headers.get("content-length")||0);const type=(head.headers.get("content-type")||"").split(";")[0].toLowerCase();
+  let size=Number(head.headers.get("content-length")||0);const type=(head.headers.get("content-type")||"").split(";")[0].toLowerCase();
+  if(!size){const probe=await fetch(url,{headers:{range:"bytes=0-0"}});const match=probe.headers.get("content-range")?.match(/\/(\d+)$/);size=Number(match?.[1]||probe.headers.get("content-length")||0);await probe.body?.cancel()}
   if(!size||size>maxSize)throw new Error(`${kind}_size_invalid`);
   if(kind==="poster"){
     if(type!=="image/jpeg")throw new Error("poster_type_invalid");const response=await fetch(url,{headers:{range:"bytes=0-15"}});const data=new Uint8Array(await response.arrayBuffer());if(data[0]!==0xff||data[1]!==0xd8||data[2]!==0xff)throw new Error("poster_content_invalid");return {size,duration:0};
   }
   if(!["video/mp4","video/quicktime","application/octet-stream"].includes(type))throw new Error("video_type_invalid");
   const chunkSize=Math.min(size,4*1024*1024);const ranges=[[0,chunkSize-1],...[size>chunkSize?[[Math.max(0,size-chunkSize),size-1]]:[]]] as [number,number][];
-  const chunks=await Promise.all(ranges.map(async([start,end])=>{const response=await fetch(url,{headers:{range:`bytes=${start}-${end}`}});if(!response.ok||Number(response.headers.get("content-length")||0)>4*1024*1024+1024)throw new Error("video_read_failed");return new Uint8Array(await response.arrayBuffer())}));
+  const chunks=await Promise.all(ranges.map(async([start,end])=>{const response=await fetch(url,{headers:{range:`bytes=${start}-${end}`}});const length=Number(response.headers.get("content-length")||0);if(!response.ok||length>4*1024*1024+1024||(!response.headers.get("content-range")&&size>chunkSize))throw new Error("video_read_failed");return new Uint8Array(await response.arrayBuffer())}));
   const signature=ascii(chunks[0].slice(0,64));if(!signature.includes("ftyp"))throw new Error("video_container_invalid");const text=chunks.map(ascii).join("");if(!text.includes("avc1")&&!text.includes("avc3"))throw new Error("video_codec_invalid");if(text.includes("soun")&&!text.includes("mp4a"))throw new Error("audio_codec_invalid");
   const duration=mediaDuration(chunks);if(!Number.isFinite(duration)||duration<1||duration>60.25)throw new Error("video_duration_invalid");return {size,duration:Math.ceil(duration)};
 }

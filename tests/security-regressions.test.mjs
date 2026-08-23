@@ -58,11 +58,14 @@ test("public functions use atomic rate limiting and trusted proxy precedence", (
 test("PII retention and server-side media validation remain enabled", () => {
   const migration = read("supabase/migrations/202608230001_security_remediation.sql");
   const finalizer = read("supabase/functions/finalize-property-listing/index.ts");
+  const portal = read("app/Portal.tsx");
   assert.match(migration, /180 days/);
   assert.match(migration, /cron\.schedule/);
   assert.match(finalizer, /video_codec_invalid/);
   assert.match(finalizer, /video_duration_invalid/);
   assert.match(finalizer, /admin\.auth\.getUser\(token\)/);
+  assert.match(finalizer, /content-range/);
+  assert.match(portal, /submissionError\(error\)/);
 });
 
 test("dormant publisher-interest function is absent", () => {
