@@ -32,6 +32,7 @@ export interface Listing {
   contact_phone: string;
   status: ListingStatus;
   video_path: string;
+  video_duration_seconds?: number;
   poster_path?: string;
   rejection_category?: string;
   rejection_note?: string;

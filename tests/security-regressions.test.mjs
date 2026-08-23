@@ -126,6 +126,10 @@ test("rejected listings can be securely edited and resubmitted", () => {
   assert.match(portal, /Edit &amp; resubmit/);
   assert.match(portal, /initial=\{editing \|\| undefined\}/);
   assert.match(portal, /upsert: Boolean\(initial\)/);
+  assert.match(portal, /initial\?\.video_url \|\| ""/);
+  assert.match(portal, /async function editRejected/);
+  assert.match(portal, /createSignedUrl\(listing\.video_path, 1800\)/);
+  assert.match(portal, /\(!initial && \(!video \|\| !poster\)\)/);
   assert.match(finalizer, /resubmit_validated_listing/);
   assert.match(finalizer, /existing\.status!=="rejected"/);
   assert.match(migration, /status='pending_review'/);

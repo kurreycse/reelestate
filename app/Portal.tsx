@@ -1140,8 +1140,10 @@ function PostForm({
   const [error, setError] = useState("");
   const [video, setVideo] = useState<File | null>(null);
   const [poster, setPoster] = useState<Blob | null>(null);
-  const [duration, setDuration] = useState(0);
-  const [preview, setPreview] = useState("");
+  const [duration, setDuration] = useState(
+    initial?.video_duration_seconds || 0,
+  );
+  const [preview, setPreview] = useState(initial?.video_url || "");
   const [purpose, setPurpose] = useState<"sale" | "rent">(
     initial?.purpose || "sale",
   );
@@ -1212,7 +1214,7 @@ function PostForm({
   };
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!video || !poster) {
+    if ((!initial && (!video || !poster)) || (video && !poster)) {
       setError(
         "Choose a compatible property video and wait for its thumbnail.",
       );
@@ -1223,33 +1225,37 @@ function PostForm({
     setError("");
     const form = new FormData(e.currentTarget);
     const id = initial?.id || crypto.randomUUID();
-    const ext = video.name.split(".").pop()?.toLowerCase() || "mp4";
+    const ext = video?.name.split(".").pop()?.toLowerCase() || "mp4";
     const path = initial?.video_path || `${user.id}/${id}.${ext}`;
     const posterPath = initial?.poster_path || `${user.id}/${id}.jpg`;
-    const upload = await supabase.storage
-      .from("property-videos")
-      .upload(path, video, {
-        contentType: video.type,
-        upsert: Boolean(initial),
-      });
-    if (upload.error) {
-      setError("The video could not be uploaded. Please try again.");
-      setBusy(false);
-      return;
+    if (video) {
+      const upload = await supabase.storage
+        .from("property-videos")
+        .upload(path, video, {
+          contentType: video.type,
+          upsert: Boolean(initial),
+        });
+      if (upload.error) {
+        setError("The video could not be uploaded. Please try again.");
+        setBusy(false);
+        return;
+      }
     }
     setProgress(55);
-    const posterUpload = await supabase.storage
-      .from("property-posters")
-      .upload(posterPath, poster, {
-        contentType: "image/jpeg",
-        upsert: Boolean(initial),
-      });
-    if (posterUpload.error) {
-      if (!initial)
-        await supabase.storage.from("property-videos").remove([path]);
-      setError("The thumbnail could not be uploaded. Please try again.");
-      setBusy(false);
-      return;
+    if (poster) {
+      const posterUpload = await supabase.storage
+        .from("property-posters")
+        .upload(posterPath, poster, {
+          contentType: "image/jpeg",
+          upsert: Boolean(initial),
+        });
+      if (posterUpload.error) {
+        if (!initial)
+          await supabase.storage.from("property-videos").remove([path]);
+        setError("The thumbnail could not be uploaded. Please try again.");
+        setBusy(false);
+        return;
+      }
     }
     setProgress(75);
     const amenities = form.getAll("amenities").map(String);
@@ -2264,6 +2270,24 @@ export default function Portal() {
     setSession(null);
     await supabase.auth.signOut();
   }
+  async function editRejected(listing: Listing) {
+    const [video, poster] = await Promise.all([
+      supabase.storage
+        .from("property-videos")
+        .createSignedUrl(listing.video_path, 1800),
+      listing.poster_path
+        ? supabase.storage
+            .from("property-posters")
+            .createSignedUrl(listing.poster_path, 1800)
+        : Promise.resolve({ data: null }),
+    ]);
+    setEditing({
+      ...listing,
+      video_url: video.data?.signedUrl,
+      poster_url: poster.data?.signedUrl,
+    });
+    setView("post");
+  }
   const isStaff = Boolean(
     session && profile && ["moderator", "admin"].includes(profile.role),
   );
@@ -2369,10 +2393,7 @@ export default function Portal() {
             setEditing(null);
             guarded("post");
           }}
-          onEdit={(listing) => {
-            setEditing(listing);
-            setView("post");
-          }}
+          onEdit={(listing) => void editRejected(listing)}
           onRefresh={load}
         />
       ) : view === "admin" && isStaff ? (
