@@ -171,11 +171,6 @@ function LoginModal({ onClose }: { onClose: () => void }) {
   const [error, setError] = useState("");
   const [resendIn, setResendIn] = useState(0);
   const phoneDigits = phone.replace(/\D/g, "");
-  const hasValidPhone =
-    phoneDigits.length === 10 ||
-    (phone.trim().startsWith("+") &&
-      phoneDigits.length >= 8 &&
-      phoneDigits.length <= 15);
   const normalized =
     phoneDigits.length === 10 ? `+91${phoneDigits}` : `+${phoneDigits}`;
   useEffect(() => {
@@ -187,10 +182,6 @@ function LoginModal({ onClose }: { onClose: () => void }) {
     return () => window.clearTimeout(timer);
   }, [resendIn]);
   async function requestOtp(purpose = otpPurpose) {
-    if (!hasValidPhone) {
-      setError("Enter a valid mobile number to continue.");
-      return false;
-    }
     const now = Date.now();
     const attempts = recentOtpAttempts(now);
     if (attempts.length >= OTP_SEND_LIMIT) {
@@ -252,10 +243,6 @@ function LoginModal({ onClose }: { onClose: () => void }) {
   }
   async function loginWithPassword(e: FormEvent) {
     e.preventDefault();
-    if (!hasValidPhone) {
-      setError("Enter a valid mobile number to continue.");
-      return;
-    }
     setBusy(true);
     setError("");
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -402,9 +389,9 @@ function LoginModal({ onClose }: { onClose: () => void }) {
               />
             </label>
             <small id="phone-help">
-              Required for password login, OTP login, password reset, and new
-              registration. Indian 10-digit numbers automatically receive the
-              +91 country code.
+              Mobile number is mandatory for Login with OTP, Forgot password,
+              and New registration. Indian 10-digit numbers automatically
+              receive the +91 country code.
             </small>
             <label>
               Password
@@ -418,14 +405,14 @@ function LoginModal({ onClose }: { onClose: () => void }) {
             </label>
             <button
               className="primary full"
-              disabled={busy || !hasValidPhone || !password}
+              disabled={busy || phoneDigits.length < 10 || !password}
             >
               {busy ? <Loader2 className="spin" /> : <Check size={18} />} Log in
             </button>
             <button
               type="button"
               className="back-link auth-option"
-              disabled={busy || !hasValidPhone}
+              disabled={busy || phoneDigits.length < 10}
               onClick={() => startOtp("login")}
             >
               Log in with OTP
@@ -433,7 +420,7 @@ function LoginModal({ onClose }: { onClose: () => void }) {
             <button
               type="button"
               className="back-link auth-option"
-              disabled={busy || !hasValidPhone}
+              disabled={busy || phoneDigits.length < 10}
               onClick={() => startOtp("reset")}
             >
               Forgot password? Reset it with OTP
@@ -441,7 +428,7 @@ function LoginModal({ onClose }: { onClose: () => void }) {
             <button
               type="button"
               className="back-link auth-option"
-              disabled={busy || !hasValidPhone}
+              disabled={busy || phoneDigits.length < 10}
               onClick={() => startOtp("register")}
             >
               New user? Create account
