@@ -4,7 +4,7 @@ const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "";
 
 // Remove tokens created by older releases that persisted Supabase sessions in
-// localStorage. Analytics visitor identifiers are deliberately unaffected.
+// localStorage. Authentication is now tab-scoped in sessionStorage instead.
 if (typeof window !== "undefined") {
   for (let index = localStorage.length - 1; index >= 0; index -= 1) {
     const item = localStorage.key(index);
@@ -14,7 +14,13 @@ if (typeof window !== "undefined") {
 
 export const isSupabaseConfigured = Boolean(url && key);
 export const supabase = createClient(url || "https://placeholder.supabase.co", key || "placeholder", {
-  // Keep access and refresh tokens in memory only. Reloading or closing the tab
-  // requires a fresh OTP, preventing JavaScript-accessible persistent tokens.
-  auth: { persistSession: false, autoRefreshToken: true, detectSessionInUrl: false },
+  // Preserve login across refreshes without retaining tokens after the tab is
+  // closed. A future server-rendered auth migration can move this to HttpOnly
+  // cookies; sessionStorage is the safest usable option for this client-only UI.
+  auth: {
+    persistSession: true,
+    storage: typeof window !== "undefined" ? window.sessionStorage : undefined,
+    autoRefreshToken: true,
+    detectSessionInUrl: false,
+  },
 });

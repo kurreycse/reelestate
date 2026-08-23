@@ -4,14 +4,20 @@ import test from "node:test";
 
 const read = path => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 
-test("authentication errors are mapped and sessions are not persisted", () => {
+test("authentication errors are mapped and sessions are refresh-safe but tab-scoped", () => {
   const portal = read("app/Portal.tsx");
   const client = read("lib/supabase.ts");
   assert.doesNotMatch(portal, /setError\(error\.message\)/);
   assert.match(portal, /safeAuthError/);
-  assert.match(client, /persistSession:\s*false/);
-  assert.doesNotMatch(client, /persistSession:\s*true/);
+  assert.match(client, /persistSession:\s*true/);
+  assert.match(client, /window\.sessionStorage/);
+  assert.doesNotMatch(client, /storage:\s*window\.localStorage/);
   assert.match(client, /-auth-token/);
+});
+
+test("publisher-interest link is hidden for authenticated users", () => {
+  const portal = read("app/Portal.tsx");
+  assert.match(portal, /authReady&&!session&&<a className="interest-compact"/);
 });
 
 test("profile registration derives identity from the verified auth user", () => {
