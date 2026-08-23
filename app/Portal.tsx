@@ -159,6 +159,7 @@ function LoginModal({ onClose }: { onClose: () => void }) {
   const [first, setFirst] = useState("");
   const [last, setLast] = useState("");
   const [email, setEmail] = useState("");
+  const [instagram, setInstagram] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [resendIn, setResendIn] = useState(0);
@@ -266,6 +267,7 @@ function LoginModal({ onClose }: { onClose: () => void }) {
       p_first_name: first,
       p_last_name: last,
       p_email: email,
+      p_instagram_id: instagram || null,
     });
     setBusy(false);
     if (error) {
@@ -390,6 +392,17 @@ function LoginModal({ onClose }: { onClose: () => void }) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+              />
+            </label>
+            <label>
+              Instagram ID (optional)
+              <input
+                value={instagram}
+                onChange={(e) => setInstagram(e.target.value)}
+                placeholder="@yourhandle"
+                autoComplete="off"
+                maxLength={31}
+                pattern="@?[A-Za-z0-9._]{1,30}"
               />
             </label>
             <small>

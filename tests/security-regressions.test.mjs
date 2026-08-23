@@ -80,6 +80,20 @@ test("profile registration derives identity from the verified auth user", () => 
   assert.doesNotMatch(migration, /p_phone/);
 });
 
+test("new registration stores an optional validated Instagram handle", () => {
+  const portal = read("app/Portal.tsx");
+  const migration = read(
+    "supabase/migrations/202608230008_profile_instagram_id.sql",
+  );
+  assert.match(portal, /p_instagram_id: instagram \|\| null/);
+  assert.match(portal, /Instagram ID \(optional\)/);
+  assert.match(migration, /add column if not exists instagram_id/);
+  assert.match(
+    migration,
+    /regexp_replace\(trim\(coalesce\(p_instagram_id,''\)\),'\^@',''\)/,
+  );
+});
+
 test("listing creation and dashboard reads use restricted interfaces", () => {
   const portal = read("app/Portal.tsx");
   const migration = read(

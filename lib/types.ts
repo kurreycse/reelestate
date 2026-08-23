@@ -1,10 +1,18 @@
-export type ListingStatus = "draft" | "uploading" | "pending_review" | "approved" | "rejected" | "published" | "archived";
+export type ListingStatus =
+  | "draft"
+  | "uploading"
+  | "pending_review"
+  | "approved"
+  | "rejected"
+  | "published"
+  | "archived";
 
 export interface Profile {
   id: string;
   first_name: string;
   last_name: string;
   email: string;
+  instagram_id?: string;
   phone_e164?: string;
   role: "poster" | "moderator" | "admin";
 }
@@ -33,7 +41,11 @@ export interface Listing {
   video_url?: string;
   poster_url?: string;
   furnishing_status?: "unfurnished" | "semi_furnished" | "fully_furnished";
-  ownership_type?: "freehold" | "leasehold" | "power_of_attorney" | "cooperative_society";
+  ownership_type?:
+    | "freehold"
+    | "leasehold"
+    | "power_of_attorney"
+    | "cooperative_society";
   possession_status?: "ready_to_move" | "under_construction";
   available_from?: string;
   security_deposit_minor?: number;
@@ -47,7 +59,15 @@ export interface Listing {
   floor_number?: number;
   total_floors?: number;
   parking_spaces?: number;
-  facing?: "north" | "north_east" | "east" | "south_east" | "south" | "south_west" | "west" | "north_west";
+  facing?:
+    | "north"
+    | "north_east"
+    | "east"
+    | "south_east"
+    | "south"
+    | "south_west"
+    | "west"
+    | "north_west";
   project_name?: string;
   posted_by?: "owner" | "agent" | "builder";
   amenities?: string[];
