@@ -389,9 +389,8 @@ function LoginModal({ onClose }: { onClose: () => void }) {
               />
             </label>
             <small id="phone-help">
-              Mobile number is mandatory for Login with OTP, Forgot password,
-              and New registration. Indian 10-digit numbers automatically
-              receive the +91 country code.
+              Indian 10-digit numbers automatically receive the +91 country
+              code.
             </small>
             <label>
               Password
