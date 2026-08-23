@@ -27,7 +27,7 @@ async function inspect(url:string,maxSize:number,kind:"video"|"poster"){
   const chunkSize=Math.min(size,4*1024*1024);const ranges=[[0,chunkSize-1],...[size>chunkSize?[[Math.max(0,size-chunkSize),size-1]]:[]]] as [number,number][];
   const chunks=await Promise.all(ranges.map(async([start,end])=>{const response=await fetch(url,{headers:{range:`bytes=${start}-${end}`}});const length=Number(response.headers.get("content-length")||0);if(!response.ok||length>4*1024*1024+1024)throw new Error("video_read_failed");const data=new Uint8Array(await response.arrayBuffer());if(data.byteLength>4*1024*1024+1024)throw new Error("video_read_failed");return data}));
   const signature=ascii(chunks[0].slice(0,64));if(!signature.includes("ftyp"))throw new Error("video_container_invalid");const text=chunks.map(ascii).join("");if(!text.includes("avc1")&&!text.includes("avc3"))throw new Error("video_codec_invalid");if(text.includes("soun")&&!text.includes("mp4a"))throw new Error("audio_codec_invalid");
-  const duration=mediaDuration(chunks);if(!Number.isFinite(duration)||duration<1||duration>60.25)throw new Error("video_duration_invalid");return {size,duration:Math.ceil(duration)};
+  const duration=mediaDuration(chunks);if(!Number.isFinite(duration)||duration<1)throw new Error("video_duration_invalid");return {size,duration:Math.ceil(duration)};
 }
 
 Deno.serve(async request=>{

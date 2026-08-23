@@ -63,6 +63,9 @@ test("PII retention and server-side media validation remain enabled", () => {
   assert.match(migration, /cron\.schedule/);
   assert.match(finalizer, /video_codec_invalid/);
   assert.match(finalizer, /video_duration_invalid/);
+  assert.doesNotMatch(finalizer, /duration>60/);
+  const durationMigration = read("supabase/migrations/202608230005_remove_video_duration_limit.sql");
+  assert.match(durationMigration, /drop constraint if exists listings_video_duration_seconds_check/);
   assert.match(finalizer, /admin\.auth\.getUser\(token\)/);
   assert.match(finalizer, /content-range/);
   assert.doesNotMatch(finalizer, /!response\.headers\.get\("content-range"\)/);
