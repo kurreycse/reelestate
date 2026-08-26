@@ -26,6 +26,7 @@ import {
   MapPin,
   Menu,
   MessageCircle,
+  MessageSquare,
   MoreHorizontal,
   Pause,
   Phone,
@@ -645,6 +646,12 @@ function ProfileModal({ profile, onClose, onSaved }: { profile: Profile; onClose
     {error&&<div className="form-error" role="alert"><CircleAlert size={16}/>{error}</div>}{saved&&<div className="form-success" role="status"><Check size={16}/>Profile updated successfully.</div>}
     {editing?<div className="profile-actions"><button type="button" className="back-link" disabled={busy} onClick={()=>setEditing(false)}>Cancel</button><button className="primary" disabled={busy}>{busy?<Loader2 className="spin"/>:<Check size={18}/>} Save changes</button></div>:<button type="button" className="primary full" onClick={()=>{setEditing(true);setSaved(false)}}>Edit profile</button>}
     </form></div></div>;
+}
+
+function FeedbackModal({ onClose }: { onClose: () => void }) {
+  const [rating,setRating]=useState(0);const [category,setCategory]=useState("general");const [message,setMessage]=useState("");const [email,setEmail]=useState("");const [busy,setBusy]=useState(false);const [error,setError]=useState("");const [sent,setSent]=useState(false);
+  async function submit(event:FormEvent){event.preventDefault();if(!rating){setError("Please select a rating.");return}setBusy(true);setError("");const {error}=await supabase.functions.invoke("submit-feedback",{body:{rating,category,message,email,website:""}});setBusy(false);if(error)setError("Your feedback could not be sent. Please try again.");else setSent(true)}
+  return <div className="modal-backdrop" role="presentation"><div className="auth-modal feedback-modal" role="dialog" aria-modal="true" aria-labelledby="feedback-title"><button className="icon-btn close" onClick={onClose} aria-label="Close"><X/></button><div className="brand-mark"><MessageSquare/></div><span className="eyebrow">Help us improve</span><h2 id="feedback-title">Send feedback</h2>{sent?<div className="feedback-thanks"><Check/><h3>Thank you!</h3><p>Your feedback has been received.</p><button className="primary full" onClick={onClose}>Done</button></div>:<form onSubmit={submit}><fieldset className="rating-field"><legend>How was your experience? *</legend><div>{[1,2,3,4,5].map(value=><button type="button" key={value} className={rating===value?"selected":""} onClick={()=>setRating(value)} aria-label={`${value} out of 5`}>{value}</button>)}</div></fieldset><label>Feedback about<select value={category} onChange={(e)=>setCategory(e.target.value)}><option value="general">General experience</option><option value="property_search">Finding properties</option><option value="posting">Posting a property</option><option value="account">Account or login</option><option value="bug">Something is not working</option></select></label><label>Your comments<textarea value={message} onChange={(e)=>setMessage(e.target.value)} required minLength={3} maxLength={2000} placeholder="Tell us what worked well or what we can improve."/></label><label>Email (optional)<input type="email" value={email} onChange={(e)=>setEmail(e.target.value)} maxLength={254} placeholder="For a reply from our team"/></label>{error&&<div className="form-error" role="alert"><CircleAlert size={16}/>{error}</div>}<button className="primary full" disabled={busy}>{busy?<Loader2 className="spin"/>:<Send/>}{busy?"Sending…":"Send feedback"}</button></form>}</div></div>;
 }
 
 function StaffMfaModal({ onVerified }: { onVerified: () => void }) {
@@ -2381,6 +2388,7 @@ export default function Portal() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [login, setLogin] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
   const [menu, setMenu] = useState(false);
   const [mine, setMine] = useState<Listing[]>([]);
   const [enquiries, setEnquiries] = useState<PropertyEnquiry[]>([]);
@@ -2543,6 +2551,7 @@ export default function Portal() {
           ))}
         </nav>
         <div className="account">
+          <button className="feedback-button" onClick={() => setShowFeedback(true)}><MessageSquare /> Feedback</button>
           {authReady && !session && (
             <a
               className="interest-compact"
@@ -2653,6 +2662,7 @@ export default function Portal() {
           onSaved={setProfile}
         />
       )}
+      {showFeedback && <FeedbackModal onClose={() => setShowFeedback(false)} />}
     </main>
   );
 }
