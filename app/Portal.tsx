@@ -2552,16 +2552,6 @@ export default function Portal() {
         </nav>
         <div className="account">
           <button className="feedback-button" onClick={() => setShowFeedback(true)}><MessageSquare /> Feedback</button>
-          {authReady && !session && (
-            <a
-              className="interest-compact"
-              href="https://forms.gle/F5cyGACRooUkjys89"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Plus /> List your property free
-            </a>
-          )}
           {session ? (
             <>
               <button className="user-chip" onClick={() => setMenu(!menu)}>

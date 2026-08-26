@@ -36,10 +36,10 @@ test("authentication errors are mapped and sessions are refresh-safe but tab-sco
   assert.doesNotMatch(portal, /mfaRequired/);
 });
 
-test("publisher-interest link is hidden for authenticated users", () => {
+test("publisher-interest link is removed from the header", () => {
   const portal = read("app/Portal.tsx");
-  assert.match(portal, /authReady\s*&&\s*!session\s*&&\s*\(/);
-  assert.match(portal, /className="interest-compact"/);
+  assert.doesNotMatch(portal, /List your property free/);
+  assert.doesNotMatch(portal, /className="interest-compact"/);
 });
 
 test("logout clears privileged state and moderation rendering requires staff", () => {
