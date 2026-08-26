@@ -59,6 +59,16 @@ const CITY_LOCALITIES = {
     "Tatibandh",
     "Telibandha",
   ],
+  Bilaspur: [
+    "Koni",
+    "Mangla",
+    "Mopka",
+    "Nehru Nagar",
+    "Rajkishore Nagar",
+    "Sarkanda",
+    "Torwa",
+    "Vyapar Vihar",
+  ],
   Bangalore: [
     "Electronic City",
     "HSR Layout",
@@ -1375,7 +1385,10 @@ function PostForm({
   const [propertyType, setPropertyType] = useState(
     initial?.property_type || "Apartment",
   );
-  const initialCity = initial?.city === "Bangalore" ? "Bangalore" : "Raipur";
+  const initialCity: SupportedCity =
+    initial?.city && initial.city in CITY_LOCALITIES
+      ? (initial.city as SupportedCity)
+      : "Raipur";
   const initialLocality =
     initial && CITY_LOCALITIES[initialCity].includes(initial.locality as never)
       ? initial.locality

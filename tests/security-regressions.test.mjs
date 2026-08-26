@@ -62,6 +62,15 @@ test("posting fields adapt to the selected property type", () => {
   assert.match(portal, /\["Plot", "Commercial"\]\.includes\(propertyType\)/);
 });
 
+test("Bilaspur and custom localities are available for listing and search", () => {
+  const portal = read("app/Portal.tsx");
+  assert.match(portal, /Bilaspur:\s*\[/);
+  assert.match(portal, /"Sarkanda"/);
+  assert.match(portal, /"Vyapar Vihar"/);
+  assert.match(portal, /Other \/ Add new locality/);
+  assert.match(portal, /Object\.keys\(CITY_LOCALITIES\)/);
+});
+
 test("property badges cannot cover or intercept the video play control", () => {
   const css = read("app/globals.css");
   assert.match(css, /\.tile-play\{z-index:4\}/);
