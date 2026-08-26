@@ -169,6 +169,7 @@ function LoginModal({ onClose }: { onClose: () => void }) {
   const [instagram, setInstagram] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
   const [resendIn, setResendIn] = useState(0);
   const phoneDigits = phone.replace(/\D/g, "");
   const normalized =
@@ -205,20 +206,18 @@ function LoginModal({ onClose }: { onClose: () => void }) {
     setBusy(false);
     if (error) {
       console.warn("OTP request failed");
-      let rateLimited = false;
+      let responseError = "";
       try {
-        rateLimited =
-          (
-            (await (error as { context?: Response }).context
-              ?.clone()
-              .json()) as {
-              error?: string;
-            }
-          )?.error === "otp_rate_limited";
+        responseError =
+          ((await (error as { context?: Response }).context?.clone().json()) as {
+            error?: string;
+          })?.error || "";
       } catch {
         /* invalid provider response */
       }
-      if (rateLimited) {
+      if (responseError === "account_exists" && purpose === "register") {
+        setPhoneError("Account already exists. Please log in.");
+      } else if (responseError === "otp_rate_limited") {
         setResendIn(30 * 60);
         setError(
           "Ten OTP requests are allowed every 30 minutes. Please try again later.",
@@ -236,6 +235,15 @@ function LoginModal({ onClose }: { onClose: () => void }) {
     return true;
   }
   async function startOtp(purpose: "login" | "register" | "reset") {
+    if (!phone.trim()) {
+      setPhoneError("Phone number is mandatory.");
+      return;
+    }
+    if (phoneDigits.length < 10) {
+      setPhoneError("Enter a valid phone number.");
+      return;
+    }
+    setPhoneError("");
     setOtpPurpose(purpose);
     setPassword("");
     setConfirmPassword("");
@@ -381,13 +389,25 @@ function LoginModal({ onClose }: { onClose: () => void }) {
               Mobile number *
               <input
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={(e) => {
+                  setPhone(e.target.value);
+                  if (phoneError) setPhoneError("");
+                }}
                 inputMode="tel"
                 autoComplete="tel"
                 required
-                aria-describedby="phone-help"
+                aria-describedby={
+                  phoneError ? "phone-help phone-error" : "phone-help"
+                }
+                aria-invalid={Boolean(phoneError)}
               />
             </label>
+            {phoneError && (
+              <div id="phone-error" className="form-error" role="alert">
+                <CircleAlert size={16} />
+                {phoneError}
+              </div>
+            )}
             <small id="phone-help">
               Indian 10-digit numbers automatically receive the +91 country
               code.
@@ -411,7 +431,7 @@ function LoginModal({ onClose }: { onClose: () => void }) {
             <button
               type="button"
               className="back-link auth-option"
-              disabled={busy || phoneDigits.length < 10}
+              disabled={busy}
               onClick={() => startOtp("login")}
             >
               Log in with OTP
@@ -419,7 +439,7 @@ function LoginModal({ onClose }: { onClose: () => void }) {
             <button
               type="button"
               className="back-link auth-option"
-              disabled={busy || phoneDigits.length < 10}
+              disabled={busy}
               onClick={() => startOtp("reset")}
             >
               Forgot password? Reset it with OTP
@@ -427,7 +447,7 @@ function LoginModal({ onClose }: { onClose: () => void }) {
             <button
               type="button"
               className="back-link auth-option"
-              disabled={busy || phoneDigits.length < 10}
+              disabled={busy}
               onClick={() => startOtp("register")}
             >
               New user? Create account
@@ -596,6 +616,35 @@ function LoginModal({ onClose }: { onClose: () => void }) {
       </div>
     </div>
   );
+}
+
+function ProfileModal({ profile, onClose, onSaved }: { profile: Profile; onClose: () => void; onSaved: (profile: Profile) => void }) {
+  const [firstName, setFirstName] = useState(profile.first_name);
+  const [lastName, setLastName] = useState(profile.last_name);
+  const [email, setEmail] = useState(profile.email);
+  const [instagram, setInstagram] = useState(profile.instagram_id || "");
+  const [editing, setEditing] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [saved, setSaved] = useState(false);
+  async function save(event: FormEvent) {
+    event.preventDefault();setBusy(true);setError("");setSaved(false);
+    const { data, error } = await supabase.rpc("update_my_profile", { p_first_name: firstName, p_last_name: lastName, p_email: email, p_instagram_id: instagram || null });
+    setBusy(false);
+    if (error || !data) { console.warn("Profile update failed", { code: error?.code });setError("Your profile could not be updated. Check the details and try again.");return; }
+    onSaved(data as Profile);setEditing(false);setSaved(true);
+  }
+  return <div className="modal-backdrop" role="presentation"><div className="auth-modal profile-modal" role="dialog" aria-modal="true" aria-labelledby="profile-title">
+    <button className="icon-btn close" onClick={onClose} aria-label="Close"><X /></button><div className="brand-mark"><UserRound /></div><span className="eyebrow">My account</span><h2 id="profile-title">Profile details</h2>
+    <form onSubmit={save}><div className="form-grid two">
+      <label>First name<input value={firstName} onChange={(e)=>setFirstName(e.target.value)} disabled={!editing} required maxLength={80}/></label>
+      <label>Last name<input value={lastName} onChange={(e)=>setLastName(e.target.value)} disabled={!editing} required maxLength={80}/></label>
+    </div><label>Email address<input type="email" value={email} onChange={(e)=>setEmail(e.target.value)} disabled={!editing} required maxLength={254}/></label>
+    <label>Instagram ID<input value={instagram} onChange={(e)=>setInstagram(e.target.value)} disabled={!editing} placeholder="Not provided" maxLength={31} pattern="@?[A-Za-z0-9._]{1,30}"/></label>
+    <label>Verified phone<input value={profile.phone_e164 || "Not available"} disabled/></label><label>Account type<input value={profile.role === "poster" ? "Property user" : profile.role} disabled/></label>
+    {error&&<div className="form-error" role="alert"><CircleAlert size={16}/>{error}</div>}{saved&&<div className="form-success" role="status"><Check size={16}/>Profile updated successfully.</div>}
+    {editing?<div className="profile-actions"><button type="button" className="back-link" disabled={busy} onClick={()=>setEditing(false)}>Cancel</button><button className="primary" disabled={busy}>{busy?<Loader2 className="spin"/>:<Check size={18}/>} Save changes</button></div>:<button type="button" className="primary full" onClick={()=>{setEditing(true);setSaved(false)}}>Edit profile</button>}
+    </form></div></div>;
 }
 
 function StaffMfaModal({ onVerified }: { onVerified: () => void }) {
@@ -2331,6 +2380,7 @@ export default function Portal() {
   const [authReady, setAuthReady] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [login, setLogin] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   const [menu, setMenu] = useState(false);
   const [mine, setMine] = useState<Listing[]>([]);
   const [enquiries, setEnquiries] = useState<PropertyEnquiry[]>([]);
@@ -2431,6 +2481,7 @@ export default function Portal() {
   async function logout() {
     setView("feed");
     setMenu(false);
+    setShowProfile(false);
     setProfile(null);
     setMine([]);
     setEnquiries([]);
@@ -2511,6 +2562,14 @@ export default function Portal() {
               </button>
               {menu && (
                 <div className="account-menu">
+                  <button
+                    onClick={() => {
+                      setShowProfile(true);
+                      setMenu(false);
+                    }}
+                  >
+                    <UserRound /> My profile
+                  </button>
                   <button onClick={() => guarded("dashboard")}>
                     <UserRound /> My posts
                   </button>
@@ -2587,6 +2646,13 @@ export default function Portal() {
         ))}
       </nav>
       {login && <LoginModal onClose={() => setLogin(false)} />}
+      {showProfile && profile && (
+        <ProfileModal
+          profile={profile}
+          onClose={() => setShowProfile(false)}
+          onSaved={setProfile}
+        />
+      )}
     </main>
   );
 }

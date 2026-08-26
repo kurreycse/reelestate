@@ -28,6 +28,8 @@ test("authentication errors are mapped and sessions are refresh-safe but tab-sco
   assert.match(otpFunction, /p_limit:10,p_window_seconds:1800/);
   assert.match(otpFunction, /crypto\.subtle\.digest/);
   assert.match(otpFunction, /create_user:purpose==="register"/);
+  assert.match(otpFunction, /purpose==="register".*phone_e164.*account_exists/);
+  assert.match(portal, /Account already exists\. Please log in\./);
   assert.match(portal, /Forgot password\? Reset it with OTP/);
   assert.match(portal, /mode === "reset-password"/);
   assert.match(portal, /Your phone is verified\. Set a new password/);
@@ -101,6 +103,18 @@ test("new registration stores an optional validated Instagram handle", () => {
     migration,
     /regexp_replace\(trim\(coalesce\(p_instagram_id,''\)\),'\^@',''\)/,
   );
+});
+
+test("users can view and safely edit their own profile", () => {
+  const portal = read("app/Portal.tsx");
+  const migration = read("supabase/migrations/202608240001_edit_my_profile.sql");
+  assert.match(portal, /My profile/);
+  assert.match(portal, /Profile details/);
+  assert.match(portal, /rpc\("update_my_profile"/);
+  assert.match(portal, /Verified phone/);
+  assert.match(migration, /where id=auth\.uid\(\)/);
+  assert.match(migration, /grant execute on function public\.update_my_profile/);
+  assert.doesNotMatch(migration, /update public\.profiles set.*role/);
 });
 
 test("listing creation and dashboard reads use restricted interfaces", () => {
