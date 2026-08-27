@@ -28,10 +28,15 @@ test("authentication errors are mapped and sessions are refresh-safe but tab-sco
   assert.match(otpFunction, /p_limit:10,p_window_seconds:1800/);
   assert.match(otpFunction, /crypto\.subtle\.digest/);
   assert.match(otpFunction, /create_user:purpose==="register"/);
-  assert.match(otpFunction, /purpose==="register".*phone_e164.*account_exists/);
+  assert.match(otpFunction, /phone_e164/);
+  assert.match(otpFunction, /purpose==="register"&&profile.*account_exists/);
   assert.match(portal, /Account already exists\. Please log in\./);
-  assert.match(otpFunction, /purpose==="login"&&!profile.*account_not_found/);
+  assert.match(
+    otpFunction,
+    /purpose==="login"\|\|purpose==="reset"\).*&&!profile.*account_not_found/,
+  );
   assert.match(portal, /Account not found\. Please register first\./);
+  assert.match(portal, /purpose === "login" \|\| purpose === "reset"/);
   assert.match(portal, /Forgot password\? Reset it with OTP/);
   assert.match(portal, /mode === "reset-password"/);
   assert.match(portal, /Your phone is verified\. Set a new password/);
