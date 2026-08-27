@@ -1,5 +1,5 @@
 import {createClient} from "@supabase/supabase-js";
-const origins=new Set(["https://reelestate.co.in","https://www.reelestate.co.in","http://localhost:3000","http://localhost:5173","http://localhost:5174"]);
+const origins=new Set(["https://reelestate.co.in","https://www.reelestate.co.in","https://reelestate-property-video.rabartkurrey.chatgpt.site","http://localhost:3000","http://localhost:3001","http://localhost:5173","http://localhost:5174"]);
 const headers=(origin:string|null)=>({"access-control-allow-origin":origin&&origins.has(origin)?origin:"https://reelestate.co.in","access-control-allow-headers":"authorization, x-client-info, apikey, content-type","access-control-allow-methods":"POST, OPTIONS","content-type":"application/json","cache-control":"no-store",vary:"Origin"});
 const reply=(body:unknown,status:number,origin:string|null)=>new Response(JSON.stringify(body),{status,headers:headers(origin)});
 const digest=async(value:string)=>Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(value)))).map(byte=>byte.toString(16).padStart(2,"0")).join("");
