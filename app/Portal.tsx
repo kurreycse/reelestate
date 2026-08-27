@@ -228,6 +228,8 @@ function LoginModal({ onClose }: { onClose: () => void }) {
       }
       if (responseError === "account_exists" && purpose === "register") {
         setPhoneError("Account already exists. Please log in.");
+      } else if (responseError === "account_not_found" && purpose === "login") {
+        setPhoneError("Account not found. Please register first.");
       } else if (responseError === "otp_rate_limited") {
         setResendIn(30 * 60);
         setError(
