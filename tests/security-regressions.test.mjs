@@ -18,6 +18,8 @@ test("authentication errors are mapped and sessions are refresh-safe but tab-sco
   assert.match(portal, /updatedAttempts\.length >= OTP_SEND_LIMIT/);
   assert.match(portal, /OTP_SEND_LIMIT = 10/);
   assert.match(portal, /OTP_WINDOW_MS = 30 \* 60 \* 1000/);
+  assert.match(portal, /otpAttemptsKey\(normalized\)/);
+  assert.match(portal, /recentOtpAttempts\(normalized, now\)/);
   assert.match(portal, /request-phone-otp/);
   assert.match(portal, /supabase\.auth\.signInWithPassword/);
   assert.match(portal, /supabase\.auth\.updateUser\(\{\s*password/);

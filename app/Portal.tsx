@@ -104,9 +104,13 @@ function safeAuthError(code?: string) {
 const OTP_SEND_LIMIT = 10;
 const OTP_WINDOW_MS = 30 * 60 * 1000;
 const OTP_ATTEMPTS_KEY = "reelestate-otp-send-attempts";
-function recentOtpAttempts(now = Date.now()) {
+const otpAttemptsKey = (phoneNumber: string) =>
+  `${OTP_ATTEMPTS_KEY}:${phoneNumber}`;
+function recentOtpAttempts(phoneNumber: string, now = Date.now()) {
   try {
-    const stored = JSON.parse(localStorage.getItem(OTP_ATTEMPTS_KEY) || "[]");
+    const stored = JSON.parse(
+      localStorage.getItem(otpAttemptsKey(phoneNumber)) || "[]",
+    );
     return Array.isArray(stored)
       ? stored.filter(
           (value): value is number =>
@@ -195,7 +199,7 @@ function LoginModal({ onClose }: { onClose: () => void }) {
   }, [resendIn]);
   async function requestOtp(purpose = otpPurpose) {
     const now = Date.now();
-    const attempts = recentOtpAttempts(now);
+    const attempts = recentOtpAttempts(normalized, now);
     if (attempts.length >= OTP_SEND_LIMIT) {
       const wait = Math.max(
         1,
@@ -208,7 +212,10 @@ function LoginModal({ onClose }: { onClose: () => void }) {
       return false;
     }
     const updatedAttempts = [...attempts, now];
-    localStorage.setItem(OTP_ATTEMPTS_KEY, JSON.stringify(updatedAttempts));
+    localStorage.setItem(
+      otpAttemptsKey(normalized),
+      JSON.stringify(updatedAttempts),
+    );
     setBusy(true);
     setError("");
     const { error } = await supabase.functions.invoke("request-phone-otp", {
