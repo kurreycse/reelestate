@@ -455,6 +455,14 @@ function LoginModal({ onClose }: { onClose: () => void }) {
               type="button"
               className="back-link auth-option"
               disabled={busy}
+              onClick={() => startOtp("register")}
+            >
+              New user? Create account
+            </button>
+            <button
+              type="button"
+              className="back-link auth-option"
+              disabled={busy}
               onClick={() => startOtp("login")}
             >
               Log in with OTP
@@ -466,14 +474,6 @@ function LoginModal({ onClose }: { onClose: () => void }) {
               onClick={() => startOtp("reset")}
             >
               Forgot password? Reset it with OTP
-            </button>
-            <button
-              type="button"
-              className="back-link auth-option"
-              disabled={busy}
-              onClick={() => startOtp("register")}
-            >
-              New user? Create account
             </button>
           </form>
         )}

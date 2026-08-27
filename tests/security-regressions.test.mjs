@@ -25,6 +25,13 @@ test("authentication errors are mapped and sessions are refresh-safe but tab-sco
   assert.match(portal, /supabase\.auth\.updateUser\(\{\s*password/);
   assert.match(portal, />\s*Log in with OTP\s*</);
   assert.match(portal, /New user\? Create account/);
+  assert.ok(
+    portal.indexOf("New user? Create account") <
+      portal.indexOf("Log in with OTP") &&
+      portal.indexOf("Log in with OTP") <
+        portal.indexOf("Forgot password? Reset it with OTP"),
+    "authentication options should show registration, OTP login, then password reset",
+  );
   assert.match(portal, /password\.length < 8/);
   const otpFunction = read("supabase/functions/request-phone-otp/index.ts");
   assert.match(otpFunction, /p_limit:10,p_window_seconds:1800/);
