@@ -1178,15 +1178,15 @@ function Marketplace({ onRequireLogin }: { onRequireLogin: () => void }) {
     <section className="marketplace">
       <div className="market-hero">
         <div>
-          <span className="eyebrow">Reviewed video properties</span>
+          <span className="eyebrow">100% free · Reviewed video properties</span>
           <h1>
             Find a home you can
             <br />
             <em>see yourself in.</em>
           </h1>
           <p>
-            Browse short, verified walkthroughs from owners and agents across
-            India.
+            Browse properties for free. Register and upload your own property
+            reels for free—there are no listing charges.
           </p>
         </div>
       </div>
@@ -1400,7 +1400,7 @@ function Marketplace({ onRequireLogin }: { onRequireLogin: () => void }) {
           </span>
         </div>
       </div>
-      {showDummyNotice && <div className="modal-backdrop" role="presentation" onMouseDown={() => setShowDummyNotice(false)}><div className="auth-modal dummy-notice" role="dialog" aria-modal="true" aria-labelledby="dummy-notice-title" onMouseDown={(event) => event.stopPropagation()}><button className="icon-btn close" onClick={() => setShowDummyNotice(false)} aria-label="Close"><X /></button><div className="brand-mark"><Building2 /></div><span className="eyebrow">Preview listing</span><h2 id="dummy-notice-title">Thanks for visiting!</h2><p>This property reel was added for testing. Register and upload your first real property reel to start connecting with buyers and tenants.</p><button className="primary full" onClick={() => { setShowDummyNotice(false); onRequireLogin(); }}><Plus /> Register &amp; upload your first reel</button></div></div>}
+      {showDummyNotice && <div className="modal-backdrop" role="presentation" onMouseDown={() => setShowDummyNotice(false)}><div className="auth-modal dummy-notice" role="dialog" aria-modal="true" aria-labelledby="dummy-notice-title" onMouseDown={(event) => event.stopPropagation()}><button className="icon-btn close" onClick={() => setShowDummyNotice(false)} aria-label="Close"><X /></button><div className="brand-mark"><Building2 /></div><span className="eyebrow">Preview listing</span><h2 id="dummy-notice-title">Upload your reels for free</h2><p>Thanks for visiting! This property reel was added for testing. Register now and upload your real property reel for free to connect with buyers and tenants.</p><button className="primary full" onClick={() => { setShowDummyNotice(false); onRequireLogin(); }}><Plus /> Upload my reel for free</button></div></div>}
     </section>
   );
 }
@@ -1615,8 +1615,8 @@ function PostForm({
         <div className="review-note">
           <ShieldCheck />
           <span>
-            <b>Every post is reviewed</b>
-            <small>Nothing goes live without approval.</small>
+            <b>Free to upload</b>
+            <small>Every post is reviewed before it goes live.</small>
           </span>
         </div>
       </header>
@@ -2184,7 +2184,7 @@ function Dashboard({
           <p>Track every draft, review and live listing in one place.</p>
         </div>
         <button className="primary" onClick={onPost}>
-          <Plus /> New listing
+          <Plus /> Post a free listing
         </button>
       </header>
       <div className="stats">
@@ -2210,11 +2210,11 @@ function Dashboard({
           <Video />
           <h2>Your first walkthrough awaits.</h2>
           <p>
-            Post a short property video and we’ll review it before it reaches
-            buyers and tenants.
+            Post a short property video for free and we’ll review it before it
+            reaches buyers and tenants.
           </p>
           <button className="primary" onClick={onPost}>
-            Create listing
+            Create free listing
           </button>
         </div>
       ) : (
@@ -2578,7 +2578,7 @@ export default function Portal() {
   );
   const nav = [
     { id: "feed" as View, label: "Discover", icon: Home },
-    { id: "post" as View, label: "Post", icon: Plus },
+    { id: "post" as View, label: "Post for free", icon: Plus },
     { id: "dashboard" as View, label: "My posts", icon: Video },
   ];
   if (isStaff) nav.push({ id: "admin", label: "Review", icon: ShieldCheck });
