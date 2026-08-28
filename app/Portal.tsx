@@ -46,6 +46,7 @@ import {
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
 import { recordEngagement } from "../lib/analytics";
 import type { Listing, Profile, PropertyEnquiry } from "../lib/types";
+import { DUMMY_LISTINGS, isDummyListing } from "../lib/dummyListings";
 
 type View = "feed" | "post" | "dashboard" | "admin";
 const CITY_LOCALITIES = {
@@ -809,9 +810,11 @@ function StaffMfaModal({ onVerified }: { onVerified: () => void }) {
 function PropertyTile({
   listing,
   onRequireLogin,
+  onDummyAction,
 }: {
   listing: Listing;
   onRequireLogin: () => void;
+  onDummyAction: () => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const completionSent = useRef(false);
@@ -819,6 +822,7 @@ function PropertyTile({
   const [videoUrl, setVideoUrl] = useState<string>();
   const [videoBusy, setVideoBusy] = useState(false);
   const toggle = async () => {
+    if (isDummyListing(listing)) return;
     const v = videoRef.current;
     if (!v || videoBusy) return;
     if (!videoUrl) {
@@ -861,7 +865,14 @@ function PropertyTile({
   return (
     <article className="property-tile">
       <div className="tile-media">
-        <video
+        {isDummyListing(listing) ? <div
+          className="dummy-poster"
+          style={{
+            backgroundPosition: `${(listing.poster_index % 5) * 25}% ${Math.floor(listing.poster_index / 5) * 33.333}%`,
+          }}
+          aria-label={`${listing.title} property preview`}
+          role="img"
+        /> : <video
           ref={videoRef}
           poster={listing.poster_url}
           playsInline
@@ -880,10 +891,10 @@ function PropertyTile({
               recordEngagement(listing.id, "complete");
             }
           }}
-        />
+        />}
         <button
           className="tile-play"
-          onClick={toggle}
+          onClick={isDummyListing(listing) ? onDummyAction : toggle}
           disabled={videoBusy}
           aria-label={`${playing ? "Pause" : "Play"} ${listing.title}`}
         >
@@ -936,16 +947,12 @@ function PropertyTile({
           </div>
         )}
         <p className="tile-description">{listing.description}</p>
-        <a
-          className="tile-details"
-          href={`/property/${listing.id}`}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          View full details
-        </a>
+        {isDummyListing(listing) ? <button className="tile-details" onClick={onDummyAction}>View full details</button> : <a className="tile-details" href={`/property/${listing.id}`} target="_blank" rel="noopener noreferrer">View full details</a>}
         <div className="tile-actions">
-          {listing.contact_phone ? (
+          {isDummyListing(listing) ? <>
+            <button onClick={onDummyAction}><Phone /> Call</button>
+            <button onClick={onDummyAction}><MessageCircle /> WhatsApp</button>
+          </> : listing.contact_phone ? (
             <>
               {listing.contact_preference !== "whatsapp" && (
                 <a
@@ -979,7 +986,7 @@ function PropertyTile({
 
 function Marketplace({ onRequireLogin }: { onRequireLogin: () => void }) {
   const PAGE_SIZE = 18;
-  const [items, setItems] = useState<Listing[]>([]);
+  const [items, setItems] = useState<Listing[]>(DUMMY_LISTINGS);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
@@ -996,6 +1003,7 @@ function Marketplace({ onRequireLogin }: { onRequireLogin: () => void }) {
   const [furnishing, setFurnishing] = useState("all");
   const [postedBy, setPostedBy] = useState("all");
   const [databaseLocalities, setDatabaseLocalities] = useState<string[]>([]);
+  const [showDummyNotice, setShowDummyNotice] = useState(false);
   const cities = Object.keys(CITY_LOCALITIES) as SupportedCity[];
   const localities = useMemo(
     () =>
@@ -1055,9 +1063,10 @@ function Marketplace({ onRequireLogin }: { onRequireLogin: () => void }) {
         p_cursor_id: cursor?.id || null,
         p_limit: PAGE_SIZE + 1,
       });
-      if (error)
+      if (error) {
         setLoadError("Properties could not be loaded. Please try again.");
-      else {
+        if (reset) setItems(DUMMY_LISTINGS);
+      } else {
         const rows = (data || []) as Listing[];
         const page = rows.slice(0, PAGE_SIZE);
         const response = page.length
@@ -1087,7 +1096,7 @@ function Marketplace({ onRequireLogin }: { onRequireLogin: () => void }) {
         );
         setItems((current) =>
           reset
-            ? withPosters
+            ? [...DUMMY_LISTINGS, ...withPosters]
             : [
                 ...current,
                 ...withPosters.filter(
@@ -1144,6 +1153,27 @@ function Marketplace({ onRequireLogin }: { onRequireLogin: () => void }) {
     setFurnishing("all");
     setPostedBy("all");
   };
+  const visibleItems = useMemo(() => items.filter((listing) => {
+    if (!isDummyListing(listing)) return true;
+    const search = appliedQuery.toLowerCase();
+    if (search && !`${listing.title} ${listing.city} ${listing.locality} ${listing.property_type}`.toLowerCase().includes(search)) return false;
+    if (purpose !== "all" && listing.purpose !== purpose) return false;
+    if (type !== "all" && listing.property_type !== type) return false;
+    if (city !== "all" && listing.city !== city) return false;
+    if (locality !== "all" && listing.locality !== locality) return false;
+    if (bedrooms !== "all" && listing.bedrooms !== Number(bedrooms)) return false;
+    if (furnishing !== "all" && listing.furnishing_status !== furnishing) return false;
+    if (postedBy !== "all" && listing.posted_by !== postedBy) return false;
+    const rupees = listing.price_minor / 100;
+    if (budget === "low" && rupees >= (listing.purpose === "rent" ? 25000 : 10000000)) return false;
+    if (budget === "mid" && (rupees < (listing.purpose === "rent" ? 25000 : 10000000) || rupees > (listing.purpose === "rent" ? 50000 : 30000000))) return false;
+    if (budget === "high" && rupees <= (listing.purpose === "rent" ? 50000 : 30000000)) return false;
+    const sqft = listing.carpet_area_sqft || 0;
+    if (area === "small" && sqft >= 1000) return false;
+    if (area === "mid" && (sqft < 1000 || sqft > 2000)) return false;
+    if (area === "large" && sqft <= 2000) return false;
+    return true;
+  }), [items, appliedQuery, purpose, type, city, locality, budget, bedrooms, area, furnishing, postedBy]);
   return (
     <section className="marketplace">
       <div className="market-hero">
@@ -1299,8 +1329,8 @@ function Marketplace({ onRequireLogin }: { onRequireLogin: () => void }) {
         <div>
           <span className="eyebrow">Properties for you</span>
           <h2>
-            {items.length} video{" "}
-            {items.length === 1 ? "property" : "properties"} loaded
+            {visibleItems.length} video{" "}
+            {visibleItems.length === 1 ? "property" : "properties"} loaded
           </h2>
         </div>
         <span className="newest-label">Newest first</span>
@@ -1309,7 +1339,7 @@ function Marketplace({ onRequireLogin }: { onRequireLogin: () => void }) {
         <div className="market-loading">
           <Loader2 className="spin" /> Loading properties…
         </div>
-      ) : loadError && !items.length ? (
+      ) : loadError && !visibleItems.length ? (
         <div className="empty-panel">
           <CircleAlert />
           <h2>Unable to load properties</h2>
@@ -1318,14 +1348,15 @@ function Marketplace({ onRequireLogin }: { onRequireLogin: () => void }) {
             Try again
           </button>
         </div>
-      ) : items.length ? (
+      ) : visibleItems.length ? (
         <>
           <div className="property-grid">
-            {items.map((x) => (
+            {visibleItems.map((x) => (
               <PropertyTile
                 key={x.id}
                 listing={x}
                 onRequireLogin={onRequireLogin}
+                onDummyAction={() => setShowDummyNotice(true)}
               />
             ))}
           </div>
@@ -1369,6 +1400,7 @@ function Marketplace({ onRequireLogin }: { onRequireLogin: () => void }) {
           </span>
         </div>
       </div>
+      {showDummyNotice && <div className="modal-backdrop" role="presentation" onMouseDown={() => setShowDummyNotice(false)}><div className="auth-modal dummy-notice" role="dialog" aria-modal="true" aria-labelledby="dummy-notice-title" onMouseDown={(event) => event.stopPropagation()}><button className="icon-btn close" onClick={() => setShowDummyNotice(false)} aria-label="Close"><X /></button><div className="brand-mark"><Building2 /></div><span className="eyebrow">Preview listing</span><h2 id="dummy-notice-title">Thanks for visiting!</h2><p>This property reel was added for testing. Register and upload your first real property reel to start connecting with buyers and tenants.</p><button className="primary full" onClick={() => { setShowDummyNotice(false); onRequireLogin(); }}><Plus /> Register &amp; upload your first reel</button></div></div>}
     </section>
   );
 }
