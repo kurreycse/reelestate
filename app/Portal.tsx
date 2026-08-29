@@ -19,7 +19,6 @@ import {
   CircleAlert,
   Clock3,
   Eye,
-  HeartHandshake,
   Home,
   Loader2,
   LogOut,
@@ -1178,17 +1177,20 @@ function Marketplace({ onRequireLogin }: { onRequireLogin: () => void }) {
     <section className="marketplace">
       <div className="market-hero">
         <div>
-          <span className="eyebrow">100% free · Reviewed video properties</span>
+          <span className="eyebrow">Property discovery, built around video</span>
           <h1>
-            Find a home you can
+            Find property by watching,
             <br />
-            <em>see yourself in.</em>
+            <em>not scrolling.</em>
           </h1>
           <p>
-            Browse properties for free. Register and upload your own property
-            reels for free—there are no listing charges.
+            ReelEstate is a free, video-first property portal. Owners, agents
+            and builders upload short property walkthroughs; buyers and tenants
+            search by location and budget, compare clear property details and
+            connect directly through calls, WhatsApp or enquiries.
           </p>
         </div>
+        <div className="comparison-card"><table><caption>Social media and property portal comparison</caption><thead><tr><th scope="col">Social Media</th><th scope="col">Property Portal</th></tr></thead><tbody>{[["Entertainment algorithm","Location & budget search"],["Catchy captions","Structured property details"],["Visibility fades fast","Listing stays live"],["Paid ads required","Free organic reach"],["Likes & followers","Calls, WhatsApp & enquiries"]].map(([social,portal])=><tr key={social}><td>{social}</td><td><Check/>{portal}</td></tr>)}</tbody></table></div>
       </div>
       <form
         className="search-panel"
@@ -1325,7 +1327,7 @@ function Marketplace({ onRequireLogin }: { onRequireLogin: () => void }) {
           Clear all
         </button>
       </div>
-      <div className="results-head">
+      <div className="results-head" id="property-reels">
         <div>
           <span className="eyebrow">Properties for you</span>
           <h2>
@@ -1384,22 +1386,11 @@ function Marketplace({ onRequireLogin }: { onRequireLogin: () => void }) {
           </button>
         </div>
       )}
-      <div className="market-note">
-        <ShieldCheck />
-        <div>
-          <b>Every live listing is reviewed.</b>
-          <span>
-            Videos and property details are checked before appearing in search.
-          </span>
-        </div>
-        <HeartHandshake />
-        <div>
-          <b>Connect directly.</b>
-          <span>
-            No long lead forms—call or message when a property feels right.
-          </span>
-        </div>
-      </div>
+      <section className="about-reelestate">
+        <span className="eyebrow">About ReelEstate</span>
+        <h2>A focused marketplace for people who want to see the property before they visit.</h2>
+        <p>ReelEstate is a free property-reel platform where buyers and tenants watch short walkthroughs, compare useful details and connect directly. Owners, agents and builders get a simple way to make every property video searchable and actionable.</p>
+      </section>
       {feedbackListing&&<FeedbackModal listing={feedbackListing} onClose={()=>setFeedbackListing(null)} onUpload={()=>{setFeedbackListing(null);onRequireLogin()}}/>}
     </section>
   );
