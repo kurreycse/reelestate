@@ -10,6 +10,7 @@ import {
 } from "react";
 import type { Session } from "@supabase/supabase-js";
 import Image from "next/image";
+import Link from "next/link";
 import {
   ArrowLeft,
   Building2,
@@ -634,7 +635,8 @@ function LoginModal({ onClose }: { onClose: () => void }) {
           </div>
         )}
         <p className="legal">
-          By continuing, you agree to our Terms and Privacy Policy.
+          By continuing, you agree to our <Link href="/terms-conditions">Terms</Link>{" "}
+          and <Link href="/privacy">Privacy Policy</Link>.
         </p>
       </div>
     </div>
