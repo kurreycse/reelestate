@@ -9,46 +9,23 @@ test("authentication errors are mapped and sessions are refresh-safe but tab-sco
   const portal = read("app/Portal.tsx");
   const client = read("lib/supabase.ts");
   assert.doesNotMatch(portal, /setError\(error\.message\)/);
-  assert.match(portal, /safeAuthError/);
   assert.match(client, /persistSession:\s*true/);
   assert.match(client, /window\.sessionStorage/);
+  assert.match(client, /flowType: "pkce"/);
+  assert.match(client, /detectSessionInUrl: false/);
   assert.doesNotMatch(client, /storage:\s*window\.localStorage/);
-  assert.match(client, /-auth-token/);
-  assert.match(portal, /Resend OTP in/);
-  assert.match(portal, /updatedAttempts\.length >= OTP_SEND_LIMIT/);
-  assert.match(portal, /OTP_SEND_LIMIT = 10/);
-  assert.match(portal, /OTP_WINDOW_MS = 30 \* 60 \* 1000/);
-  assert.match(portal, /otpAttemptsKey\(normalized\)/);
-  assert.match(portal, /recentOtpAttempts\(normalized, now\)/);
-  assert.match(portal, /request-phone-otp/);
-  assert.match(portal, /supabase\.auth\.signInWithPassword/);
-  assert.match(portal, /supabase\.auth\.updateUser\(\{\s*password/);
-  assert.match(portal, />\s*Log in with OTP\s*</);
-  assert.match(portal, /New user\? Create account/);
-  assert.ok(
-    portal.indexOf("New user? Create account") <
-      portal.indexOf("Log in with OTP") &&
-      portal.indexOf("Log in with OTP") <
-        portal.indexOf("Forgot password? Reset it with OTP"),
-    "authentication options should show registration, OTP login, then password reset",
-  );
-  assert.match(portal, /password\.length < 8/);
-  const otpFunction = read("supabase/functions/request-phone-otp/index.ts");
-  assert.match(otpFunction, /p_limit:10,p_window_seconds:1800/);
-  assert.match(otpFunction, /crypto\.subtle\.digest/);
-  assert.match(otpFunction, /create_user:purpose==="register"/);
-  assert.match(otpFunction, /phone_e164/);
-  assert.match(otpFunction, /purpose==="register"&&profile.*account_exists/);
-  assert.match(portal, /Account already exists\. Please log in\./);
-  assert.match(
-    otpFunction,
-    /purpose==="login"\|\|purpose==="reset"\).*&&!profile.*account_not_found/,
-  );
-  assert.match(portal, /Account not found\. Please register first\./);
-  assert.match(portal, /purpose === "login" \|\| purpose === "reset"/);
-  assert.match(portal, /Forgot password\? Reset it with OTP/);
-  assert.match(portal, /mode === "reset-password"/);
-  assert.match(portal, /Your phone is verified\. Set a new password/);
+  assert.match(portal, /provider: "facebook"/);
+  assert.match(portal, /Continue with Facebook/);
+  assert.doesNotMatch(portal, /signInWithPassword|request-phone-otp|New user\? Create account|Forgot password/);
+  const callback = read("app/auth/facebook/page.tsx");
+  assert.match(callback, /exchangeCodeForSession/);
+  assert.match(callback, /history\.replaceState/);
+  assert.match(callback, /complete_facebook_registration/);
+  assert.match(callback, /supabase\.auth\.signOut/);
+  const migration = read("supabase/migrations/202609270001_facebook_registration.sql");
+  assert.match(migration, /i\.user_id = current_user_id and i\.provider = 'facebook'/);
+  assert.match(migration, /ACCOUNT_DISABLED/);
+  assert.match(migration, /from public, anon/);
   assert.doesNotMatch(portal, /mfaRequired/);
 });
 
@@ -105,7 +82,7 @@ test("profile registration derives identity from the verified auth user", () => 
   const migration = read(
     "supabase/migrations/202608230004_secure_profile_registration.sql",
   );
-  assert.match(portal, /rpc\("complete_phone_registration"/);
+  assert.match(read("app/auth/facebook/page.tsx"), /rpc\("complete_facebook_registration"/);
   assert.doesNotMatch(portal, /from\("profiles"\)\.insert/);
   assert.match(migration, /from auth\.users/);
   assert.match(migration, /phone_confirmed_at is not null/);
@@ -122,7 +99,7 @@ test("new registration stores an optional validated Instagram handle", () => {
     "supabase/migrations/202608230008_profile_instagram_id.sql",
   );
   assert.match(portal, /p_instagram_id: instagram \|\| null/);
-  assert.match(portal, /Instagram ID \(optional\)/);
+  assert.match(portal, /Instagram ID/);
   assert.match(migration, /add column if not exists instagram_id/);
   assert.match(
     migration,

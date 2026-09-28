@@ -21,6 +21,7 @@ export const supabase = createClient(url || "https://placeholder.supabase.co", k
     persistSession: true,
     storage: typeof window !== "undefined" ? window.sessionStorage : undefined,
     autoRefreshToken: true,
+    flowType: "pkce",
     detectSessionInUrl: false,
   },
 });
