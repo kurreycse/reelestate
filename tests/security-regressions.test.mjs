@@ -43,6 +43,9 @@ test("Instagram reel import shows connected reels inline with multi-select playb
   const callback = read("app/auth/insta/callback/page.tsx");
   const finalizer = read("supabase/functions/finalize-property-listing/index.ts");
   const sourceMigration = read("supabase/migrations/202609280001_instagram_listing_source_url.sql");
+  const linkOnlyMigration = read("supabase/migrations/202609280002_instagram_link_only_listings.sql");
+  const propertyEngagement = read("app/property/[id]/PropertyEngagement.tsx");
+  const picker = portal.slice(portal.indexOf("function InstagramReelPicker"), portal.indexOf("function Dashboard"));
   assert.match(route, /graph\.instagram\.com\/v20\.0\/me\/media/);
   assert.match(route, /media_product_type/);
   assert.match(route, /item\.media_product_type === "REELS"/);
@@ -57,22 +60,35 @@ test("Instagram reel import shows connected reels inline with multi-select playb
   assert.match(portal, /Complete the title, price, city, locality/);
   assert.match(portal, /aria-expanded=\{expandedReelIds\.includes\(reel\.id\)\}/);
   assert.match(portal, /localStorage\.setItem\(instagramReelDraftStorageKey\(\), JSON\.stringify\(next\)\)/);
-  assert.match(portal, /Draft auto-saved on this device/);
+  assert.match(portal, /Only details are drafted locally/);
   assert.match(portal, /Save to database and submit for review/);
   assert.match(styles, /\.instagram-details-toggle/);
   assert.match(portal, /playsInline/);
-  assert.match(portal, /onImportReels/);
+  assert.match(picker, /supabase\.functions\.invoke\("finalize-property-listing"/);
+  assert.match(picker, /video_path: null/);
+  assert.match(picker, /instagram_media_id: reel\.id/);
+  assert.doesNotMatch(picker, /storage\.from\("property-videos"\)/);
+  assert.doesNotMatch(picker, /setView\("post"\)/);
   assert.match(portal, /instagramQueuePosition/);
   assert.match(portal, /window\.location\.assign\(authUrl\)/);
   assert.doesNotMatch(portal, /window\.open\(authUrl/);
   assert.match(callback, /instagram=connected/);
   assert.match(config, /media-src .*cdninstagram\.com/);
+  assert.match(config, /frame-src .*instagram\.com/);
   assert.match(portal, /setInstagramConnected\(true\)/);
   assert.match(portal, /instagram_source_url: instagramReel\?\.permalink/);
   assert.match(finalizer, /invalid_instagram_source_url/);
-  assert.match(finalizer, /instagram_source_url:instagramSourceUrl/);
+  assert.match(finalizer, /verifiedMedia\.media_product_type!=="REELS"/);
+  assert.match(finalizer, /delete data\.instagram_access_token/);
   assert.match(sourceMigration, /add column if not exists instagram_source_url/);
   assert.match(sourceMigration, /listings_instagram_source_url_valid/);
+  assert.match(linkOnlyMigration, /alter column video_path drop not null/);
+  assert.match(linkOnlyMigration, /instagram_media_id text/);
+  assert.match(linkOnlyMigration, /l\.instagram_source_url, l\.instagram_media_id/);
+  assert.match(linkOnlyMigration, /instagram_source_url,instagram_media_id/);
+  assert.match(linkOnlyMigration, /p_data->>'instagram_media_id'/);
+  assert.match(portal, /listing\.instagram_source_url \? <iframe/);
+  assert.match(propertyEngagement, /listing\.instagram_source_url\?/);
 });
 
 test("logout clears privileged state and moderation rendering requires staff", () => {

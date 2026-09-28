@@ -61,6 +61,7 @@ type ImportedReelDetails = {
   locality: string;
   propertyType: string;
   description: string;
+  contactPhone: string;
 };
 
 type ImportedInstagramReel = {
@@ -393,6 +394,7 @@ function PropertyTile({
     if (isDummyListing(listing)) return;
     const v = videoRef.current;
     if (!v || videoBusy) return;
+    if (!listing.video_path) return;
     if (!videoUrl) {
       setVideoBusy(true);
       const { data } = await supabase.storage
@@ -440,6 +442,13 @@ function PropertyTile({
           }}
           aria-label={`${listing.title} property preview`}
           role="img"
+        /> : listing.instagram_source_url ? <iframe
+          className="instagram-listing-embed"
+          src={`${listing.instagram_source_url.replace(/\/+$/, "")}/embed/`}
+          title={`${listing.title} Instagram reel`}
+          loading="lazy"
+          allow="autoplay; encrypted-media; picture-in-picture; web-share"
+          allowFullScreen
         /> : <video
           ref={videoRef}
           poster={listing.poster_url}
@@ -460,7 +469,7 @@ function PropertyTile({
             }
           }}
         />}
-        <button
+        {!listing.instagram_source_url && <button
           className="tile-play"
           onClick={isDummyListing(listing) ? onDummyAction : toggle}
           disabled={videoBusy}
@@ -473,9 +482,9 @@ function PropertyTile({
           ) : (
             <Play fill="currentColor" />
           )}
-        </button>
+        </button>}
         <span className="video-tag">
-          <Video /> Video tour
+          <Video /> {listing.instagram_source_url ? "Instagram reel" : "Video tour"}
         </span>
         <span className="reviewed-tag">
           <ShieldCheck /> Reviewed
@@ -1789,11 +1798,13 @@ function EnquiryInbox({
 
 function InstagramReelPicker({
   onClose,
-  onUseReels,
+  contactPhone,
+  onSaved,
   connected,
 }: {
   onClose: () => void;
-  onUseReels: (reels: ImportedInstagramReel[]) => void;
+  contactPhone: string;
+  onSaved: () => void;
   connected: boolean;
 }) {
   const [reels, setReels] = useState<ImportedInstagramReel[]>([]);
@@ -1801,6 +1812,9 @@ function InstagramReelPicker({
   const [reelDetails, setReelDetails] = useState<Record<string, ImportedReelDetails>>({});
   const [expandedReelIds, setExpandedReelIds] = useState<string[]>([]);
   const [busy, setBusy] = useState(connected);
+  const [saving, setSaving] = useState(false);
+  const [saveProgress, setSaveProgress] = useState("");
+  const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
 
   const fetchReels = useCallback(async () => {
@@ -1850,6 +1864,7 @@ function InstagramReelPicker({
           description: reel.caption.length >= 20
             ? reel.caption.slice(0, 2000)
             : `${reel.caption} Property walkthrough imported from Instagram.`.slice(0, 2000),
+          contactPhone,
         };
         return [reel.id, { ...defaults, ...savedDetails[reel.id] }];
       }));
@@ -1864,7 +1879,7 @@ function InstagramReelPicker({
     } finally {
       setBusy(false);
     }
-  }, []);
+  }, [contactPhone]);
 
   useEffect(() => {
     if (connected && localStorage.getItem(INSTAGRAM_TOKEN_KEY)) {
@@ -1913,7 +1928,7 @@ function InstagramReelPicker({
     );
   }
 
-  function continueWithSelected() {
+  async function continueWithSelected() {
     const incomplete = selectedReels.some(({ listingDetails }) =>
       !listingDetails ||
       listingDetails.title.trim().length < 5 ||
@@ -1921,15 +1936,93 @@ function InstagramReelPicker({
       Number(listingDetails.price) <= 0 ||
       listingDetails.city.trim().length < 2 ||
       listingDetails.locality.trim().length < 2 ||
-      listingDetails.description.trim().length < 20,
+      listingDetails.description.trim().length < 20 ||
+      listingDetails.contactPhone.trim().length < 8 ||
+      listingDetails.contactPhone.trim().length > 20,
     );
     if (!selectedReels.length) return;
     if (incomplete) {
-      setError("Complete the title, price, city, locality, and 20-character description for every selected reel.");
+      setError("Complete the title, price, city, locality, contact number, and 20-character description for every selected reel.");
       return;
     }
     setError("");
-    onUseReels(selectedReels);
+    setNotice("");
+    setSaving(true);
+    let savedCount = 0;
+    const instagramToken = localStorage.getItem(INSTAGRAM_TOKEN_KEY);
+    if (!instagramToken) {
+      setError("Your Instagram connection expired. Reconnect and fetch your reels again.");
+      setSaving(false);
+      return;
+    }
+
+    for (const [index, reel] of selectedReels.entries()) {
+      setSaveProgress(`Saving reel ${index + 1} of ${selectedReels.length}…`);
+      try {
+        const details = reel.listingDetails!;
+        const { error: saveError } = await supabase.functions.invoke("finalize-property-listing", {
+          body: {
+            id: crypto.randomUUID(),
+            title: details.title.trim(),
+            property_type: details.propertyType,
+            purpose: details.purpose,
+            price_minor: Math.round(Number(details.price) * 100),
+            city: details.city.trim(),
+            locality: details.locality.trim(),
+            description: details.description.trim(),
+            contact_preference: "both",
+            contact_phone: details.contactPhone.trim(),
+            video_path: null,
+            poster_path: null,
+            video_duration_seconds: 1,
+            furnishing_status: null,
+            ownership_type: details.purpose === "sale" ? "freehold" : null,
+            possession_status: details.purpose === "sale" ? "ready_to_move" : null,
+            available_from: null,
+            security_deposit_minor: null,
+            maintenance_minor: null,
+            tenant_preference: null,
+            bedrooms: null,
+            bathrooms: null,
+            carpet_area_sqft: null,
+            builtup_area_sqft: null,
+            property_age_years: 0,
+            floor_number: 0,
+            total_floors: null,
+            parking_spaces: 0,
+            facing: null,
+            project_name: null,
+            posted_by: "owner",
+            amenities: [],
+            instagram_source_url: reel.permalink,
+            instagram_media_id: reel.id,
+            instagram_access_token: instagramToken,
+          },
+        });
+        if (saveError) throw new Error(await submissionError(saveError));
+
+        savedCount += 1;
+        setSelectedReelIds((current) => current.filter((id) => id !== reel.id));
+        try {
+          const draftKey = instagramReelDraftStorageKey();
+          const drafts = JSON.parse(localStorage.getItem(draftKey) || "{}") as Record<string, ImportedReelDetails>;
+          delete drafts[reel.id];
+          localStorage.setItem(draftKey, JSON.stringify(drafts));
+        } catch {
+          /* Listing is saved; a stale local draft is harmless. */
+        }
+      } catch (saveError) {
+        setError(saveError instanceof Error ? saveError.message : "A reel could not be saved. Please try again.");
+        break;
+      }
+    }
+
+    if (savedCount > 0) {
+      setNotice(`Saved ${savedCount} reel ${savedCount === 1 ? "listing" : "listings"} to the database. ${savedCount === 1 ? "It is" : "They are"} pending review.`);
+      onSaved();
+    }
+    setSaveProgress("");
+    setSaving(false);
   }
 
   return (
@@ -1943,8 +2036,8 @@ function InstagramReelPicker({
       </div>
         <p className="modal-intro">
           {connected
-            ? "We only read your reel metadata and media URLs so you can choose one to import. We never post to Instagram automatically."
-            : "Pick a reel, save it to your draft, then publish it like any other property post."}
+            ? "Add listing details to each reel, select the listings you want, and save them directly for review."
+            : "Connect Instagram to fetch your reels and save property listings."}
         </p>
         {!connected && (
           <button className="primary full" disabled={busy} onClick={() => void connect()}>
@@ -1958,7 +2051,9 @@ function InstagramReelPicker({
             {busy ? "Loading reels…" : "Fetch reels"}
           </button>
         )}
-        {error && <div className="form-error"><CircleAlert size={16} />{error}</div>}
+        {error && <div className="form-error" role="alert"><CircleAlert size={16} />{error}</div>}
+        {notice && <div className="form-success" role="status"><Check size={16} />{notice}</div>}
+        {saveProgress && <p className="instagram-save-progress" role="status"><Loader2 className="spin" size={16} />{saveProgress}</p>}
         {!busy && !error && connected && reels.length === 0 && (
           <p className="instagram-empty">No Instagram reels were found for this account.</p>
         )}
@@ -2012,7 +2107,7 @@ function InstagramReelPicker({
                         </button>
                         {expandedReelIds.includes(reel.id) && (
                       <div className="instagram-reel-details">
-                        <small className="instagram-draft-status">Draft auto-saved on this device. It is not added to the database until submission.</small>
+                        <small className="instagram-draft-status">Only details are drafted locally. Saving stores the reel link and listing details, not a video copy.</small>
                         <label>Listing title<input value={details.title} maxLength={120} minLength={5} onChange={(event) => updateReelDetails(reel.id, { title: event.target.value })} /></label>
                         <div className="form-grid two">
                           <label>Purpose<select value={details.purpose} onChange={(event) => updateReelDetails(reel.id, { purpose: event.target.value as "sale" | "rent" })}><option value="sale">For sale</option><option value="rent">For rent</option></select></label>
@@ -2024,6 +2119,7 @@ function InstagramReelPicker({
                         </div>
                         <label>Locality<input value={details.locality} maxLength={150} onChange={(event) => updateReelDetails(reel.id, { locality: event.target.value })} placeholder="Area or locality" /></label>
                         <label>Description<textarea value={details.description} minLength={20} maxLength={2000} onChange={(event) => updateReelDetails(reel.id, { description: event.target.value })} rows={3} /></label>
+                        <label>Contact number<input type="tel" value={details.contactPhone} minLength={8} maxLength={20} onChange={(event) => updateReelDetails(reel.id, { contactPhone: event.target.value })} /></label>
                       </div>
                         )}
                       </>
@@ -2035,10 +2131,11 @@ function InstagramReelPicker({
             <button
               type="button"
               className="primary full"
-              disabled={!selectedReels.length || busy}
-              onClick={continueWithSelected}
+              disabled={!selectedReels.length || busy || saving}
+              onClick={() => void continueWithSelected()}
             >
-              Continue with {selectedReels.length || "selected"} reels
+              {saving ? <Loader2 className="spin" /> : <Check />}
+              {saving ? saveProgress : `Save ${selectedReels.length || "selected"} reels to database`}
             </button>
           </>
         )}
@@ -2049,17 +2146,17 @@ function InstagramReelPicker({
 function Dashboard({
   items,
   enquiries,
+  contactPhone,
   onPost,
   onEdit,
   onRefresh,
-  onImportReels,
 }: {
   items: Listing[];
   enquiries: PropertyEnquiry[];
+  contactPhone: string;
   onPost: () => void;
   onEdit: (listing: Listing) => void;
   onRefresh: () => void;
-  onImportReels: (reels: ImportedInstagramReel[]) => void;
 }) {
   const [instagramOpen, setInstagramOpen] = useState(false);
   const [instagramConnected, setInstagramConnected] = useState(false);
@@ -2177,10 +2274,8 @@ function Dashboard({
         <InstagramReelPicker
           onClose={() => setInstagramOpen(false)}
           connected={instagramConnected}
-          onUseReels={(reels) => {
-            setInstagramOpen(false);
-            onImportReels(reels);
-          }}
+          contactPhone={contactPhone}
+          onSaved={onRefresh}
         />
       )}
       <div className="stats">
@@ -2385,7 +2480,16 @@ function Admin({
           ) : (
             <>
               <div className="review-video">
-                <video src={selected.video_url} controls playsInline />
+                {selected.instagram_source_url ? (
+                  <iframe
+                    src={`${selected.instagram_source_url.replace(/\/+$/, "")}/embed/`}
+                    title={`${selected.title} Instagram reel`}
+                    allow="autoplay; encrypted-media; picture-in-picture; web-share"
+                    allowFullScreen
+                  />
+                ) : selected.video_url ? (
+                  <video src={selected.video_url} controls playsInline />
+                ) : <p>Video unavailable</p>}
               </div>
               <div className="review-content">
                 <span className="property-pill">
@@ -2485,11 +2589,13 @@ export default function Portal() {
         const signed = await Promise.all(
           (pending || []).map(async (x: Listing) => ({
             ...x,
-            video_url: (
-              await supabase.storage
-                .from("property-videos")
-                .createSignedUrl(x.video_path, 3600)
-            ).data?.signedUrl,
+            video_url: x.video_path
+              ? (
+                  await supabase.storage
+                    .from("property-videos")
+                    .createSignedUrl(x.video_path, 3600)
+                ).data?.signedUrl
+              : undefined,
           })),
         );
         setQueue(signed);
@@ -2572,9 +2678,11 @@ export default function Portal() {
   }
   async function editRejected(listing: Listing) {
     const [video, poster] = await Promise.all([
-      supabase.storage
-        .from("property-videos")
-        .createSignedUrl(listing.video_path, 1800),
+      listing.video_path
+        ? supabase.storage
+            .from("property-videos")
+            .createSignedUrl(listing.video_path, 1800)
+        : Promise.resolve({ data: null }),
       listing.poster_path
         ? supabase.storage
             .from("property-posters")
@@ -2712,6 +2820,7 @@ export default function Portal() {
         <Dashboard
           items={mine}
           enquiries={enquiries}
+          contactPhone={profile?.phone_e164 || session.user.phone || ""}
           onPost={() => {
             setEditing(null);
             setInstagramImportQueue([]);
@@ -2720,12 +2829,6 @@ export default function Portal() {
           }}
           onEdit={(listing) => void editRejected(listing)}
           onRefresh={() => void load()}
-          onImportReels={(reels) => {
-            setInstagramImportQueue(reels);
-            setInstagramQueueTotal(reels.length);
-            setEditing(null);
-            setView("post");
-          }}
         />
       ) : view === "admin" && isStaff ? (
         <Admin

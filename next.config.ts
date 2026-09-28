@@ -12,6 +12,7 @@ const nextConfig: NextConfig = {
           "style-src 'self' 'unsafe-inline'",
           "img-src 'self' data: blob: https://*.supabase.co https://*.cdninstagram.com https://*.fbcdn.net",
           "media-src 'self' blob: https://*.supabase.co https://*.cdninstagram.com https://*.fbcdn.net",
+          "frame-src 'self' https://www.instagram.com",
           "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.cdninstagram.com https://*.fbcdn.net",
           "font-src 'self' data:",
           "frame-ancestors 'none'",
