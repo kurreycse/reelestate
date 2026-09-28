@@ -31,9 +31,32 @@ async function completeInstagramLogin() {
     );
   }
 
+  const profileResponse = await fetch("/api/instagram/profile", {
+    headers: {
+      Authorization: `Bearer ${data.access_token}`,
+    },
+  });
+
+  const profileData = (await profileResponse.json()) as {
+    username?: string;
+    profile_picture_url?: string;
+    error?: string;
+  };
+
+  const profile = {
+    username: profileData.username || "instagram_user",
+    profilePictureUrl: profileData.profile_picture_url || "",
+  };
+
   localStorage.setItem("reelestate-instagram-access-token", data.access_token);
+  localStorage.setItem("reelestate-instagram-account", JSON.stringify(profile));
   window.opener?.postMessage(
-    { type: "instagram-connected", accessToken: data.access_token },
+    {
+      type: "instagram-connected",
+      accessToken: data.access_token,
+      username: profile.username,
+      profilePictureUrl: profile.profilePictureUrl,
+    },
     window.location.origin,
   );
 

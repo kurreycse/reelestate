@@ -51,6 +51,7 @@ import { appConfig } from "../lib/config";
 type View = "feed" | "post" | "dashboard" | "admin";
 
 const INSTAGRAM_TOKEN_KEY = "reelestate-instagram-access-token";
+const INSTAGRAM_ACCOUNT_KEY = "reelestate-instagram-account";
 
 type ImportedInstagramReel = {
   id: string;
@@ -1822,16 +1823,19 @@ function InstagramImportModal({
         });
         if (!response.ok) throw new Error("Unable to fetch your reels.");
         const json = (await response.json()) as { data?: ImportedInstagramReel[] };
-        const next = (json.data || []).map((item) => ({
-          id: item.id,
-          caption: item.caption || "Imported from Instagram",
-          media_type: item.media_type || "VIDEO",
-          media_url: item.media_url || item.thumbnail_url || "",
-          thumbnail_url: item.thumbnail_url,
-          permalink: item.permalink,
-          username: item.username,
-          timestamp: item.timestamp,
-        }));
+        const next = (json.data || []).map((item) => {
+          const mediaUrl = item.media_url || item.thumbnail_url || "";
+          return {
+            id: item.id,
+            caption: item.caption || "Imported from Instagram",
+            media_type: item.media_type || "VIDEO",
+            media_url: mediaUrl,
+            thumbnail_url: item.thumbnail_url || mediaUrl,
+            permalink: item.permalink,
+            username: item.username,
+            timestamp: item.timestamp,
+          };
+        });
         if (!next.length) throw new Error("No reels were returned for this account.");
         setReels(next);
         localStorage.setItem("reelestate-instagram-reels", JSON.stringify(next));
@@ -1895,12 +1899,25 @@ function InstagramImportModal({
         {error && <div className="form-error"><CircleAlert size={16} />{error}</div>}
         {reels.length > 0 && (
           <div className="instagram-grid">
-            {reels.map((reel) => (
-              <button key={reel.id} type="button" className="instagram-card" onClick={() => onUseReel(reel)}>
-                <img src={reel.thumbnail_url || reel.media_url} alt={reel.caption || "Instagram reel"} />
-                <span>{reel.caption || "Instagram reel"}</span>
-              </button>
-            ))}
+            {reels.map((reel) => {
+              const previewUrl = reel.thumbnail_url || reel.media_url || "";
+              return (
+                <button key={reel.id} type="button" className="instagram-card" onClick={() => onUseReel(reel)}>
+                  {previewUrl ? (
+                    <img
+                      src={previewUrl}
+                      alt={reel.caption || "Instagram reel"}
+                      onError={(event) => {
+                        event.currentTarget.style.display = "none";
+                      }}
+                    />
+                  ) : (
+                    <div className="instagram-card-placeholder">No preview</div>
+                  )}
+                  <span>{reel.caption || "Instagram reel"}</span>
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
@@ -1925,9 +1942,20 @@ function Dashboard({
 }) {
   const [instagramOpen, setInstagramOpen] = useState(false);
   const [instagramConnected, setInstagramConnected] = useState(false);
+  const [instagramAccount, setInstagramAccount] = useState<{
+    username: string;
+    profilePictureUrl?: string;
+  } | null>(null);
 
   const syncInstagramStatus = () => {
-    setInstagramConnected(Boolean(localStorage.getItem(INSTAGRAM_TOKEN_KEY)));
+    const connected = Boolean(localStorage.getItem(INSTAGRAM_TOKEN_KEY));
+    setInstagramConnected(connected);
+    try {
+      const stored = localStorage.getItem(INSTAGRAM_ACCOUNT_KEY);
+      setInstagramAccount(stored ? JSON.parse(stored) : null);
+    } catch {
+      setInstagramAccount(null);
+    }
   };
 
   useEffect(() => {
@@ -1936,6 +1964,11 @@ function Dashboard({
     const onMessage = (event: MessageEvent) => {
       if (event.origin !== window.location.origin) return;
       if (event.data?.type === "instagram-connected") {
+        const profile = {
+          username: event.data.username || "instagram_user",
+          profilePictureUrl: event.data.profilePictureUrl || "",
+        };
+        localStorage.setItem(INSTAGRAM_ACCOUNT_KEY, JSON.stringify(profile));
         syncInstagramStatus();
       }
     };
@@ -1949,6 +1982,7 @@ function Dashboard({
   const disconnectInstagram = () => {
     if (!window.confirm("Disconnect Instagram and remove the saved reel access?")) return;
     localStorage.removeItem(INSTAGRAM_TOKEN_KEY);
+    localStorage.removeItem(INSTAGRAM_ACCOUNT_KEY);
     localStorage.removeItem("reelestate-instagram-reels");
     syncInstagramStatus();
     setInstagramOpen(false);
@@ -1963,6 +1997,47 @@ function Dashboard({
           <p>Track every draft, review and live listing in one place.</p>
         </div>
         <div className="dashboard-actions">
+          {instagramConnected && instagramAccount && (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                border: "1px solid rgba(59, 130, 246, 0.25)",
+                borderRadius: 999,
+                padding: "8px 12px",
+                background: "rgba(255,255,255,0.75)",
+                boxShadow: "0 2px 6px rgba(12, 16, 36, 0.04)",
+              }}
+            >
+              {instagramAccount.profilePictureUrl ? (
+                <img
+                  src={instagramAccount.profilePictureUrl}
+                  alt={instagramAccount.username}
+                  style={{ width: 26, height: 26, borderRadius: "50%", objectFit: "cover" }}
+                />
+              ) : (
+                <div
+                  style={{
+                    width: 26,
+                    height: 26,
+                    borderRadius: "50%",
+                    display: "grid",
+                    placeItems: "center",
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "#fff",
+                    background: "linear-gradient(135deg, #f58529, #dd2a7b)",
+                  }}
+                >
+                  {instagramAccount.username.slice(0, 1).toUpperCase()}
+                </div>
+              )}
+              <span style={{ fontSize: 14, fontWeight: 600, color: "#2a2d3a" }}>
+                @{instagramAccount.username}
+              </span>
+            </div>
+          )}
           <button className="secondary" onClick={() => setInstagramOpen(true)}>
             <Video /> {instagramConnected ? "Fetch reels" : "Connect Instagram"}
           </button>
