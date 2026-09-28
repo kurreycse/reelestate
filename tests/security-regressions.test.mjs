@@ -37,17 +37,24 @@ test("publisher-interest link is removed from the header", () => {
 
 test("Instagram reel import shows connected reels inline with multi-select playback", () => {
   const portal = read("app/Portal.tsx");
+  const styles = read("app/globals.css");
   const route = read("app/api/instagram/reels/route.ts");
   const config = read("next.config.ts");
   const callback = read("app/auth/insta/callback/page.tsx");
+  const finalizer = read("supabase/functions/finalize-property-listing/index.ts");
+  const sourceMigration = read("supabase/migrations/202609280001_instagram_listing_source_url.sql");
   assert.match(route, /graph\.instagram\.com\/v20\.0\/me\/media/);
   assert.match(route, /media_product_type/);
   assert.match(route, /item\.media_product_type === "REELS"/);
   assert.match(portal, /className="instagram-inline"/);
   assert.doesNotMatch(portal, /DEMO_INSTAGRAM_REELS/);
   assert.doesNotMatch(portal, /getItem\("reelestate-instagram-reels"\)/);
-  assert.match(portal, /className="instagram-table"/);
+  assert.match(portal, /className="instagram-reel-grid"/);
+  assert.match(styles, /\.instagram-reel-grid\{display:grid;grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
   assert.match(portal, /type="checkbox"/);
+  assert.match(portal, /Sale price \(INR\)/);
+  assert.match(portal, /Monthly rent \(INR\)/);
+  assert.match(portal, /Complete the title, price, city, locality/);
   assert.match(portal, /playsInline/);
   assert.match(portal, /onImportReels/);
   assert.match(portal, /instagramQueuePosition/);
@@ -56,6 +63,11 @@ test("Instagram reel import shows connected reels inline with multi-select playb
   assert.match(callback, /instagram=connected/);
   assert.match(config, /media-src .*cdninstagram\.com/);
   assert.match(portal, /setInstagramConnected\(true\)/);
+  assert.match(portal, /instagram_source_url: instagramReel\?\.permalink/);
+  assert.match(finalizer, /invalid_instagram_source_url/);
+  assert.match(finalizer, /instagram_source_url:instagramSourceUrl/);
+  assert.match(sourceMigration, /add column if not exists instagram_source_url/);
+  assert.match(sourceMigration, /listings_instagram_source_url_valid/);
 });
 
 test("logout clears privileged state and moderation rendering requires staff", () => {

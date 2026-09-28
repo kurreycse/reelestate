@@ -53,6 +53,16 @@ type View = "feed" | "post" | "dashboard" | "admin";
 const INSTAGRAM_TOKEN_KEY = "reelestate-instagram-access-token";
 const INSTAGRAM_ACCOUNT_KEY = "reelestate-instagram-account";
 
+type ImportedReelDetails = {
+  title: string;
+  purpose: "sale" | "rent";
+  price: string;
+  city: string;
+  locality: string;
+  propertyType: string;
+  description: string;
+};
+
 type ImportedInstagramReel = {
   id: string;
   caption: string;
@@ -62,6 +72,7 @@ type ImportedInstagramReel = {
   permalink?: string;
   username?: string;
   timestamp?: string;
+  listingDetails?: ImportedReelDetails;
 };
 
 const CITY_LOCALITIES = {
@@ -969,24 +980,28 @@ function PostForm({
   );
   const [preview, setPreview] = useState(initial?.video_url || "");
   const [purpose, setPurpose] = useState<"sale" | "rent">(
-    initial?.purpose || "sale",
+    initial?.purpose || instagramReel?.listingDetails?.purpose || "sale",
   );
   const importedCaption = instagramReel?.caption?.replace(/\s+/g, " ").trim() || "";
   const importedTitle = initial?.title ||
+    instagramReel?.listingDetails?.title ||
     (importedCaption ? importedCaption.slice(0, 70) : "Instagram reel property listing");
   const importedDescription = initial?.description ||
+    instagramReel?.listingDetails?.description ||
     (importedCaption || "A short property walkthrough imported from Instagram.");
   const [propertyType, setPropertyType] = useState(
-    initial?.property_type || "Apartment",
+    initial?.property_type || instagramReel?.listingDetails?.propertyType || "Apartment",
   );
+  const importedCity = initial?.city || instagramReel?.listingDetails?.city;
   const initialCity: SupportedCity =
-    initial?.city && initial.city in CITY_LOCALITIES
-      ? (initial.city as SupportedCity)
+    importedCity && importedCity in CITY_LOCALITIES
+      ? (importedCity as SupportedCity)
       : "Raipur";
+  const importedLocality = initial?.locality || instagramReel?.listingDetails?.locality;
   const initialLocality =
-    initial && CITY_LOCALITIES[initialCity].includes(initial.locality as never)
-      ? initial.locality
-      : initial
+    importedLocality && CITY_LOCALITIES[initialCity].includes(importedLocality as never)
+      ? importedLocality
+      : initial || instagramReel?.listingDetails?.locality
         ? "__custom__"
         : CITY_LOCALITIES.Raipur[0];
   const [propertyCity, setPropertyCity] = useState<SupportedCity>(initialCity);
@@ -1164,6 +1179,7 @@ function PostForm({
       project_name: form.get("project_name") || null,
       posted_by: form.get("posted_by"),
       amenities,
+      instagram_source_url: instagramReel?.permalink || null,
     };
     const { error } = await supabase.functions.invoke(
       "finalize-property-listing",
@@ -1285,7 +1301,7 @@ function PostForm({
               {purpose === "sale" ? "Total sale price (₹)" : "Monthly rent (₹)"}
               <input
                 name="price"
-                defaultValue={initial ? initial.price_minor / 100 : undefined}
+                defaultValue={initial ? initial.price_minor / 100 : instagramReel?.listingDetails?.price || undefined}
                 type="number"
                 min="1"
                 placeholder={purpose === "sale" ? "8500000" : "25000"}
@@ -1350,7 +1366,7 @@ function PostForm({
                 New locality
                 <input
                   name="locality"
-                  defaultValue={initial?.locality}
+                  defaultValue={initial?.locality || instagramReel?.listingDetails?.locality}
                   placeholder="Enter locality name"
                   minLength={2}
                   maxLength={150}
@@ -1606,7 +1622,7 @@ function PostForm({
             Description
             <textarea
               name="description"
-              defaultValue={initial?.description}
+              defaultValue={initial?.description || importedDescription}
               placeholder="What makes this property special? Mention the layout, light, amenities and surroundings."
               minLength={20}
               maxLength={2000}
@@ -1768,6 +1784,7 @@ function InstagramReelPicker({
 }) {
   const [reels, setReels] = useState<ImportedInstagramReel[]>([]);
   const [selectedReelIds, setSelectedReelIds] = useState<string[]>([]);
+  const [reelDetails, setReelDetails] = useState<Record<string, ImportedReelDetails>>({});
   const [busy, setBusy] = useState(connected);
   const [error, setError] = useState("");
 
@@ -1797,6 +1814,19 @@ function InstagramReelPicker({
       });
       setReels(next);
       setSelectedReelIds([]);
+      setReelDetails(Object.fromEntries(next.map((reel) => [reel.id, {
+        title: reel.caption.replace(/\s+/g, " ").trim().slice(0, 70).length >= 5
+          ? reel.caption.replace(/\s+/g, " ").trim().slice(0, 70)
+          : "Instagram property reel",
+        purpose: "sale",
+        price: "",
+        city: "Raipur",
+        locality: CITY_LOCALITIES.Raipur[0],
+        propertyType: "Apartment",
+        description: reel.caption.length >= 20
+          ? reel.caption.slice(0, 2000)
+          : `${reel.caption} Property walkthrough imported from Instagram.`.slice(0, 2000),
+      }])));
     } catch (requestError) {
       setError(
         requestError instanceof Error
@@ -1830,7 +1860,35 @@ function InstagramReelPicker({
     window.location.assign(authUrl);
   }
 
-  const selectedReels = reels.filter((reel) => selectedReelIds.includes(reel.id));
+  const selectedReels = reels
+    .filter((reel) => selectedReelIds.includes(reel.id))
+    .map((reel) => ({ ...reel, listingDetails: reelDetails[reel.id] }));
+
+  function updateReelDetails(id: string, changes: Partial<ImportedReelDetails>) {
+    setReelDetails((current) => ({
+      ...current,
+      [id]: { ...current[id], ...changes },
+    }));
+  }
+
+  function continueWithSelected() {
+    const incomplete = selectedReels.some(({ listingDetails }) =>
+      !listingDetails ||
+      listingDetails.title.trim().length < 5 ||
+      !Number.isFinite(Number(listingDetails.price)) ||
+      Number(listingDetails.price) <= 0 ||
+      listingDetails.city.trim().length < 2 ||
+      listingDetails.locality.trim().length < 2 ||
+      listingDetails.description.trim().length < 20,
+    );
+    if (!selectedReels.length) return;
+    if (incomplete) {
+      setError("Complete the title, price, city, locality, and 20-character description for every selected reel.");
+      return;
+    }
+    setError("");
+    onUseReels(selectedReels);
+  }
 
   return (
     <section className="instagram-inline" aria-labelledby="instagram-title">
@@ -1864,77 +1922,67 @@ function InstagramReelPicker({
         )}
         {reels.length > 0 && (
           <>
-            <div className="instagram-table-wrap">
-              <table className="instagram-table">
-                <thead>
-                  <tr>
-                    <th scope="col">Select</th>
-                    <th scope="col">Reel</th>
-                    <th scope="col">Posted</th>
-                    <th scope="col">Instagram account</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {reels.map((reel) => (
-                    <tr key={reel.id}>
-                      <td>
-                        <input
-                          type="checkbox"
-                          value={reel.id}
-                          checked={selectedReelIds.includes(reel.id)}
-                          onChange={(event) =>
-                            setSelectedReelIds((current) =>
-                              event.target.checked
-                                ? [...current, reel.id]
-                                : current.filter((id) => id !== reel.id),
-                            )
-                          }
-                          aria-label={`Select reel: ${reel.caption || "Instagram reel"}`}
-                        />
-                      </td>
-                      <td>
-                        <div className="instagram-reel-cell">
-                          {reel.media_url ? (
-                            <video
-                              controls
-                              playsInline
-                              preload="none"
-                              poster={reel.thumbnail_url}
-                              aria-label={`Play reel: ${reel.caption || "Instagram reel"}`}
-                            >
-                              <source src={reel.media_url} />
-                            </video>
-                          ) : (
-                            <span className="instagram-reel-placeholder"><Video size={18} /></span>
-                          )}
-                          <span>
-                            {reel.caption || "Instagram reel"}
-                            {reel.permalink && (
-                              <a href={reel.permalink} target="_blank" rel="noreferrer">
-                                View on Instagram
-                              </a>
-                            )}
-                          </span>
+            <div className="instagram-reel-grid">
+              {reels.map((reel) => {
+                const details = reelDetails[reel.id];
+                return (
+                  <article className="instagram-reel-card" key={reel.id}>
+                    <label className="instagram-reel-select">
+                      <input
+                        type="checkbox"
+                        checked={selectedReelIds.includes(reel.id)}
+                        onChange={(event) =>
+                          setSelectedReelIds((current) =>
+                            event.target.checked
+                              ? [...current, reel.id]
+                              : current.filter((id) => id !== reel.id),
+                          )
+                        }
+                        aria-label={`Select reel: ${reel.caption || "Instagram reel"}`}
+                      />
+                      Include this reel
+                    </label>
+                    {reel.media_url ? (
+                      <video
+                        className="instagram-reel-player"
+                        controls
+                        playsInline
+                        preload="none"
+                        poster={reel.thumbnail_url}
+                        aria-label={`Play reel: ${reel.caption || "Instagram reel"}`}
+                      >
+                        <source src={reel.media_url} />
+                      </video>
+                    ) : (
+                      <div className="instagram-reel-player instagram-reel-placeholder"><Video size={22} /></div>
+                    )}
+                    <p className="instagram-reel-caption">{reel.caption || "Instagram reel"}</p>
+                    {details && (
+                      <div className="instagram-reel-details">
+                        <label>Listing title<input value={details.title} maxLength={120} minLength={5} onChange={(event) => updateReelDetails(reel.id, { title: event.target.value })} /></label>
+                        <div className="form-grid two">
+                          <label>Purpose<select value={details.purpose} onChange={(event) => updateReelDetails(reel.id, { purpose: event.target.value as "sale" | "rent" })}><option value="sale">For sale</option><option value="rent">For rent</option></select></label>
+                          <label>{details.purpose === "sale" ? "Sale price (INR)" : "Monthly rent (INR)"}<input type="number" min="1" value={details.price} onChange={(event) => updateReelDetails(reel.id, { price: event.target.value })} placeholder={details.purpose === "sale" ? "8500000" : "25000"} /></label>
                         </div>
-                      </td>
-                      <td>
-                        {reel.timestamp
-                          ? new Date(reel.timestamp).toLocaleDateString()
-                          : "—"}
-                      </td>
-                      <td>{reel.username ? `@${reel.username}` : "Connected account"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        <div className="form-grid two">
+                          <label>Property type<select value={details.propertyType} onChange={(event) => updateReelDetails(reel.id, { propertyType: event.target.value })}><option>Apartment</option><option>Villa</option><option>Independent house</option><option>Plot</option><option>Commercial</option></select></label>
+                          <label>City<select value={details.city} onChange={(event) => updateReelDetails(reel.id, { city: event.target.value, locality: CITY_LOCALITIES[event.target.value as SupportedCity][0] })}>{(Object.keys(CITY_LOCALITIES) as SupportedCity[]).map((city) => <option key={city}>{city}</option>)}</select></label>
+                        </div>
+                        <label>Locality<input value={details.locality} maxLength={150} onChange={(event) => updateReelDetails(reel.id, { locality: event.target.value })} placeholder="Area or locality" /></label>
+                        <label>Description<textarea value={details.description} minLength={20} maxLength={2000} onChange={(event) => updateReelDetails(reel.id, { description: event.target.value })} rows={3} /></label>
+                      </div>
+                    )}
+                  </article>
+                );
+              })}
             </div>
             <button
               type="button"
               className="primary full"
               disabled={!selectedReels.length || busy}
-              onClick={() => selectedReels.length && onUseReels(selectedReels)}
+              onClick={continueWithSelected}
             >
-              Use {selectedReels.length || "selected"} reels
+              Continue with {selectedReels.length || "selected"} reels
             </button>
           </>
         )}
