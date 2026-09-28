@@ -50,6 +50,8 @@ import { appConfig } from "../lib/config";
 
 type View = "feed" | "post" | "dashboard" | "admin";
 
+const INSTAGRAM_TOKEN_KEY = "reelestate-instagram-access-token";
+
 type ImportedInstagramReel = {
   id: string;
   caption: string;
@@ -1790,20 +1792,27 @@ function InstagramImportModal({
         const parsed = JSON.parse(stored) as ImportedInstagramReel[];
         if (parsed.length) {
           setReels(parsed);
-          return;
         }
       }
     } catch {
       /* fall back to demo reels */
     }
-    setReels(DEMO_INSTAGRAM_REELS);
-    localStorage.setItem("reelestate-instagram-reels", JSON.stringify(DEMO_INSTAGRAM_REELS));
+
+    if (!reels.length) {
+      setReels(DEMO_INSTAGRAM_REELS);
+      localStorage.setItem("reelestate-instagram-reels", JSON.stringify(DEMO_INSTAGRAM_REELS));
+    }
+
+    const token = localStorage.getItem(INSTAGRAM_TOKEN_KEY);
+    if (token) {
+      void connect();
+    }
   }, []);
 
   async function connect() {
     setBusy(true);
     setError("");
-    const token = localStorage.getItem("reelestate-instagram-access-token");
+    const token = localStorage.getItem(INSTAGRAM_TOKEN_KEY);
     if (token) {
       try {
         const response = await fetch("/api/instagram/reels", {
@@ -1844,7 +1853,8 @@ function InstagramImportModal({
     const onMessage = (event: MessageEvent) => {
       if (event.origin !== window.location.origin) return;
       if (event.data?.type === "instagram-connected") {
-        localStorage.setItem("reelestate-instagram-access-token", event.data.accessToken);
+        window.removeEventListener("message", onMessage);
+        localStorage.setItem(INSTAGRAM_TOKEN_KEY, event.data.accessToken);
         void connect();
       }
     };
@@ -1900,6 +1910,27 @@ function Dashboard({
   onImportReel: (reel: ImportedInstagramReel) => void;
 }) {
   const [instagramOpen, setInstagramOpen] = useState(false);
+  const [instagramConnected, setInstagramConnected] = useState(false);
+
+  useEffect(() => {
+    const sync = () => {
+      setInstagramConnected(Boolean(localStorage.getItem(INSTAGRAM_TOKEN_KEY)));
+    };
+    sync();
+    window.addEventListener("storage", sync);
+    const onMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data?.type === "instagram-connected") {
+        sync();
+      }
+    };
+    window.addEventListener("message", onMessage);
+    return () => {
+      window.removeEventListener("storage", sync);
+      window.removeEventListener("message", onMessage);
+    };
+  }, []);
+
   return (
     <section className="workspace">
       <header className="section-head compact">
@@ -1910,7 +1941,7 @@ function Dashboard({
         </div>
         <div className="dashboard-actions">
           <button className="secondary" onClick={() => setInstagramOpen(true)}>
-            <Video /> Connect Instagram
+            <Video /> {instagramConnected ? "Fetch reels" : "Connect Instagram"}
           </button>
           <button className="primary" onClick={onPost}>
             <Plus /> Post a free listing
@@ -2269,6 +2300,17 @@ export default function Portal() {
     const timer = window.setTimeout(() => void load(), 0);
     return () => window.clearTimeout(timer);
   }, [load]);
+  useEffect(() => {
+    const onInstagramConnected = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data?.type === "instagram-connected") {
+        setView("dashboard");
+        setMenu(false);
+      }
+    };
+    window.addEventListener("message", onInstagramConnected);
+    return () => window.removeEventListener("message", onInstagramConnected);
+  }, []);
   useEffect(() => {
     const stop = () =>
       document.querySelectorAll("video").forEach((v) => v.pause());
