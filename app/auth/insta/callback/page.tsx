@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { appConfig } from "../../../lib/config";
+import { appConfig } from "../../../../lib/config";
 
 async function completeInstagramLogin() {
   const url = new URL(window.location.href);
