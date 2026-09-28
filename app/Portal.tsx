@@ -1866,18 +1866,32 @@ function InstagramImportModal({
     }
   }
 
+  const connected = Boolean(localStorage.getItem(INSTAGRAM_TOKEN_KEY));
+
   return (
     <div className="modal-backdrop" role="presentation">
       <div className="auth-modal instagram-modal" role="dialog" aria-modal="true" aria-labelledby="instagram-title">
         <button className="icon-btn close" onClick={onClose} aria-label="Close"><X /></button>
         <div className="brand-mark"><Video /></div>
         <span className="eyebrow">Instagram</span>
-        <h2 id="instagram-title">Connect your reels</h2>
-        <p className="modal-intro">Pick a reel, save it to your draft, then publish it like any other property post.</p>
-        <button className="primary full" disabled={busy} onClick={() => void connect()}>
-          {busy ? <Loader2 className="spin" /> : <Video />}
-          {busy ? "Loading reels…" : "Connect Instagram"}
-        </button>
+        <h2 id="instagram-title">{connected ? "Your reels" : "Connect your reels"}</h2>
+        <p className="modal-intro">
+          {connected
+            ? "We only read your reel metadata and media URLs so you can choose one to import. We never post to Instagram automatically."
+            : "Pick a reel, save it to your draft, then publish it like any other property post."}
+        </p>
+        {!connected && (
+          <button className="primary full" disabled={busy} onClick={() => void connect()}>
+            {busy ? <Loader2 className="spin" /> : <Video />}
+            {busy ? "Loading reels…" : "Connect Instagram"}
+          </button>
+        )}
+        {connected && (
+          <button className="secondary full" disabled={busy} onClick={() => void connect()}>
+            {busy ? <Loader2 className="spin" /> : <Video />}
+            {busy ? "Loading reels…" : "Fetch reels"}
+          </button>
+        )}
         {error && <div className="form-error"><CircleAlert size={16} />{error}</div>}
         {reels.length > 0 && (
           <div className="instagram-grid">
