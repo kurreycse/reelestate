@@ -46,6 +46,7 @@ import { isSupabaseConfigured, supabase } from "../lib/supabase";
 import { recordEngagement } from "../lib/analytics";
 import type { Listing, Profile, PropertyEnquiry } from "../lib/types";
 import { DUMMY_LISTINGS, isDummyListing } from "../lib/dummyListings";
+import { appConfig } from "../lib/config";
 
 type View = "feed" | "post" | "dashboard" | "admin";
 
@@ -1836,17 +1837,9 @@ function InstagramImportModal({
       return;
     }
 
-    const clientId = process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID || "1411779603837368";
-    if (!clientId) {
-      const fallback = DEMO_INSTAGRAM_REELS;
-      setReels(fallback);
-      localStorage.setItem("reelestate-instagram-reels", JSON.stringify(fallback));
-      setBusy(false);
-      return;
-    }
-
-    const redirectUri = `${window.location.origin}/auth/insta/callback`;
-    const authUrl = `https://www.instagram.com/oauth/authorize?force_reauth=true&client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent("instagram_business_basic")}`;
+    const clientId = appConfig.instagram.clientId;
+    const redirectUri = appConfig.instagram.redirectUri;
+    const authUrl = `https://www.instagram.com/oauth/authorize?force_reauth=true&client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(appConfig.instagram.scope)}`;
     const popup = window.open(authUrl, "instagramConnect", "width=520,height=720");
     const onMessage = (event: MessageEvent) => {
       if (event.origin !== window.location.origin) return;

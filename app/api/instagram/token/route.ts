@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { appConfig } from "../../../lib/config";
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,16 +13,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const clientId =
-      process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID || process.env.INSTAGRAM_CLIENT_ID;
-    const clientSecret = process.env.INSTAGRAM_CLIENT_SECRET;
-
-    if (!clientId || !clientSecret) {
-      return NextResponse.json(
-        { error: "Instagram OAuth is not configured in this environment." },
-        { status: 500 },
-      );
-    }
+    const clientId = appConfig.instagram.clientId;
+    const clientSecret = appConfig.instagram.clientSecret;
 
     const payload = new URLSearchParams({
       client_id: clientId,

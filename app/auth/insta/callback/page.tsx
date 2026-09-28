@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { appConfig } from "../../../lib/config";
 
 async function completeInstagramLogin() {
   const url = new URL(window.location.href);
@@ -16,7 +17,7 @@ async function completeInstagramLogin() {
     );
   }
 
-  const redirectUri = `${window.location.origin}/auth/insta/callback`;
+  const redirectUri = appConfig.instagram.redirectUri;
   const response = await fetch("/api/instagram/token", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
