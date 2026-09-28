@@ -35,17 +35,26 @@ test("publisher-interest link is removed from the header", () => {
   assert.doesNotMatch(portal, /className="interest-compact"/);
 });
 
-test("Instagram reel import only shows the connected account's reels with explicit selection", () => {
+test("Instagram reel import shows connected reels inline with multi-select playback", () => {
   const portal = read("app/Portal.tsx");
   const route = read("app/api/instagram/reels/route.ts");
+  const config = read("next.config.ts");
+  const callback = read("app/auth/insta/callback/page.tsx");
   assert.match(route, /graph\.instagram\.com\/v20\.0\/me\/media/);
   assert.match(route, /media_product_type/);
   assert.match(route, /item\.media_product_type === "REELS"/);
+  assert.match(portal, /className="instagram-inline"/);
   assert.doesNotMatch(portal, /DEMO_INSTAGRAM_REELS/);
   assert.doesNotMatch(portal, /getItem\("reelestate-instagram-reels"\)/);
   assert.match(portal, /className="instagram-table"/);
-  assert.match(portal, /type="radio"/);
-  assert.match(portal, /Use selected reel/);
+  assert.match(portal, /type="checkbox"/);
+  assert.match(portal, /playsInline/);
+  assert.match(portal, /onImportReels/);
+  assert.match(portal, /instagramQueuePosition/);
+  assert.match(portal, /window\.location\.assign\(authUrl\)/);
+  assert.doesNotMatch(portal, /window\.open\(authUrl/);
+  assert.match(callback, /instagram=connected/);
+  assert.match(config, /media-src .*cdninstagram\.com/);
   assert.match(portal, /setInstagramConnected\(true\)/);
 });
 

@@ -63,7 +63,7 @@ async function completeInstagramLogin() {
   if (window.opener) {
     window.close();
   } else {
-    window.location.replace("/");
+    window.location.replace("/?instagram=connected");
   }
 }
 

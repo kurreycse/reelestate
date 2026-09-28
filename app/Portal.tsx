@@ -947,12 +947,16 @@ function PostForm({
   onDone,
   initial,
   instagramReel,
+  instagramQueuePosition,
+  instagramQueueTotal,
   onClearInstagramImport,
 }: {
   user: Session["user"];
   onDone: () => void;
   initial?: Listing;
   instagramReel?: ImportedInstagramReel;
+  instagramQueuePosition?: number;
+  instagramQueueTotal?: number;
   onClearInstagramImport?: () => void;
 }) {
   const [busy, setBusy] = useState(false);
@@ -1232,6 +1236,9 @@ function PostForm({
             <div className="instagram-import-banner">
               <span className="eyebrow">Imported from Instagram</span>
               <p>{instagramReel.username || "Instagram reel"}</p>
+              {instagramQueueTotal > 1 && (
+                <small>Listing {instagramQueuePosition} of {instagramQueueTotal}</small>
+              )}
               {onClearInstagramImport && (
                 <button type="button" className="back-link" onClick={onClearInstagramImport}>Use another reel</button>
               )}
@@ -1750,17 +1757,17 @@ function EnquiryInbox({
   );
 }
 
-function InstagramImportModal({
+function InstagramReelPicker({
   onClose,
-  onUseReel,
+  onUseReels,
   connected,
 }: {
   onClose: () => void;
-  onUseReel: (reel: ImportedInstagramReel) => void;
+  onUseReels: (reels: ImportedInstagramReel[]) => void;
   connected: boolean;
 }) {
   const [reels, setReels] = useState<ImportedInstagramReel[]>([]);
-  const [selectedReelId, setSelectedReelId] = useState("");
+  const [selectedReelIds, setSelectedReelIds] = useState<string[]>([]);
   const [busy, setBusy] = useState(connected);
   const [error, setError] = useState("");
 
@@ -1789,7 +1796,7 @@ function InstagramImportModal({
         };
       });
       setReels(next);
-      setSelectedReelId(next[0]?.id || "");
+      setSelectedReelIds([]);
     } catch (requestError) {
       setError(
         requestError instanceof Error
@@ -1811,7 +1818,7 @@ function InstagramImportModal({
     setBusy(true);
     setError("");
     setReels([]);
-    setSelectedReelId("");
+    setSelectedReelIds([]);
     if (localStorage.getItem(INSTAGRAM_TOKEN_KEY)) {
       void fetchReels();
       return;
@@ -1820,31 +1827,20 @@ function InstagramImportModal({
     const clientId = appConfig.instagram.clientId;
     const redirectUri = appConfig.instagram.redirectUri;
     const authUrl = `https://www.instagram.com/oauth/authorize?force_reauth=true&client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(appConfig.instagram.scope)}`;
-    const popup = window.open(authUrl, "instagramConnect", "width=520,height=720");
-    const onMessage = (event: MessageEvent) => {
-      if (event.origin !== window.location.origin) return;
-      if (event.data?.type === "instagram-connected") {
-        window.removeEventListener("message", onMessage);
-        localStorage.setItem(INSTAGRAM_TOKEN_KEY, event.data.accessToken);
-      }
-    };
-    window.addEventListener("message", onMessage);
-    if (!popup) {
-      setError("Your browser blocked the Instagram popup. Please allow popups and try again.");
-      setBusy(false);
-      window.removeEventListener("message", onMessage);
-    }
+    window.location.assign(authUrl);
   }
 
-  const selectedReel = reels.find((reel) => reel.id === selectedReelId);
+  const selectedReels = reels.filter((reel) => selectedReelIds.includes(reel.id));
 
   return (
-    <div className="modal-backdrop" role="presentation">
-      <div className="auth-modal instagram-modal" role="dialog" aria-modal="true" aria-labelledby="instagram-title">
-        <button className="icon-btn close" onClick={onClose} aria-label="Close"><X /></button>
-        <div className="brand-mark"><Video /></div>
-        <span className="eyebrow">Instagram</span>
+    <section className="instagram-inline" aria-labelledby="instagram-title">
+      <div className="instagram-inline-heading">
+        <div>
+          <span className="eyebrow">Instagram</span>
         <h2 id="instagram-title">{connected ? "Your reels" : "Connect your reels"}</h2>
+        </div>
+        <button type="button" className="icon-btn" onClick={onClose} aria-label="Close reel list"><X /></button>
+      </div>
         <p className="modal-intro">
           {connected
             ? "We only read your reel metadata and media URLs so you can choose one to import. We never post to Instagram automatically."
@@ -1883,18 +1879,31 @@ function InstagramImportModal({
                     <tr key={reel.id}>
                       <td>
                         <input
-                          type="radio"
-                          name="selected-instagram-reel"
+                          type="checkbox"
                           value={reel.id}
-                          checked={selectedReelId === reel.id}
-                          onChange={() => setSelectedReelId(reel.id)}
+                          checked={selectedReelIds.includes(reel.id)}
+                          onChange={(event) =>
+                            setSelectedReelIds((current) =>
+                              event.target.checked
+                                ? [...current, reel.id]
+                                : current.filter((id) => id !== reel.id),
+                            )
+                          }
                           aria-label={`Select reel: ${reel.caption || "Instagram reel"}`}
                         />
                       </td>
                       <td>
                         <div className="instagram-reel-cell">
-                          {reel.thumbnail_url ? (
-                            <Image src={reel.thumbnail_url} alt="" width={64} height={48} unoptimized />
+                          {reel.media_url ? (
+                            <video
+                              controls
+                              playsInline
+                              preload="none"
+                              poster={reel.thumbnail_url}
+                              aria-label={`Play reel: ${reel.caption || "Instagram reel"}`}
+                            >
+                              <source src={reel.media_url} />
+                            </video>
                           ) : (
                             <span className="instagram-reel-placeholder"><Video size={18} /></span>
                           )}
@@ -1922,15 +1931,14 @@ function InstagramImportModal({
             <button
               type="button"
               className="primary full"
-              disabled={!selectedReel || busy}
-              onClick={() => selectedReel && onUseReel(selectedReel)}
+              disabled={!selectedReels.length || busy}
+              onClick={() => selectedReels.length && onUseReels(selectedReels)}
             >
-              Use selected reel
+              Use {selectedReels.length || "selected"} reels
             </button>
           </>
         )}
-      </div>
-    </div>
+    </section>
   );
 }
 
@@ -1940,14 +1948,14 @@ function Dashboard({
   onPost,
   onEdit,
   onRefresh,
-  onImportReel,
+  onImportReels,
 }: {
   items: Listing[];
   enquiries: PropertyEnquiry[];
   onPost: () => void;
   onEdit: (listing: Listing) => void;
   onRefresh: () => void;
-  onImportReel: (reel: ImportedInstagramReel) => void;
+  onImportReels: (reels: ImportedInstagramReel[]) => void;
 }) {
   const [instagramOpen, setInstagramOpen] = useState(false);
   const [instagramConnected, setInstagramConnected] = useState(false);
@@ -2061,6 +2069,16 @@ function Dashboard({
           </button>
         </div>
       </header>
+      {instagramOpen && (
+        <InstagramReelPicker
+          onClose={() => setInstagramOpen(false)}
+          connected={instagramConnected}
+          onUseReels={(reels) => {
+            setInstagramOpen(false);
+            onImportReels(reels);
+          }}
+        />
+      )}
       <div className="stats">
         <div>
           <span>All posts</span>
@@ -2146,16 +2164,6 @@ function Dashboard({
             </article>
           ))}
         </div>
-      )}
-      {instagramOpen && (
-        <InstagramImportModal
-          onClose={() => setInstagramOpen(false)}
-          connected={instagramConnected}
-          onUseReel={(reel) => {
-            setInstagramOpen(false);
-            onImportReel(reel);
-          }}
-        />
       )}
       <EnquiryInbox items={enquiries} onChanged={onRefresh} />
     </section>
@@ -2336,7 +2344,8 @@ export default function Portal() {
   const [queue, setQueue] = useState<Listing[]>([]);
   const [analyticsItems, setAnalyticsItems] = useState<Listing[]>([]);
   const [editing, setEditing] = useState<Listing | null>(null);
-  const [instagramImport, setInstagramImport] = useState<ImportedInstagramReel | null>(null);
+  const [instagramImportQueue, setInstagramImportQueue] = useState<ImportedInstagramReel[]>([]);
+  const [instagramQueueTotal, setInstagramQueueTotal] = useState(0);
   const load = useCallback(async () => {
     if (session?.user) {
       const [{ data: own }, { data: p }, { data: leadData }] =
@@ -2424,6 +2433,12 @@ export default function Portal() {
     };
     window.addEventListener("message", onInstagramConnected);
     return () => window.removeEventListener("message", onInstagramConnected);
+  }, []);
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("instagram") !== "connected") return;
+    window.history.replaceState(null, "", url.pathname);
+    void Promise.resolve().then(() => setView("dashboard"));
   }, []);
   useEffect(() => {
     const stop = () =>
@@ -2556,16 +2571,27 @@ export default function Portal() {
         <Marketplace onRequireLogin={() => setLogin(true)} />
       ) : view === "post" && session ? (
         <PostForm
-          key={editing?.id || instagramImport?.id || "new"}
+          key={editing?.id || instagramImportQueue[0]?.id || "new"}
           user={session.user}
           initial={editing || undefined}
-          instagramReel={instagramImport || undefined}
-          onClearInstagramImport={() => setInstagramImport(null)}
+          instagramReel={instagramImportQueue[0]}
+          instagramQueuePosition={instagramQueueTotal - instagramImportQueue.length + 1}
+          instagramQueueTotal={instagramQueueTotal}
+          onClearInstagramImport={() => {
+            setInstagramImportQueue([]);
+            setInstagramQueueTotal(0);
+          }}
           onDone={() => {
             load();
             setEditing(null);
-            setInstagramImport(null);
-            setView("dashboard");
+            if (!editing && instagramImportQueue.length > 1) {
+              setInstagramImportQueue((current) => current.slice(1));
+              setView("post");
+            } else {
+              setInstagramImportQueue([]);
+              setInstagramQueueTotal(0);
+              setView("dashboard");
+            }
           }}
         />
       ) : view === "dashboard" && session ? (
@@ -2574,13 +2600,15 @@ export default function Portal() {
           enquiries={enquiries}
           onPost={() => {
             setEditing(null);
-            setInstagramImport(null);
+            setInstagramImportQueue([]);
+            setInstagramQueueTotal(0);
             guarded("post");
           }}
           onEdit={(listing) => void editRejected(listing)}
           onRefresh={() => void load()}
-          onImportReel={(reel) => {
-            setInstagramImport(reel);
+          onImportReels={(reels) => {
+            setInstagramImportQueue(reels);
+            setInstagramQueueTotal(reels.length);
             setEditing(null);
             setView("post");
           }}
