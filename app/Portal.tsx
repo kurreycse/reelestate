@@ -48,6 +48,43 @@ import type { Listing, Profile, PropertyEnquiry } from "../lib/types";
 import { DUMMY_LISTINGS, isDummyListing } from "../lib/dummyListings";
 
 type View = "feed" | "post" | "dashboard" | "admin";
+
+type ImportedInstagramReel = {
+  id: string;
+  caption: string;
+  media_type: "VIDEO" | "IMAGE" | "CAROUSEL_ALBUM";
+  media_url: string;
+  thumbnail_url?: string;
+  permalink?: string;
+  username?: string;
+  timestamp?: string;
+};
+
+const DEMO_INSTAGRAM_REELS: ImportedInstagramReel[] = [
+  {
+    id: "demo-reel-1",
+    caption: "Sunlit 3 BHK with a calm sunset view and a bright balcony.",
+    media_type: "VIDEO",
+    media_url: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+    thumbnail_url:
+      "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=900&q=80",
+    permalink: "https://www.instagram.com/",
+    username: "reelestate_demo",
+    timestamp: new Date().toISOString(),
+  },
+  {
+    id: "demo-reel-2",
+    caption: "A minimalist apartment with premium marble flooring and open natural light.",
+    media_type: "VIDEO",
+    media_url: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm",
+    thumbnail_url:
+      "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=900&q=80",
+    permalink: "https://www.instagram.com/",
+    username: "reelestate_demo",
+    timestamp: new Date(Date.now() - 86400000).toISOString(),
+  },
+];
+
 const CITY_LOCALITIES = {
   Raipur: [
     "Avanti Vihar",
@@ -930,10 +967,14 @@ function PostForm({
   user,
   onDone,
   initial,
+  instagramReel,
+  onClearInstagramImport,
 }: {
   user: Session["user"];
   onDone: () => void;
   initial?: Listing;
+  instagramReel?: ImportedInstagramReel;
+  onClearInstagramImport?: () => void;
 }) {
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -947,6 +988,11 @@ function PostForm({
   const [purpose, setPurpose] = useState<"sale" | "rent">(
     initial?.purpose || "sale",
   );
+  const importedCaption = instagramReel?.caption?.replace(/\s+/g, " ").trim() || "";
+  const importedTitle = initial?.title ||
+    (importedCaption ? importedCaption.slice(0, 70) : "Instagram reel property listing");
+  const importedDescription = initial?.description ||
+    (importedCaption || "A short property walkthrough imported from Instagram.");
   const [propertyType, setPropertyType] = useState(
     initial?.property_type || "Apartment",
   );
@@ -963,6 +1009,39 @@ function PostForm({
   const [propertyCity, setPropertyCity] = useState<SupportedCity>(initialCity);
   const [propertyLocality, setPropertyLocality] =
     useState<string>(initialLocality);
+
+  useEffect(() => {
+    if (!instagramReel || initial || video) return;
+    let active = true;
+    const loadRemoteReel = async () => {
+      try {
+        const response = await fetch(instagramReel.media_url, { cache: "no-store" });
+        if (!response.ok) throw new Error("Instagram reel could not be loaded.");
+        const blob = await response.blob();
+        const mediaType = blob.type.startsWith("video/") ? "video/mp4" : "image/jpeg";
+        const fileName = `${instagramReel.id}.${mediaType.includes("video") ? "mp4" : "jpg"}`;
+        const importedFile = new File([blob], fileName, { type: mediaType });
+        if (!active) return;
+        const objectUrl = URL.createObjectURL(importedFile);
+        setVideo(importedFile);
+        setPreview(objectUrl);
+        setDuration(instagramReel.timestamp ? 15 : 0);
+        if (instagramReel.thumbnail_url) {
+          const thumbnailResponse = await fetch(instagramReel.thumbnail_url, { cache: "no-store" });
+          const thumbnailBlob = await thumbnailResponse.blob();
+          if (active) setPoster(thumbnailBlob);
+        }
+      } catch {
+        if (active) setError("This Instagram reel could not be imported. Please try another reel.");
+      }
+    };
+    void loadRemoteReel();
+    return () => {
+      active = false;
+      if (preview.startsWith("blob:")) URL.revokeObjectURL(preview);
+    };
+  }, [instagramReel, initial, video, preview]);
+
   const select = (file?: File) => {
     if (!file) return;
     setError("");
@@ -1170,12 +1249,21 @@ function PostForm({
         </div>
         <div className="listing-fields">
           <h2>Property details</h2>
+          {instagramReel && (
+            <div className="instagram-import-banner">
+              <span className="eyebrow">Imported from Instagram</span>
+              <p>{instagramReel.username || "Instagram reel"}</p>
+              {onClearInstagramImport && (
+                <button type="button" className="back-link" onClick={onClearInstagramImport}>Use another reel</button>
+              )}
+            </div>
+          )}
           <div className="form-grid two">
             <label>
               Listing title
               <input
                 name="title"
-                defaultValue={initial?.title}
+                defaultValue={importedTitle}
                 placeholder="Sunlit 3 BHK with garden view"
                 required
                 minLength={5}
@@ -1683,19 +1771,142 @@ function EnquiryInbox({
   );
 }
 
+function InstagramImportModal({
+  onClose,
+  onUseReel,
+}: {
+  onClose: () => void;
+  onUseReel: (reel: ImportedInstagramReel) => void;
+}) {
+  const [reels, setReels] = useState<ImportedInstagramReel[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("reelestate-instagram-reels");
+      if (stored) {
+        const parsed = JSON.parse(stored) as ImportedInstagramReel[];
+        if (parsed.length) {
+          setReels(parsed);
+          return;
+        }
+      }
+    } catch {
+      /* fall back to demo reels */
+    }
+    setReels(DEMO_INSTAGRAM_REELS);
+    localStorage.setItem("reelestate-instagram-reels", JSON.stringify(DEMO_INSTAGRAM_REELS));
+  }, []);
+
+  async function connect() {
+    setBusy(true);
+    setError("");
+    const token = localStorage.getItem("reelestate-instagram-access-token");
+    if (token) {
+      try {
+        const response = await fetch("/api/instagram/reels", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!response.ok) throw new Error("Unable to fetch your reels.");
+        const json = (await response.json()) as { data?: ImportedInstagramReel[] };
+        const next = (json.data || []).map((item) => ({
+          id: item.id,
+          caption: item.caption || "Imported from Instagram",
+          media_type: item.media_type || "VIDEO",
+          media_url: item.media_url || item.thumbnail_url || "",
+          thumbnail_url: item.thumbnail_url,
+          permalink: item.permalink,
+          username: item.username,
+          timestamp: item.timestamp,
+        }));
+        if (!next.length) throw new Error("No reels were returned for this account.");
+        setReels(next);
+        localStorage.setItem("reelestate-instagram-reels", JSON.stringify(next));
+      } catch (requestError) {
+        setError(
+          requestError instanceof Error
+            ? requestError.message
+            : "Your reels could not be loaded right now.",
+        );
+      }
+      setBusy(false);
+      return;
+    }
+
+    const clientId = process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID || "1411779603837368";
+    if (!clientId) {
+      const fallback = DEMO_INSTAGRAM_REELS;
+      setReels(fallback);
+      localStorage.setItem("reelestate-instagram-reels", JSON.stringify(fallback));
+      setBusy(false);
+      return;
+    }
+
+    const redirectUri = `${window.location.origin}/auth/insta/callback`;
+    const authUrl = `https://www.instagram.com/oauth/authorize?force_reauth=true&client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent("instagram_business_basic")}`;
+    const popup = window.open(authUrl, "instagramConnect", "width=520,height=720");
+    const onMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data?.type === "instagram-connected") {
+        localStorage.setItem("reelestate-instagram-access-token", event.data.accessToken);
+        void connect();
+      }
+    };
+    window.addEventListener("message", onMessage);
+    if (!popup) {
+      setError("Your browser blocked the Instagram popup. Please allow popups and try again.");
+      setBusy(false);
+      window.removeEventListener("message", onMessage);
+    }
+  }
+
+  return (
+    <div className="modal-backdrop" role="presentation">
+      <div className="auth-modal instagram-modal" role="dialog" aria-modal="true" aria-labelledby="instagram-title">
+        <button className="icon-btn close" onClick={onClose} aria-label="Close"><X /></button>
+        <div className="brand-mark"><Video /></div>
+        <span className="eyebrow">Instagram</span>
+        <h2 id="instagram-title">Connect your reels</h2>
+        <p className="modal-intro">Pick a reel, save it to your draft, then publish it like any other property post.</p>
+        <button className="primary full" disabled={busy} onClick={() => void connect()}>
+          {busy ? <Loader2 className="spin" /> : <Video />}
+          {busy ? "Loading reels…" : "Connect Instagram"}
+        </button>
+        {error && <div className="form-error"><CircleAlert size={16} />{error}</div>}
+        {reels.length > 0 && (
+          <div className="instagram-grid">
+            {reels.map((reel) => (
+              <button key={reel.id} type="button" className="instagram-card" onClick={() => onUseReel(reel)}>
+                <img src={reel.thumbnail_url || reel.media_url} alt={reel.caption || "Instagram reel"} />
+                <span>{reel.caption || "Instagram reel"}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function Dashboard({
   items,
   enquiries,
   onPost,
   onEdit,
   onRefresh,
+  onImportReel,
 }: {
   items: Listing[];
   enquiries: PropertyEnquiry[];
   onPost: () => void;
   onEdit: (listing: Listing) => void;
   onRefresh: () => void;
+  onImportReel: (reel: ImportedInstagramReel) => void;
 }) {
+  const [instagramOpen, setInstagramOpen] = useState(false);
   return (
     <section className="workspace">
       <header className="section-head compact">
@@ -1704,9 +1915,14 @@ function Dashboard({
           <h1>My property posts</h1>
           <p>Track every draft, review and live listing in one place.</p>
         </div>
-        <button className="primary" onClick={onPost}>
-          <Plus /> Post a free listing
-        </button>
+        <div className="dashboard-actions">
+          <button className="secondary" onClick={() => setInstagramOpen(true)}>
+            <Video /> Connect Instagram
+          </button>
+          <button className="primary" onClick={onPost}>
+            <Plus /> Post a free listing
+          </button>
+        </div>
       </header>
       <div className="stats">
         <div>
@@ -1793,6 +2009,15 @@ function Dashboard({
             </article>
           ))}
         </div>
+      )}
+      {instagramOpen && (
+        <InstagramImportModal
+          onClose={() => setInstagramOpen(false)}
+          onUseReel={(reel) => {
+            setInstagramOpen(false);
+            onImportReel(reel);
+          }}
+        />
       )}
       <EnquiryInbox items={enquiries} onChanged={onRefresh} />
     </section>
@@ -1973,6 +2198,7 @@ export default function Portal() {
   const [queue, setQueue] = useState<Listing[]>([]);
   const [analyticsItems, setAnalyticsItems] = useState<Listing[]>([]);
   const [editing, setEditing] = useState<Listing | null>(null);
+  const [instagramImport, setInstagramImport] = useState<ImportedInstagramReel | null>(null);
   const load = useCallback(async () => {
     if (session?.user) {
       const [{ data: own }, { data: p }, { data: leadData }] =
@@ -2181,12 +2407,15 @@ export default function Portal() {
         <Marketplace onRequireLogin={() => setLogin(true)} />
       ) : view === "post" && session ? (
         <PostForm
-          key={editing?.id || "new"}
+          key={editing?.id || instagramImport?.id || "new"}
           user={session.user}
           initial={editing || undefined}
+          instagramReel={instagramImport || undefined}
+          onClearInstagramImport={() => setInstagramImport(null)}
           onDone={() => {
             load();
             setEditing(null);
+            setInstagramImport(null);
             setView("dashboard");
           }}
         />
@@ -2196,10 +2425,16 @@ export default function Portal() {
           enquiries={enquiries}
           onPost={() => {
             setEditing(null);
+            setInstagramImport(null);
             guarded("post");
           }}
           onEdit={(listing) => void editRejected(listing)}
-          onRefresh={load}
+          onRefresh={() => void load()}
+          onImportReel={(reel) => {
+            setInstagramImport(reel);
+            setEditing(null);
+            setView("post");
+          }}
         />
       ) : view === "admin" && isStaff ? (
         <Admin
