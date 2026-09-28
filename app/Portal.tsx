@@ -955,8 +955,8 @@ function PostForm({
   onDone: () => void;
   initial?: Listing;
   instagramReel?: ImportedInstagramReel;
-  instagramQueuePosition?: number;
-  instagramQueueTotal?: number;
+  instagramQueuePosition: number;
+  instagramQueueTotal: number;
   onClearInstagramImport?: () => void;
 }) {
   const [busy, setBusy] = useState(false);
