@@ -1792,21 +1792,21 @@ function InstagramImportModal({
         const parsed = JSON.parse(stored) as ImportedInstagramReel[];
         if (parsed.length) {
           setReels(parsed);
+          return;
         }
       }
     } catch {
-      /* fall back to demo reels */
-    }
-
-    if (!reels.length) {
-      setReels(DEMO_INSTAGRAM_REELS);
-      localStorage.setItem("reelestate-instagram-reels", JSON.stringify(DEMO_INSTAGRAM_REELS));
+      /* ignore invalid cache */
     }
 
     const token = localStorage.getItem(INSTAGRAM_TOKEN_KEY);
-    if (token) {
-      void connect();
+    if (!token) {
+      setReels(DEMO_INSTAGRAM_REELS);
+      localStorage.setItem("reelestate-instagram-reels", JSON.stringify(DEMO_INSTAGRAM_REELS));
+      return;
     }
+
+    void connect();
   }, []);
 
   async function connect() {
@@ -1912,24 +1912,33 @@ function Dashboard({
   const [instagramOpen, setInstagramOpen] = useState(false);
   const [instagramConnected, setInstagramConnected] = useState(false);
 
+  const syncInstagramStatus = () => {
+    setInstagramConnected(Boolean(localStorage.getItem(INSTAGRAM_TOKEN_KEY)));
+  };
+
   useEffect(() => {
-    const sync = () => {
-      setInstagramConnected(Boolean(localStorage.getItem(INSTAGRAM_TOKEN_KEY)));
-    };
-    sync();
-    window.addEventListener("storage", sync);
+    syncInstagramStatus();
+    window.addEventListener("storage", syncInstagramStatus);
     const onMessage = (event: MessageEvent) => {
       if (event.origin !== window.location.origin) return;
       if (event.data?.type === "instagram-connected") {
-        sync();
+        syncInstagramStatus();
       }
     };
     window.addEventListener("message", onMessage);
     return () => {
-      window.removeEventListener("storage", sync);
+      window.removeEventListener("storage", syncInstagramStatus);
       window.removeEventListener("message", onMessage);
     };
   }, []);
+
+  const disconnectInstagram = () => {
+    if (!window.confirm("Disconnect Instagram and remove the saved reel access?")) return;
+    localStorage.removeItem(INSTAGRAM_TOKEN_KEY);
+    localStorage.removeItem("reelestate-instagram-reels");
+    syncInstagramStatus();
+    setInstagramOpen(false);
+  };
 
   return (
     <section className="workspace">
@@ -1943,6 +1952,11 @@ function Dashboard({
           <button className="secondary" onClick={() => setInstagramOpen(true)}>
             <Video /> {instagramConnected ? "Fetch reels" : "Connect Instagram"}
           </button>
+          {instagramConnected && (
+            <button className="secondary" onClick={disconnectInstagram}>
+              <X /> Disconnect Instagram
+            </button>
+          )}
           <button className="primary" onClick={onPost}>
             <Plus /> Post a free listing
           </button>
