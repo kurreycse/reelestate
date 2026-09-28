@@ -55,6 +55,11 @@ test("Instagram reel import shows connected reels inline with multi-select playb
   assert.match(portal, /Sale price \(INR\)/);
   assert.match(portal, /Monthly rent \(INR\)/);
   assert.match(portal, /Complete the title, price, city, locality/);
+  assert.match(portal, /aria-expanded=\{expandedReelIds\.includes\(reel\.id\)\}/);
+  assert.match(portal, /localStorage\.setItem\(instagramReelDraftStorageKey\(\), JSON\.stringify\(next\)\)/);
+  assert.match(portal, /Draft auto-saved on this device/);
+  assert.match(portal, /Save to database and submit for review/);
+  assert.match(styles, /\.instagram-details-toggle/);
   assert.match(portal, /playsInline/);
   assert.match(portal, /onImportReels/);
   assert.match(portal, /instagramQueuePosition/);

@@ -75,6 +75,18 @@ type ImportedInstagramReel = {
   listingDetails?: ImportedReelDetails;
 };
 
+function instagramReelDraftStorageKey() {
+  try {
+    const account = JSON.parse(localStorage.getItem(INSTAGRAM_ACCOUNT_KEY) || "null") as {
+      username?: string;
+    } | null;
+    const username = account?.username?.toLowerCase() || "connected-account";
+    return `reelestate-instagram-reel-drafts:${username}`;
+  } catch {
+    return "reelestate-instagram-reel-drafts:connected-account";
+  }
+}
+
 const CITY_LOCALITIES = {
   Raipur: [
     "Avanti Vihar",
@@ -1667,7 +1679,9 @@ function PostForm({
               ? "Uploading…"
               : initial
                 ? "Resubmit for review"
-                : "Submit for review"}
+                : instagramReel
+                  ? "Save to database and submit for review"
+                  : "Submit for review"}
           </button>
         </div>
       </form>
@@ -1785,6 +1799,7 @@ function InstagramReelPicker({
   const [reels, setReels] = useState<ImportedInstagramReel[]>([]);
   const [selectedReelIds, setSelectedReelIds] = useState<string[]>([]);
   const [reelDetails, setReelDetails] = useState<Record<string, ImportedReelDetails>>({});
+  const [expandedReelIds, setExpandedReelIds] = useState<string[]>([]);
   const [busy, setBusy] = useState(connected);
   const [error, setError] = useState("");
 
@@ -1812,21 +1827,34 @@ function InstagramReelPicker({
           timestamp: item.timestamp,
         };
       });
+      let savedDetails: Record<string, ImportedReelDetails> = {};
+      try {
+        savedDetails = JSON.parse(
+          localStorage.getItem(instagramReelDraftStorageKey()) || "{}",
+        ) as Record<string, ImportedReelDetails>;
+      } catch {
+        localStorage.removeItem(instagramReelDraftStorageKey());
+      }
       setReels(next);
       setSelectedReelIds([]);
-      setReelDetails(Object.fromEntries(next.map((reel) => [reel.id, {
-        title: reel.caption.replace(/\s+/g, " ").trim().slice(0, 70).length >= 5
-          ? reel.caption.replace(/\s+/g, " ").trim().slice(0, 70)
-          : "Instagram property reel",
-        purpose: "sale",
-        price: "",
-        city: "Raipur",
-        locality: CITY_LOCALITIES.Raipur[0],
-        propertyType: "Apartment",
-        description: reel.caption.length >= 20
-          ? reel.caption.slice(0, 2000)
-          : `${reel.caption} Property walkthrough imported from Instagram.`.slice(0, 2000),
-      }])));
+      setExpandedReelIds([]);
+      const detailsByReel = Object.fromEntries(next.map((reel) => {
+        const caption = reel.caption.replace(/\s+/g, " ").trim();
+        const defaults: ImportedReelDetails = {
+          title: caption.slice(0, 70).length >= 5 ? caption.slice(0, 70) : "Instagram property reel",
+          purpose: "sale",
+          price: "",
+          city: "Raipur",
+          locality: CITY_LOCALITIES.Raipur[0],
+          propertyType: "Apartment",
+          description: reel.caption.length >= 20
+            ? reel.caption.slice(0, 2000)
+            : `${reel.caption} Property walkthrough imported from Instagram.`.slice(0, 2000),
+        };
+        return [reel.id, { ...defaults, ...savedDetails[reel.id] }];
+      }));
+      setReelDetails(detailsByReel);
+      localStorage.setItem(instagramReelDraftStorageKey(), JSON.stringify(detailsByReel));
     } catch (requestError) {
       setError(
         requestError instanceof Error
@@ -1865,10 +1893,24 @@ function InstagramReelPicker({
     .map((reel) => ({ ...reel, listingDetails: reelDetails[reel.id] }));
 
   function updateReelDetails(id: string, changes: Partial<ImportedReelDetails>) {
-    setReelDetails((current) => ({
-      ...current,
-      [id]: { ...current[id], ...changes },
-    }));
+    const next = {
+      ...reelDetails,
+      [id]: { ...reelDetails[id], ...changes },
+    };
+    setReelDetails(next);
+    try {
+      localStorage.setItem(instagramReelDraftStorageKey(), JSON.stringify(next));
+    } catch {
+      setError("This browser could not save the reel details draft.");
+    }
+  }
+
+  function toggleDetails(id: string) {
+    setExpandedReelIds((current) =>
+      current.includes(id)
+        ? current.filter((reelId) => reelId !== id)
+        : [...current, id],
+    );
   }
 
   function continueWithSelected() {
@@ -1958,7 +2000,19 @@ function InstagramReelPicker({
                     )}
                     <p className="instagram-reel-caption">{reel.caption || "Instagram reel"}</p>
                     {details && (
+                      <>
+                        <button
+                          type="button"
+                          className="instagram-details-toggle"
+                          aria-expanded={expandedReelIds.includes(reel.id)}
+                          onClick={() => toggleDetails(reel.id)}
+                        >
+                          {expandedReelIds.includes(reel.id) ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                          {expandedReelIds.includes(reel.id) ? "Hide property details" : "Add property details"}
+                        </button>
+                        {expandedReelIds.includes(reel.id) && (
                       <div className="instagram-reel-details">
+                        <small className="instagram-draft-status">Draft auto-saved on this device. It is not added to the database until submission.</small>
                         <label>Listing title<input value={details.title} maxLength={120} minLength={5} onChange={(event) => updateReelDetails(reel.id, { title: event.target.value })} /></label>
                         <div className="form-grid two">
                           <label>Purpose<select value={details.purpose} onChange={(event) => updateReelDetails(reel.id, { purpose: event.target.value as "sale" | "rent" })}><option value="sale">For sale</option><option value="rent">For rent</option></select></label>
@@ -1971,6 +2025,8 @@ function InstagramReelPicker({
                         <label>Locality<input value={details.locality} maxLength={150} onChange={(event) => updateReelDetails(reel.id, { locality: event.target.value })} placeholder="Area or locality" /></label>
                         <label>Description<textarea value={details.description} minLength={20} maxLength={2000} onChange={(event) => updateReelDetails(reel.id, { description: event.target.value })} rows={3} /></label>
                       </div>
+                        )}
+                      </>
                     )}
                   </article>
                 );
@@ -2632,6 +2688,16 @@ export default function Portal() {
           onDone={() => {
             load();
             setEditing(null);
+            if (!editing && instagramImportQueue[0]) {
+              try {
+                const draftKey = instagramReelDraftStorageKey();
+                const saved = JSON.parse(localStorage.getItem(draftKey) || "{}") as Record<string, ImportedReelDetails>;
+                delete saved[instagramImportQueue[0].id];
+                localStorage.setItem(draftKey, JSON.stringify(saved));
+              } catch {
+                /* Listing is already saved; a stale local draft is harmless. */
+              }
+            }
             if (!editing && instagramImportQueue.length > 1) {
               setInstagramImportQueue((current) => current.slice(1));
               setView("post");
