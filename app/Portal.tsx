@@ -64,31 +64,6 @@ type ImportedInstagramReel = {
   timestamp?: string;
 };
 
-const DEMO_INSTAGRAM_REELS: ImportedInstagramReel[] = [
-  {
-    id: "demo-reel-1",
-    caption: "Sunlit 3 BHK with a calm sunset view and a bright balcony.",
-    media_type: "VIDEO",
-    media_url: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-    thumbnail_url:
-      "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=900&q=80",
-    permalink: "https://www.instagram.com/",
-    username: "reelestate_demo",
-    timestamp: new Date().toISOString(),
-  },
-  {
-    id: "demo-reel-2",
-    caption: "A minimalist apartment with premium marble flooring and open natural light.",
-    media_type: "VIDEO",
-    media_url: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm",
-    thumbnail_url:
-      "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=900&q=80",
-    permalink: "https://www.instagram.com/",
-    username: "reelestate_demo",
-    timestamp: new Date(Date.now() - 86400000).toISOString(),
-  },
-];
-
 const CITY_LOCALITIES = {
   Raipur: [
     "Avanti Vihar",
@@ -1778,75 +1753,67 @@ function EnquiryInbox({
 function InstagramImportModal({
   onClose,
   onUseReel,
+  connected,
 }: {
   onClose: () => void;
   onUseReel: (reel: ImportedInstagramReel) => void;
+  connected: boolean;
 }) {
   const [reels, setReels] = useState<ImportedInstagramReel[]>([]);
-  const [busy, setBusy] = useState(false);
+  const [selectedReelId, setSelectedReelId] = useState("");
+  const [busy, setBusy] = useState(connected);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem("reelestate-instagram-reels");
-      if (stored) {
-        const parsed = JSON.parse(stored) as ImportedInstagramReel[];
-        if (parsed.length) {
-          setReels(parsed);
-          return;
-        }
-      }
-    } catch {
-      /* ignore invalid cache */
-    }
-
+  const fetchReels = useCallback(async () => {
     const token = localStorage.getItem(INSTAGRAM_TOKEN_KEY);
-    if (!token) {
-      setReels(DEMO_INSTAGRAM_REELS);
-      localStorage.setItem("reelestate-instagram-reels", JSON.stringify(DEMO_INSTAGRAM_REELS));
-      return;
+    if (!token) return;
+    try {
+      const response = await fetch("/api/instagram/reels", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) throw new Error("Unable to fetch your reels.");
+      const json = (await response.json()) as { data?: ImportedInstagramReel[] };
+      const next = (json.data || []).map((item) => {
+        const mediaUrl = item.media_url || item.thumbnail_url || "";
+        return {
+          id: item.id,
+          caption: item.caption || "Imported from Instagram",
+          media_type: item.media_type || "VIDEO",
+          media_url: mediaUrl,
+          thumbnail_url: item.thumbnail_url || mediaUrl,
+          permalink: item.permalink,
+          username: item.username,
+          timestamp: item.timestamp,
+        };
+      });
+      setReels(next);
+      setSelectedReelId(next[0]?.id || "");
+    } catch (requestError) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Your reels could not be loaded right now.",
+      );
+    } finally {
+      setBusy(false);
     }
-
-    void connect();
   }, []);
 
-  async function connect() {
+  useEffect(() => {
+    if (connected && localStorage.getItem(INSTAGRAM_TOKEN_KEY)) {
+      void Promise.resolve().then(fetchReels);
+    }
+  }, [connected, fetchReels]);
+
+  function connect() {
     setBusy(true);
     setError("");
-    const token = localStorage.getItem(INSTAGRAM_TOKEN_KEY);
-    if (token) {
-      try {
-        const response = await fetch("/api/instagram/reels", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (!response.ok) throw new Error("Unable to fetch your reels.");
-        const json = (await response.json()) as { data?: ImportedInstagramReel[] };
-        const next = (json.data || []).map((item) => {
-          const mediaUrl = item.media_url || item.thumbnail_url || "";
-          return {
-            id: item.id,
-            caption: item.caption || "Imported from Instagram",
-            media_type: item.media_type || "VIDEO",
-            media_url: mediaUrl,
-            thumbnail_url: item.thumbnail_url || mediaUrl,
-            permalink: item.permalink,
-            username: item.username,
-            timestamp: item.timestamp,
-          };
-        });
-        if (!next.length) throw new Error("No reels were returned for this account.");
-        setReels(next);
-        localStorage.setItem("reelestate-instagram-reels", JSON.stringify(next));
-      } catch (requestError) {
-        setError(
-          requestError instanceof Error
-            ? requestError.message
-            : "Your reels could not be loaded right now.",
-        );
-      }
-      setBusy(false);
+    setReels([]);
+    setSelectedReelId("");
+    if (localStorage.getItem(INSTAGRAM_TOKEN_KEY)) {
+      void fetchReels();
       return;
     }
 
@@ -1859,7 +1826,6 @@ function InstagramImportModal({
       if (event.data?.type === "instagram-connected") {
         window.removeEventListener("message", onMessage);
         localStorage.setItem(INSTAGRAM_TOKEN_KEY, event.data.accessToken);
-        void connect();
       }
     };
     window.addEventListener("message", onMessage);
@@ -1870,7 +1836,7 @@ function InstagramImportModal({
     }
   }
 
-  const connected = Boolean(localStorage.getItem(INSTAGRAM_TOKEN_KEY));
+  const selectedReel = reels.find((reel) => reel.id === selectedReelId);
 
   return (
     <div className="modal-backdrop" role="presentation">
@@ -1897,28 +1863,71 @@ function InstagramImportModal({
           </button>
         )}
         {error && <div className="form-error"><CircleAlert size={16} />{error}</div>}
+        {!busy && !error && connected && reels.length === 0 && (
+          <p className="instagram-empty">No Instagram reels were found for this account.</p>
+        )}
         {reels.length > 0 && (
-          <div className="instagram-grid">
-            {reels.map((reel) => {
-              const previewUrl = reel.thumbnail_url || reel.media_url || "";
-              return (
-                <button key={reel.id} type="button" className="instagram-card" onClick={() => onUseReel(reel)}>
-                  {previewUrl ? (
-                    <img
-                      src={previewUrl}
-                      alt={reel.caption || "Instagram reel"}
-                      onError={(event) => {
-                        event.currentTarget.style.display = "none";
-                      }}
-                    />
-                  ) : (
-                    <div className="instagram-card-placeholder">No preview</div>
-                  )}
-                  <span>{reel.caption || "Instagram reel"}</span>
-                </button>
-              );
-            })}
-          </div>
+          <>
+            <div className="instagram-table-wrap">
+              <table className="instagram-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Select</th>
+                    <th scope="col">Reel</th>
+                    <th scope="col">Posted</th>
+                    <th scope="col">Instagram account</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {reels.map((reel) => (
+                    <tr key={reel.id}>
+                      <td>
+                        <input
+                          type="radio"
+                          name="selected-instagram-reel"
+                          value={reel.id}
+                          checked={selectedReelId === reel.id}
+                          onChange={() => setSelectedReelId(reel.id)}
+                          aria-label={`Select reel: ${reel.caption || "Instagram reel"}`}
+                        />
+                      </td>
+                      <td>
+                        <div className="instagram-reel-cell">
+                          {reel.thumbnail_url ? (
+                            <Image src={reel.thumbnail_url} alt="" width={64} height={48} unoptimized />
+                          ) : (
+                            <span className="instagram-reel-placeholder"><Video size={18} /></span>
+                          )}
+                          <span>
+                            {reel.caption || "Instagram reel"}
+                            {reel.permalink && (
+                              <a href={reel.permalink} target="_blank" rel="noreferrer">
+                                View on Instagram
+                              </a>
+                            )}
+                          </span>
+                        </div>
+                      </td>
+                      <td>
+                        {reel.timestamp
+                          ? new Date(reel.timestamp).toLocaleDateString()
+                          : "—"}
+                      </td>
+                      <td>{reel.username ? `@${reel.username}` : "Connected account"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <button
+              type="button"
+              className="primary full"
+              disabled={!selectedReel || busy}
+              onClick={() => selectedReel && onUseReel(selectedReel)}
+            >
+              Use selected reel
+            </button>
+          </>
         )}
       </div>
     </div>
@@ -1969,7 +1978,8 @@ function Dashboard({
           profilePictureUrl: event.data.profilePictureUrl || "",
         };
         localStorage.setItem(INSTAGRAM_ACCOUNT_KEY, JSON.stringify(profile));
-        syncInstagramStatus();
+        setInstagramAccount(profile);
+        setInstagramConnected(true);
       }
     };
     window.addEventListener("message", onMessage);
@@ -2140,6 +2150,7 @@ function Dashboard({
       {instagramOpen && (
         <InstagramImportModal
           onClose={() => setInstagramOpen(false)}
+          connected={instagramConnected}
           onUseReel={(reel) => {
             setInstagramOpen(false);
             onImportReel(reel);

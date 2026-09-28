@@ -35,6 +35,20 @@ test("publisher-interest link is removed from the header", () => {
   assert.doesNotMatch(portal, /className="interest-compact"/);
 });
 
+test("Instagram reel import only shows the connected account's reels with explicit selection", () => {
+  const portal = read("app/Portal.tsx");
+  const route = read("app/api/instagram/reels/route.ts");
+  assert.match(route, /graph\.instagram\.com\/v20\.0\/me\/media/);
+  assert.match(route, /media_product_type/);
+  assert.match(route, /item\.media_product_type === "REELS"/);
+  assert.doesNotMatch(portal, /DEMO_INSTAGRAM_REELS/);
+  assert.doesNotMatch(portal, /getItem\("reelestate-instagram-reels"\)/);
+  assert.match(portal, /className="instagram-table"/);
+  assert.match(portal, /type="radio"/);
+  assert.match(portal, /Use selected reel/);
+  assert.match(portal, /setInstagramConnected\(true\)/);
+});
+
 test("logout clears privileged state and moderation rendering requires staff", () => {
   const portal = read("app/Portal.tsx");
   assert.match(portal, /async function logout\(\)/);

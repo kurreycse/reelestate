@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     const url = new URL("https://graph.instagram.com/v20.0/me/media");
     url.searchParams.set(
       "fields",
-      "id,caption,media_type,media_url,permalink,thumbnail_url,username,timestamp,children{media_url,thumbnail_url}",
+      "id,caption,media_type,media_product_type,media_url,permalink,thumbnail_url,username,timestamp,children{media_url,thumbnail_url}",
     );
     url.searchParams.set("access_token", token);
 
@@ -37,6 +37,7 @@ export async function GET(request: NextRequest) {
         thumbnail_url?: string;
         username?: string;
         timestamp?: string;
+        media_product_type?: string;
         children?: { data?: Array<{ media_url?: string; thumbnail_url?: string }> };
       }>;
       error?: { message?: string };
@@ -51,7 +52,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const normalized = data.data.map((item) => {
+    const normalized = data.data.filter((item) => item.media_product_type === "REELS").map((item) => {
       const childMedia = item.children?.data?.[0];
       return {
         ...item,
