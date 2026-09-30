@@ -1811,6 +1811,8 @@ function InstagramReelPicker({
   const [reels, setReels] = useState<ImportedInstagramReel[]>([]);
   const [alreadySavedCount, setAlreadySavedCount] = useState(0);
   const [selectedReelIds, setSelectedReelIds] = useState<string[]>([]);
+  const [reelSearch, setReelSearch] = useState("");
+  const [reelSort, setReelSort] = useState<"newest" | "oldest">("newest");
   const [reelDetails, setReelDetails] = useState<Record<string, ImportedReelDetails>>({});
   const [expandedReelIds, setExpandedReelIds] = useState<string[]>([]);
   const [reelFieldErrors, setReelFieldErrors] = useState<Record<string, string[]>>({});
@@ -1825,27 +1827,21 @@ function InstagramReelPicker({
     const token = localStorage.getItem(INSTAGRAM_TOKEN_KEY);
     if (!token) return;
     try {
-      const [response, { data: ownerListings, error: listingsError }] = await Promise.all([
+      const [response, { data: savedMediaRows, error: savedMediaError }] = await Promise.all([
         fetch("/api/instagram/reels", {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        supabase.rpc("get_my_listings"),
+        supabase.rpc("get_my_instagram_media_ids"),
       ]);
-      if (listingsError) throw new Error("Your saved listings could not be loaded. Please try again.");
+      if (savedMediaError) throw new Error("Your saved reel matches could not be loaded. Please try again.");
       if (!response.ok) throw new Error("Unable to fetch your reels.");
       const json = (await response.json()) as { data?: ImportedInstagramReel[] };
-      const savedListings = (ownerListings || []) as Listing[];
+      const savedMediaIds = new Set((savedMediaRows || []).map((row: { instagram_media_id: string }) => row.instagram_media_id));
       const fetched = (json.data || []).map((item) => {
         const mediaUrl = item.media_url || item.thumbnail_url || "";
-        const existingListing = savedListings
-          .filter((listing) => listing.instagram_media_id === item.id)
-          .sort((first, second) =>
-            Number(second.status === "published") - Number(first.status === "published") ||
-            second.created_at.localeCompare(first.created_at),
-          )[0];
         return {
           id: item.id,
-          listingId: existingListing?.id,
+          listingId: savedMediaIds.has(item.id) ? item.id : undefined,
           caption: item.caption || "Imported from Instagram",
           media_type: item.media_type || "VIDEO",
           media_url: mediaUrl,
@@ -1907,7 +1903,9 @@ function InstagramReelPicker({
     setBusy(true);
     setError("");
     setReels([]);
+    setAlreadySavedCount(0);
     setSelectedReelIds([]);
+    setReelSearch("");
     if (localStorage.getItem(INSTAGRAM_TOKEN_KEY)) {
       void fetchReels();
       return;
@@ -1922,19 +1920,38 @@ function InstagramReelPicker({
   const selectedReels = reels
     .filter((reel) => selectedReelIds.includes(reel.id))
     .map((reel) => ({ ...reel, listingDetails: reelDetails[reel.id] }));
-  const newReels = reels.filter((reel) => !reel.listingId);
-  const allSelected = newReels.length > 0 && newReels.every((reel) => selectedReelIds.includes(reel.id));
+  const newReels = useMemo(() => reels.filter((reel) => !reel.listingId), [reels]);
+  const visibleReels = useMemo(() => {
+    const query = reelSearch.trim().toLowerCase();
+    return newReels
+      .filter((reel) => !query || reel.caption.toLowerCase().includes(query))
+      .slice()
+      .sort((first, second) => {
+        const firstTime = Date.parse(first.timestamp || "") || 0;
+        const secondTime = Date.parse(second.timestamp || "") || 0;
+        return reelSort === "newest" ? secondTime - firstTime : firstTime - secondTime;
+      });
+  }, [newReels, reelSearch, reelSort]);
+  const selectedVisibleCount = visibleReels.filter((reel) => selectedReelIds.includes(reel.id)).length;
+  const allVisibleSelected = visibleReels.length > 0 && selectedVisibleCount === visibleReels.length;
 
   useEffect(() => {
     if (selectAllRef.current) {
-      selectAllRef.current.indeterminate = selectedReelIds.length > 0 && !allSelected;
+      selectAllRef.current.indeterminate = selectedVisibleCount > 0 && !allVisibleSelected;
     }
-  }, [allSelected, selectedReelIds.length]);
+  }, [allVisibleSelected, selectedVisibleCount]);
 
   function setReelSelected(id: string, selected: boolean) {
     setSelectedReelIds((current) => selected
       ? [...new Set([...current, id])]
       : current.filter((reelId) => reelId !== id));
+  }
+
+  function setVisibleReelsSelected(selected: boolean) {
+    const visibleIds = new Set(visibleReels.map((reel) => reel.id));
+    setSelectedReelIds((current) => selected
+      ? [...new Set([...current, ...visibleIds])]
+      : current.filter((id) => !visibleIds.has(id)));
   }
 
   function validateReel(details?: ImportedReelDetails) {
@@ -2003,7 +2020,7 @@ function InstagramReelPicker({
       setSaveProgress(`Saving reel ${index + 1} of ${selectedReels.length}…`);
       try {
         const details = reel.listingDetails!;
-        const { data: saveResult, error: saveError } = await supabase.functions.invoke("save-instagram-listing", {
+        const { error: saveError } = await supabase.functions.invoke("save-instagram-listing", {
           body: {
             id: reel.listingId || crypto.randomUUID(),
             title: details.title.trim(),
@@ -2045,10 +2062,7 @@ function InstagramReelPicker({
         if (saveError) throw new Error(await submissionError(saveError, "This reel could not be saved. Please retry."));
 
         savedCount += 1;
-        const savedListingId = (saveResult as { listing_id?: string } | null)?.listing_id;
-        if (savedListingId) {
-          setReels((current) => current.map((item) => item.id === reel.id ? { ...item, listingId: savedListingId } : item));
-        }
+        setReels((current) => current.filter((item) => item.id !== reel.id));
         setSelectedReelIds((current) => current.filter((id) => id !== reel.id));
         try {
           const draftKey = instagramReelDraftStorageKey();
@@ -2065,6 +2079,7 @@ function InstagramReelPicker({
     }
 
     if (savedCount > 0) {
+      setAlreadySavedCount((current) => current + savedCount);
       setNotice(`Saved ${savedCount} reel ${savedCount === 1 ? "listing" : "listings"} to the database. ${savedCount === 1 ? "It is" : "They are"} pending review.`);
       onSaved();
     }
@@ -2075,13 +2090,17 @@ function InstagramReelPicker({
   const renderReel = (reel: ImportedInstagramReel) => {
     const details = reelDetails[reel.id];
     const fieldErrors = reelFieldErrors[reel.id] || [];
+    const publishedAt = reel.timestamp ? new Date(reel.timestamp) : null;
+    const publishedLabel = publishedAt && !Number.isNaN(publishedAt.getTime())
+      ? `Posted ${new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }).format(publishedAt)}`
+      : "New reel";
     return <article className={`instagram-reel-card${fieldErrors.length ? " invalid" : ""}`} id={`instagram-reel-${reel.id}`} key={reel.id}>
       <label className="instagram-reel-select">
         <input type="checkbox" checked={selectedReelIds.includes(reel.id)} onChange={(event) => setReelSelected(reel.id, event.target.checked)} aria-label={`Select reel: ${reel.caption || "Instagram reel"}`} />
       </label>
       {reel.media_url ? <video className="instagram-reel-player" controls playsInline preload="none" poster={reel.thumbnail_url} aria-label={`Play reel: ${reel.caption || "Instagram reel"}`}><source src={reel.media_url} /></video> : <div className="instagram-reel-player instagram-reel-placeholder"><Video size={22} /></div>}
       <p className="instagram-reel-caption">{reel.caption || "Instagram reel"}</p>
-      <small className={`instagram-reel-source ${reel.listingId ? "saved" : "new"}`}>{reel.listingId ? "Already saved · property details loaded" : "New reel · not saved yet"}</small>
+      <small className="instagram-reel-source new">{publishedLabel}</small>
       {fieldErrors.length > 0 && <ul className="instagram-reel-errors" role="alert">{fieldErrors.map((fieldError) => <li key={fieldError}>{fieldError}</li>)}</ul>}
       {details && <>
         <button type="button" className="instagram-details-toggle" aria-expanded={expandedReelIds.includes(reel.id)} onClick={() => toggleDetails(reel.id)}>
@@ -2136,27 +2155,49 @@ function InstagramReelPicker({
         {notice && <div className="form-success" role="status"><Check size={16} />{notice}</div>}
         {saveProgress && <p className="instagram-save-progress" role="status"><Loader2 className="spin" size={16} />{saveProgress}</p>}
         {!busy && !error && connected && reels.length === 0 && alreadySavedCount > 0 && (
-          <p className="instagram-empty">All {alreadySavedCount} fetched reels already have saved listings.</p>
+          <p className="instagram-empty">{alreadySavedCount === 1 ? "The fetched reel already has a saved listing." : `All ${alreadySavedCount} fetched reels already have saved listings.`}</p>
         )}
         {!busy && !error && connected && reels.length === 0 && alreadySavedCount === 0 && (
           <p className="instagram-empty">No new Instagram reels were found for this account.</p>
         )}
         {reels.length > 0 && (
           <>
-            <label className="instagram-select-all">
-              <input ref={selectAllRef} type="checkbox" checked={allSelected} onChange={(event) => setSelectedReelIds(event.target.checked ? newReels.map((reel) => reel.id) : [])} />
-              Select all reels
-            </label>
-            <section className="instagram-reel-section"><h3>New additions</h3><div className="instagram-reel-grid">{newReels.map(renderReel)}</div></section>
-            <button
-              type="button"
-              className="primary full"
-              disabled={!selectedReels.length || busy || saving}
-              onClick={() => void continueWithSelected()}
-            >
-              {saving ? <Loader2 className="spin" /> : <Check />}
-              {saving ? saveProgress : `Save ${selectedReels.length || "selected"} reels to database`}
-            </button>
+            <div className="instagram-reel-summary" aria-live="polite">
+              <span><strong>{newReels.length}</strong> new reels</span>
+              <span><strong>{alreadySavedCount}</strong> already listed</span>
+            </div>
+            <div className="instagram-reel-tools">
+              <label className="instagram-reel-search">
+                <Search size={16} aria-hidden="true" />
+                <input type="search" aria-label="Search reels by caption" value={reelSearch} onChange={(event) => setReelSearch(event.target.value)} placeholder="Search captions" />
+              </label>
+              <label className="instagram-reel-sort">Sort by
+                <select value={reelSort} onChange={(event) => setReelSort(event.target.value as "newest" | "oldest")}>
+                  <option value="newest">Newest first</option>
+                  <option value="oldest">Oldest first</option>
+                </select>
+              </label>
+            </div>
+            <div className="instagram-reel-selection">
+              <label className="instagram-select-all">
+                <input ref={selectAllRef} type="checkbox" checked={allVisibleSelected} disabled={!visibleReels.length} onChange={(event) => setVisibleReelsSelected(event.target.checked)} />
+                Select visible ({visibleReels.length})
+              </label>
+              <span>{selectedReels.length} selected</span>
+            </div>
+            <section className="instagram-reel-section">
+              <h3>New reels <span>{visibleReels.length} of {newReels.length}</span></h3>
+              {visibleReels.length > 0
+                ? <div className="instagram-reel-grid">{visibleReels.map(renderReel)}</div>
+                : <p className="instagram-no-results">No reels match “{reelSearch.trim()}”. Try another caption.</p>}
+            </section>
+            <div className="instagram-save-bar">
+              <span aria-live="polite">{selectedReels.length} selected</span>
+              <button type="button" className="primary" disabled={!selectedReels.length || busy || saving} onClick={() => void continueWithSelected()}>
+                {saving ? <Loader2 className="spin" /> : <Check />}
+                {saving ? "Saving selected…" : `Save ${selectedReels.length || "selected"}`}
+              </button>
+            </div>
           </>
         )}
     </section>
