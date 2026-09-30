@@ -5,6 +5,7 @@ const allowedOrigins = new Set([
   "https://reelestate.co.in",
   "https://www.reelestate.co.in",
   "http://localhost:3000",
+  "http://localhost:3002",
   "http://localhost:3003",
   "http://localhost:5173",
   "http://localhost:5174",
@@ -83,14 +84,26 @@ Deno.serve(async (request) => {
       permalink?: string;
       media_type?: string;
       media_product_type?: string;
+      error?: { code?: number; type?: string; message?: string };
     };
     const normalizeUrl = (value: string) => {
       const parsed = new URL(value);
       const path = parsed.pathname.endsWith("/") ? parsed.pathname.slice(0, -1) : parsed.pathname;
       return `${parsed.origin}${path}`;
     };
+    if (!graphResponse.ok || reel.error) {
+      const expired = graphResponse.status === 401 || reel.error?.type === "OAuthException";
+      console.error("Instagram reel verification request failed", {
+        status: graphResponse.status,
+        providerCode: reel.error?.code,
+      });
+      return json(
+        { error: expired ? "instagram_connection_expired" : "instagram_reel_verification_failed" },
+        expired ? 401 : 502,
+        origin,
+      );
+    }
     if (
-      !graphResponse.ok ||
       reel.id !== mediaId ||
       reel.media_type !== "VIDEO" ||
       reel.media_product_type !== "REELS" ||
@@ -164,7 +177,16 @@ Deno.serve(async (request) => {
       p_owner_id: user.id,
       p_data: listingData,
     });
-    if (saveError) throw saveError;
+    if (saveError) {
+      console.error("Instagram listing database save failed", {
+        code: saveError.code,
+        message: saveError.message,
+      });
+      if (["PGRST202", "42883", "42P10"].includes(saveError.code || "")) {
+        return json({ error: "listing_database_not_ready" }, 503, origin);
+      }
+      throw saveError;
+    }
 
     await notifyListing(admin, "listing_submitted", {
       id: String(listingId),

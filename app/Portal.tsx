@@ -130,12 +130,17 @@ const money = (minor: number, currency = "INR") =>
   }).format(minor / 100);
 async function submissionError(error: unknown, fallback = "The property could not be submitted. Please retry; if it continues, use another H.264 MP4 video.") {
   let code = "";
+  let fieldErrors: Record<string, string> = {};
   try {
     const context = (error as { context?: Response })?.context;
-    if (context)
-      code = String(
-        ((await context.clone().json()) as { error?: string }).error || "",
-      );
+    if (context) {
+      const body = (await context.clone().json()) as {
+        error?: string;
+        field_errors?: Record<string, string>;
+      };
+      code = String(body.error || "");
+      fieldErrors = body.field_errors || {};
+    }
   } catch {
     /* invalid error response */
   }
@@ -170,7 +175,35 @@ async function submissionError(error: unknown, fallback = "The property could no
     case "poster_unavailable":
     case "video_read_failed":
       return "The uploaded video could not be read from storage. Please retry.";
+    case "instagram_connection_expired":
+      return "Your Instagram connection has expired. Reconnect Instagram, fetch the reels again, and retry.";
+    case "instagram_reel_verification_failed":
+      return "Instagram could not verify this reel. Reconnect the Instagram account and fetch reels again.";
+    case "instagram_reel_already_listed":
+      return "This reel is already listed. Fetch reels again to refresh the list.";
+    case "invalid_instagram_reel":
+      return "This reel could not be verified. Fetch your Instagram reels again and retry.";
+    case "listing_database_not_ready":
+      return "Instagram listing support is not enabled in the database yet. Apply the latest Supabase migrations, then retry.";
+    case "server_not_configured":
+      return "The Instagram save service is missing its server configuration.";
+    case "origin_not_allowed":
+      return "This site address is not enabled for Instagram saves. Open ReelEstate from its configured domain.";
+    case "invalid_listing_details": {
+      const messages = Object.values(fieldErrors);
+      return messages.length
+        ? `Check the property details: ${messages.join(" ")}`
+        : "Review the property details and required fields, then retry.";
+    }
+    case "listing_submission_failed":
+      return "The server could not create this listing. Retry once; if it still fails, the save service or database needs attention.";
     default:
+      if (!code) {
+        const message = String((error as { message?: string })?.message || "");
+        if (/failed to send a request|failed to fetch|networkerror/i.test(message)) {
+          return "Could not reach the Instagram save service. Check your connection or site address and retry.";
+        }
+      }
       return fallback;
   }
 }
