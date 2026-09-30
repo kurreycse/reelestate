@@ -128,7 +128,7 @@ const money = (minor: number, currency = "INR") =>
     currency,
     maximumFractionDigits: 0,
   }).format(minor / 100);
-async function submissionError(error: unknown) {
+async function submissionError(error: unknown, fallback = "The property could not be submitted. Please retry; if it continues, use another H.264 MP4 video.") {
   let code = "";
   try {
     const context = (error as { context?: Response })?.context;
@@ -171,7 +171,7 @@ async function submissionError(error: unknown) {
     case "video_read_failed":
       return "The uploaded video could not be read from storage. Please retry.";
     default:
-      return "The property could not be submitted. Please retry; if it continues, use another H.264 MP4 video.";
+      return fallback;
   }
 }
 function LoginModal({ onClose }: { onClose: () => void }) {
@@ -2089,7 +2089,7 @@ function InstagramReelPicker({
             instagram_access_token: instagramToken,
           },
         });
-        if (saveError) throw new Error(await submissionError(saveError));
+        if (saveError) throw new Error(await submissionError(saveError, "This reel could not be saved. Please retry."));
 
         savedCount += 1;
         const savedListingId = (saveResult as { listing_id?: string } | null)?.listing_id;
