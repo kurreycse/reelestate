@@ -34,6 +34,7 @@ export interface Listing {
   video_path: string | null;
   instagram_source_url?: string | null;
   instagram_media_id?: string | null;
+  is_available?: boolean;
   video_duration_seconds?: number;
   poster_path?: string;
   rejection_category?: string;

@@ -66,6 +66,7 @@ type ImportedReelDetails = {
 
 type ImportedInstagramReel = {
   id: string;
+  listingId?: string;
   caption: string;
   media_type: "VIDEO" | "IMAGE" | "CAROUSEL_ALBUM";
   media_url: string;
@@ -1801,37 +1802,86 @@ function InstagramReelPicker({
   contactPhone,
   onSaved,
   connected,
+  savedListings,
 }: {
   onClose: () => void;
   contactPhone: string;
   onSaved: () => void;
   connected: boolean;
+  savedListings: Listing[];
 }) {
   const [reels, setReels] = useState<ImportedInstagramReel[]>([]);
   const [selectedReelIds, setSelectedReelIds] = useState<string[]>([]);
   const [reelDetails, setReelDetails] = useState<Record<string, ImportedReelDetails>>({});
   const [expandedReelIds, setExpandedReelIds] = useState<string[]>([]);
+  const [reelFieldErrors, setReelFieldErrors] = useState<Record<string, string[]>>({});
+  const selectAllRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(connected);
   const [saving, setSaving] = useState(false);
   const [saveProgress, setSaveProgress] = useState("");
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
 
+  const listingDetails = (listing: Listing): ImportedReelDetails => ({
+    title: listing.title,
+    purpose: listing.purpose,
+    price: String(listing.price_minor / 100),
+    city: listing.city,
+    locality: listing.locality,
+    propertyType: listing.property_type,
+    description: listing.description,
+    contactPhone: listing.contact_phone,
+  });
+  const savedReel = (listing: Listing): ImportedInstagramReel => ({
+    id: listing.instagram_media_id!,
+    listingId: listing.id,
+    caption: listing.description,
+    media_type: "VIDEO",
+    media_url: "",
+    permalink: listing.instagram_source_url || undefined,
+  });
+
+  useEffect(() => {
+    const saved = savedListings
+      .filter((listing) => listing.instagram_media_id)
+      .map(savedReel);
+    if (!saved.length) return;
+    setReels((current) => current.length ? current : saved);
+    setReelDetails((current) => ({
+      ...Object.fromEntries(saved.map((reel) => {
+        const listing = savedListings.find((item) => item.id === reel.listingId)!;
+        return [reel.id, listingDetails(listing)];
+      })),
+      ...current,
+    }));
+    setSelectedReelIds((current) => [...new Set([...current, ...saved.map((reel) => reel.id)])]);
+  }, [savedListings, contactPhone]);
+
   const fetchReels = useCallback(async () => {
     const token = localStorage.getItem(INSTAGRAM_TOKEN_KEY);
     if (!token) return;
     try {
-      const response = await fetch("/api/instagram/reels", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const [response, { data: ownerListings, error: listingsError }] = await Promise.all([
+        fetch("/api/instagram/reels", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        supabase.rpc("get_my_listings"),
+      ]);
+      if (listingsError) throw new Error("Your saved listings could not be loaded. Please try again.");
       if (!response.ok) throw new Error("Unable to fetch your reels.");
       const json = (await response.json()) as { data?: ImportedInstagramReel[] };
-      const next = (json.data || []).map((item) => {
+      const savedListings = (ownerListings || []) as Listing[];
+      const fetched = (json.data || []).map((item) => {
         const mediaUrl = item.media_url || item.thumbnail_url || "";
+        const existingListing = savedListings
+          .filter((listing) => listing.instagram_media_id === item.id)
+          .sort((first, second) =>
+            Number(second.status === "published") - Number(first.status === "published") ||
+            second.created_at.localeCompare(first.created_at),
+          )[0];
         return {
           id: item.id,
+          listingId: existingListing?.id,
           caption: item.caption || "Imported from Instagram",
           media_type: item.media_type || "VIDEO",
           media_url: mediaUrl,
@@ -1841,6 +1891,11 @@ function InstagramReelPicker({
           timestamp: item.timestamp,
         };
       });
+      const fetchedIds = new Set(fetched.map((reel) => reel.id));
+      const savedOnly = savedListings
+        .filter((listing) => listing.instagram_media_id && !fetchedIds.has(listing.instagram_media_id))
+        .map(savedReel);
+      const next = [...fetched.filter((reel) => !reel.listingId), ...fetched.filter((reel) => reel.listingId), ...savedOnly];
       let savedDetails: Record<string, ImportedReelDetails> = {};
       try {
         savedDetails = JSON.parse(
@@ -1850,10 +1905,16 @@ function InstagramReelPicker({
         localStorage.removeItem(instagramReelDraftStorageKey());
       }
       setReels(next);
-      setSelectedReelIds([]);
+      setSelectedReelIds(next.filter((reel) => reel.listingId).map((reel) => reel.id));
       setExpandedReelIds([]);
       const detailsByReel = Object.fromEntries(next.map((reel) => {
         const caption = reel.caption.replace(/\s+/g, " ").trim();
+        const existingListing = savedListings
+          .filter((listing) => listing.instagram_media_id === reel.id)
+          .sort((first, second) =>
+            Number(second.status === "published") - Number(first.status === "published") ||
+            second.created_at.localeCompare(first.created_at),
+          )[0];
         const defaults: ImportedReelDetails = {
           title: caption.slice(0, 70).length >= 5 ? caption.slice(0, 70) : "Instagram property reel",
           purpose: "sale",
@@ -1866,7 +1927,8 @@ function InstagramReelPicker({
             : `${reel.caption} Property walkthrough imported from Instagram.`.slice(0, 2000),
           contactPhone,
         };
-        return [reel.id, { ...defaults, ...savedDetails[reel.id] }];
+        const stored = existingListing ? listingDetails(existingListing) : {};
+        return [reel.id, { ...defaults, ...savedDetails[reel.id], ...stored }];
       }));
       setReelDetails(detailsByReel);
       localStorage.setItem(instagramReelDraftStorageKey(), JSON.stringify(detailsByReel));
@@ -1879,7 +1941,7 @@ function InstagramReelPicker({
     } finally {
       setBusy(false);
     }
-  }, [contactPhone]);
+  }, [contactPhone, savedListings]);
 
   useEffect(() => {
     if (connected && localStorage.getItem(INSTAGRAM_TOKEN_KEY)) {
@@ -1906,6 +1968,34 @@ function InstagramReelPicker({
   const selectedReels = reels
     .filter((reel) => selectedReelIds.includes(reel.id))
     .map((reel) => ({ ...reel, listingDetails: reelDetails[reel.id] }));
+  const newReels = reels.filter((reel) => !reel.listingId);
+  const previouslySavedReels = reels.filter((reel) => reel.listingId);
+  const allSelected = reels.length > 0 && reels.every((reel) => selectedReelIds.includes(reel.id));
+
+  useEffect(() => {
+    if (selectAllRef.current) {
+      selectAllRef.current.indeterminate = selectedReelIds.length > 0 && !allSelected;
+    }
+  }, [allSelected, selectedReelIds.length]);
+
+  function setReelSelected(id: string, selected: boolean) {
+    setSelectedReelIds((current) => selected
+      ? [...new Set([...current, id])]
+      : current.filter((reelId) => reelId !== id));
+  }
+
+  function validateReel(details?: ImportedReelDetails) {
+    const fields: string[] = [];
+    if (!details || details.title.trim().length < 5) fields.push("Enter a title of at least 5 characters.");
+    if (!details || !["Apartment", "Villa", "Independent house", "Plot", "Commercial"].includes(details.propertyType)) fields.push("Choose a property type.");
+    if (!details || !["sale", "rent"].includes(details.purpose)) fields.push("Choose sale or rent.");
+    if (!details || !Number.isFinite(Number(details.price)) || Number(details.price) <= 0) fields.push("Enter a valid price.");
+    if (!details || details.city.trim().length < 2) fields.push("Enter a city.");
+    if (!details || details.locality.trim().length < 2) fields.push("Enter a locality.");
+    if (!details || details.description.trim().length < 20) fields.push("Enter a description of at least 20 characters.");
+    if (!details || details.contactPhone.trim().length < 8 || details.contactPhone.trim().length > 20) fields.push("Enter a valid contact number.");
+    return fields;
+  }
 
   function updateReelDetails(id: string, changes: Partial<ImportedReelDetails>) {
     const next = {
@@ -1913,6 +2003,7 @@ function InstagramReelPicker({
       [id]: { ...reelDetails[id], ...changes },
     };
     setReelDetails(next);
+    setReelFieldErrors((current) => ({ ...current, [id]: [] }));
     try {
       localStorage.setItem(instagramReelDraftStorageKey(), JSON.stringify(next));
     } catch {
@@ -1929,23 +2020,22 @@ function InstagramReelPicker({
   }
 
   async function continueWithSelected() {
-    const incomplete = selectedReels.some(({ listingDetails }) =>
-      !listingDetails ||
-      listingDetails.title.trim().length < 5 ||
-      !Number.isFinite(Number(listingDetails.price)) ||
-      Number(listingDetails.price) <= 0 ||
-      listingDetails.city.trim().length < 2 ||
-      listingDetails.locality.trim().length < 2 ||
-      listingDetails.description.trim().length < 20 ||
-      listingDetails.contactPhone.trim().length < 8 ||
-      listingDetails.contactPhone.trim().length > 20,
-    );
-    if (!selectedReels.length) return;
-    if (incomplete) {
-      setError("Complete the title, price, city, locality, contact number, and 20-character description for every selected reel.");
+    if (!selectedReels.length) {
+      setError("Select at least one reel before saving.");
+      return;
+    }
+    const invalid = Object.fromEntries(selectedReels
+      .map((reel) => [reel.id, validateReel(reel.listingDetails)] as const)
+      .filter(([, errors]) => errors.length));
+    if (Object.keys(invalid).length) {
+      setReelFieldErrors(invalid);
+      setExpandedReelIds((current) => [...new Set([...current, ...Object.keys(invalid)])]);
+      setError("Complete the highlighted property details before saving.");
+      window.setTimeout(() => document.getElementById(`instagram-reel-${Object.keys(invalid)[0]}`)?.scrollIntoView({ behavior: "smooth", block: "center" }), 0);
       return;
     }
     setError("");
+    setReelFieldErrors({});
     setNotice("");
     setSaving(true);
     let savedCount = 0;
@@ -1960,9 +2050,9 @@ function InstagramReelPicker({
       setSaveProgress(`Saving reel ${index + 1} of ${selectedReels.length}…`);
       try {
         const details = reel.listingDetails!;
-        const { error: saveError } = await supabase.functions.invoke("finalize-property-listing", {
+        const { data: saveResult, error: saveError } = await supabase.functions.invoke("save-instagram-listing", {
           body: {
-            id: crypto.randomUUID(),
+            id: reel.listingId || crypto.randomUUID(),
             title: details.title.trim(),
             property_type: details.propertyType,
             purpose: details.purpose,
@@ -2002,6 +2092,10 @@ function InstagramReelPicker({
         if (saveError) throw new Error(await submissionError(saveError));
 
         savedCount += 1;
+        const savedListingId = (saveResult as { listing_id?: string } | null)?.listing_id;
+        if (savedListingId) {
+          setReels((current) => current.map((item) => item.id === reel.id ? { ...item, listingId: savedListingId } : item));
+        }
         setSelectedReelIds((current) => current.filter((id) => id !== reel.id));
         try {
           const draftKey = instagramReelDraftStorageKey();
@@ -2024,6 +2118,40 @@ function InstagramReelPicker({
     setSaveProgress("");
     setSaving(false);
   }
+
+  const renderReel = (reel: ImportedInstagramReel) => {
+    const details = reelDetails[reel.id];
+    const fieldErrors = reelFieldErrors[reel.id] || [];
+    return <article className={`instagram-reel-card${fieldErrors.length ? " invalid" : ""}`} id={`instagram-reel-${reel.id}`} key={reel.id}>
+      <label className="instagram-reel-select">
+        <input type="checkbox" checked={selectedReelIds.includes(reel.id)} onChange={(event) => setReelSelected(reel.id, event.target.checked)} aria-label={`Select reel: ${reel.caption || "Instagram reel"}`} />
+      </label>
+      {reel.media_url ? <video className="instagram-reel-player" controls playsInline preload="none" poster={reel.thumbnail_url} aria-label={`Play reel: ${reel.caption || "Instagram reel"}`}><source src={reel.media_url} /></video> : <div className="instagram-reel-player instagram-reel-placeholder"><Video size={22} /></div>}
+      <p className="instagram-reel-caption">{reel.caption || "Instagram reel"}</p>
+      <small className={`instagram-reel-source ${reel.listingId ? "saved" : "new"}`}>{reel.listingId ? "Already saved · property details loaded" : "New reel · not saved yet"}</small>
+      {fieldErrors.length > 0 && <ul className="instagram-reel-errors" role="alert">{fieldErrors.map((fieldError) => <li key={fieldError}>{fieldError}</li>)}</ul>}
+      {details && <>
+        <button type="button" className="instagram-details-toggle" aria-expanded={expandedReelIds.includes(reel.id)} onClick={() => toggleDetails(reel.id)}>
+          {expandedReelIds.includes(reel.id) ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          {expandedReelIds.includes(reel.id) ? "Hide property details" : "Edit property details"}
+        </button>
+        {expandedReelIds.includes(reel.id) && <div className="instagram-reel-details">
+          <label>Listing title<input value={details.title} maxLength={120} minLength={5} aria-invalid={fieldErrors.some((message) => message.includes("title"))} onChange={(event) => updateReelDetails(reel.id, { title: event.target.value })} /></label>
+          <div className="form-grid two">
+            <label>Purpose<select value={details.purpose} onChange={(event) => updateReelDetails(reel.id, { purpose: event.target.value as "sale" | "rent" })}><option value="sale">For sale</option><option value="rent">For rent</option></select></label>
+            <label>{details.purpose === "sale" ? "Sale price (INR)" : "Monthly rent (INR)"}<input type="number" min="1" value={details.price} aria-invalid={fieldErrors.some((message) => message.includes("price"))} onChange={(event) => updateReelDetails(reel.id, { price: event.target.value })} /></label>
+          </div>
+          <div className="form-grid two">
+            <label>Property type<select value={details.propertyType} onChange={(event) => updateReelDetails(reel.id, { propertyType: event.target.value })}><option>Apartment</option><option>Villa</option><option>Independent house</option><option>Plot</option><option>Commercial</option></select></label>
+            <label>City<select value={details.city} onChange={(event) => updateReelDetails(reel.id, { city: event.target.value, locality: CITY_LOCALITIES[event.target.value as SupportedCity][0] })}>{(Object.keys(CITY_LOCALITIES) as SupportedCity[]).map((city) => <option key={city}>{city}</option>)}</select></label>
+          </div>
+          <label>Locality<input value={details.locality} maxLength={150} onChange={(event) => updateReelDetails(reel.id, { locality: event.target.value })} /></label>
+          <label>Description<textarea value={details.description} minLength={20} maxLength={2000} onChange={(event) => updateReelDetails(reel.id, { description: event.target.value })} rows={3} /></label>
+          <label>Contact number<input type="tel" value={details.contactPhone} minLength={8} maxLength={20} onChange={(event) => updateReelDetails(reel.id, { contactPhone: event.target.value })} /></label>
+        </div>}
+      </>}
+    </article>;
+  };
 
   return (
     <section className="instagram-inline" aria-labelledby="instagram-title">
@@ -2059,75 +2187,12 @@ function InstagramReelPicker({
         )}
         {reels.length > 0 && (
           <>
-            <div className="instagram-reel-grid">
-              {reels.map((reel) => {
-                const details = reelDetails[reel.id];
-                return (
-                  <article className="instagram-reel-card" key={reel.id}>
-                    <label className="instagram-reel-select">
-                      <input
-                        type="checkbox"
-                        checked={selectedReelIds.includes(reel.id)}
-                        onChange={(event) =>
-                          setSelectedReelIds((current) =>
-                            event.target.checked
-                              ? [...current, reel.id]
-                              : current.filter((id) => id !== reel.id),
-                          )
-                        }
-                        aria-label={`Select reel: ${reel.caption || "Instagram reel"}`}
-                      />
-                      Include this reel
-                    </label>
-                    {reel.media_url ? (
-                      <video
-                        className="instagram-reel-player"
-                        controls
-                        playsInline
-                        preload="none"
-                        poster={reel.thumbnail_url}
-                        aria-label={`Play reel: ${reel.caption || "Instagram reel"}`}
-                      >
-                        <source src={reel.media_url} />
-                      </video>
-                    ) : (
-                      <div className="instagram-reel-player instagram-reel-placeholder"><Video size={22} /></div>
-                    )}
-                    <p className="instagram-reel-caption">{reel.caption || "Instagram reel"}</p>
-                    {details && (
-                      <>
-                        <button
-                          type="button"
-                          className="instagram-details-toggle"
-                          aria-expanded={expandedReelIds.includes(reel.id)}
-                          onClick={() => toggleDetails(reel.id)}
-                        >
-                          {expandedReelIds.includes(reel.id) ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                          {expandedReelIds.includes(reel.id) ? "Hide property details" : "Add property details"}
-                        </button>
-                        {expandedReelIds.includes(reel.id) && (
-                      <div className="instagram-reel-details">
-                        <small className="instagram-draft-status">Only details are drafted locally. Saving stores the reel link and listing details, not a video copy.</small>
-                        <label>Listing title<input value={details.title} maxLength={120} minLength={5} onChange={(event) => updateReelDetails(reel.id, { title: event.target.value })} /></label>
-                        <div className="form-grid two">
-                          <label>Purpose<select value={details.purpose} onChange={(event) => updateReelDetails(reel.id, { purpose: event.target.value as "sale" | "rent" })}><option value="sale">For sale</option><option value="rent">For rent</option></select></label>
-                          <label>{details.purpose === "sale" ? "Sale price (INR)" : "Monthly rent (INR)"}<input type="number" min="1" value={details.price} onChange={(event) => updateReelDetails(reel.id, { price: event.target.value })} placeholder={details.purpose === "sale" ? "8500000" : "25000"} /></label>
-                        </div>
-                        <div className="form-grid two">
-                          <label>Property type<select value={details.propertyType} onChange={(event) => updateReelDetails(reel.id, { propertyType: event.target.value })}><option>Apartment</option><option>Villa</option><option>Independent house</option><option>Plot</option><option>Commercial</option></select></label>
-                          <label>City<select value={details.city} onChange={(event) => updateReelDetails(reel.id, { city: event.target.value, locality: CITY_LOCALITIES[event.target.value as SupportedCity][0] })}>{(Object.keys(CITY_LOCALITIES) as SupportedCity[]).map((city) => <option key={city}>{city}</option>)}</select></label>
-                        </div>
-                        <label>Locality<input value={details.locality} maxLength={150} onChange={(event) => updateReelDetails(reel.id, { locality: event.target.value })} placeholder="Area or locality" /></label>
-                        <label>Description<textarea value={details.description} minLength={20} maxLength={2000} onChange={(event) => updateReelDetails(reel.id, { description: event.target.value })} rows={3} /></label>
-                        <label>Contact number<input type="tel" value={details.contactPhone} minLength={8} maxLength={20} onChange={(event) => updateReelDetails(reel.id, { contactPhone: event.target.value })} /></label>
-                      </div>
-                        )}
-                      </>
-                    )}
-                  </article>
-                );
-              })}
-            </div>
+            <label className="instagram-select-all">
+              <input ref={selectAllRef} type="checkbox" checked={allSelected} onChange={(event) => setSelectedReelIds(event.target.checked ? reels.map((reel) => reel.id) : [])} />
+              Select all reels
+            </label>
+            {newReels.length > 0 && <section className="instagram-reel-section"><h3>New additions</h3><div className="instagram-reel-grid">{newReels.map(renderReel)}</div></section>}
+            {previouslySavedReels.length > 0 && <section className="instagram-reel-section"><h3>Previously saved</h3><p>These listings are pre-selected with their saved property details.</p><div className="instagram-reel-grid">{previouslySavedReels.map(renderReel)}</div></section>}
             <button
               type="button"
               className="primary full"
@@ -2160,6 +2225,8 @@ function Dashboard({
 }) {
   const [instagramOpen, setInstagramOpen] = useState(false);
   const [instagramConnected, setInstagramConnected] = useState(false);
+  const [availabilityBusyId, setAvailabilityBusyId] = useState<string | null>(null);
+  const [availabilityError, setAvailabilityError] = useState("");
   const [instagramAccount, setInstagramAccount] = useState<{
     username: string;
     profilePictureUrl?: string;
@@ -2206,6 +2273,21 @@ function Dashboard({
     syncInstagramStatus();
     setInstagramOpen(false);
   };
+
+  async function toggleAvailability(listing: Listing) {
+    setAvailabilityBusyId(listing.id);
+    setAvailabilityError("");
+    const { error } = await supabase.rpc("set_my_listing_availability", {
+      p_listing_id: listing.id,
+      p_is_available: listing.is_available === false,
+    });
+    setAvailabilityBusyId(null);
+    if (error) {
+      setAvailabilityError("Availability could not be updated. Please retry.");
+      return;
+    }
+    onRefresh();
+  }
 
   return (
     <section className="workspace">
@@ -2276,8 +2358,10 @@ function Dashboard({
           connected={instagramConnected}
           contactPhone={contactPhone}
           onSaved={onRefresh}
+          savedListings={items}
         />
       )}
+      {availabilityError && <p className="form-error" role="alert"><CircleAlert size={16} />{availabilityError}</p>}
       <div className="stats">
         <div>
           <span>All posts</span>
@@ -2355,6 +2439,17 @@ function Dashboard({
                 {x.status === "rejected" ? (
                   <button className="primary" onClick={() => onEdit(x)}>
                     Edit &amp; resubmit
+                  </button>
+                ) : x.status === "published" ? (
+                  <button
+                    className="secondary availability-toggle"
+                    disabled={availabilityBusyId === x.id}
+                    onClick={() => void toggleAvailability(x)}
+                    aria-label={`${x.is_available === false ? "Mark available" : "Mark unavailable"}: ${x.title}`}
+                  >
+                    {availabilityBusyId === x.id
+                      ? <Loader2 className="spin" />
+                      : x.is_available === false ? "Mark available" : "Mark unavailable"}
                   </button>
                 ) : (
                   <MoreHorizontal />
