@@ -1860,16 +1860,33 @@ function InstagramReelPicker({
     const token = localStorage.getItem(INSTAGRAM_TOKEN_KEY);
     if (!token) return;
     try {
-      const [response, { data: savedMediaRows, error: savedMediaError }] = await Promise.all([
+      const loadSavedMediaIds = async () => {
+        const { data, error } = await supabase.rpc("get_my_instagram_media_ids");
+        if (!error) {
+          return new Set((data || []).map((row: { instagram_media_id: string }) => row.instagram_media_id));
+        }
+
+        // Older databases may not have the minimal media-ID RPC migration yet.
+        // Fall back to the existing owner-scoped listing RPC so reel fetching
+        // keeps working until that migration is applied.
+        if (error.code === "PGRST202" || error.code === "42883") {
+          const { data: listings, error: listingsError } = await supabase.rpc("get_my_listings");
+          if (listingsError) throw listingsError;
+          return new Set((listings || [])
+            .map((listing: Pick<Listing, "instagram_media_id">) => listing.instagram_media_id)
+            .filter((mediaId: string | null | undefined): mediaId is string => Boolean(mediaId)));
+        }
+        throw error;
+      };
+
+      const [response, savedMediaIds] = await Promise.all([
         fetch("/api/instagram/reels", {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        supabase.rpc("get_my_instagram_media_ids"),
+        loadSavedMediaIds(),
       ]);
-      if (savedMediaError) throw new Error("Your saved reel matches could not be loaded. Please try again.");
       if (!response.ok) throw new Error("Unable to fetch your reels.");
       const json = (await response.json()) as { data?: ImportedInstagramReel[] };
-      const savedMediaIds = new Set((savedMediaRows || []).map((row: { instagram_media_id: string }) => row.instagram_media_id));
       const fetched = (json.data || []).map((item) => {
         const mediaUrl = item.media_url || item.thumbnail_url || "";
         return {
