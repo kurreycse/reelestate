@@ -45,8 +45,9 @@ import {
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
 import { recordEngagement } from "../lib/analytics";
 import type { Listing, Profile, PropertyEnquiry } from "../lib/types";
-import { DUMMY_LISTINGS, isDummyListing } from "../lib/dummyListings";
+import { isDummyListing } from "../lib/dummyListings";
 import { appConfig } from "../lib/config";
+import marketStyles from "./marketplace.module.css";
 
 type View = "feed" | "post" | "dashboard" | "admin";
 
@@ -521,7 +522,7 @@ function PropertyTile({
           <Video /> {listing.instagram_source_url ? "Instagram reel" : "Video tour"}
         </span>
         <span className="reviewed-tag">
-          <ShieldCheck /> Reviewed
+          <ShieldCheck /> Video checked
         </span>
       </div>
       <div className="tile-body">
@@ -597,7 +598,7 @@ function PropertyTile({
 
 function Marketplace({ onRequireLogin }: { onRequireLogin: () => void }) {
   const PAGE_SIZE = 18;
-  const [items, setItems] = useState<Listing[]>(DUMMY_LISTINGS);
+  const [items, setItems] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
@@ -676,7 +677,7 @@ function Marketplace({ onRequireLogin }: { onRequireLogin: () => void }) {
       });
       if (error) {
         setLoadError("Properties could not be loaded. Please try again.");
-        if (reset) setItems(DUMMY_LISTINGS);
+        if (reset) setItems([]);
       } else {
         const rows = (data || []) as Listing[];
         const page = rows.slice(0, PAGE_SIZE);
@@ -707,7 +708,7 @@ function Marketplace({ onRequireLogin }: { onRequireLogin: () => void }) {
         );
         setItems((current) =>
           reset
-            ? [...DUMMY_LISTINGS, ...withPosters]
+            ? withPosters
             : [
                 ...current,
                 ...withPosters.filter(
@@ -789,20 +790,36 @@ function Marketplace({ onRequireLogin }: { onRequireLogin: () => void }) {
     <section className="marketplace">
       <div className="market-hero">
         <div>
-          <span className="eyebrow">Property discovery, built around video</span>
+          <span className="eyebrow">Real estate, in motion</span>
           <h1>
-            Find property by watching,
+            See the property
             <br />
-            <em>not scrolling.</em>
+            <em>before you visit.</em>
           </h1>
           <p>
-            ReelEstate is a free, video-first property portal. Owners, agents
-            and builders upload short property walkthroughs; buyers and tenants
-            search by location and budget, compare clear property details and
-            connect directly through calls, WhatsApp or enquiries.
+            Watch reviewed walkthroughs from owners and brokers. Shortlist the
+            places you like, then connect directly by call or WhatsApp.
           </p>
         </div>
-        <div className="comparison-card"><table><caption>Social media and property portal comparison</caption><thead><tr><th scope="col">Social Media</th><th scope="col">Property Portal</th></tr></thead><tbody>{[["Entertainment algorithm","Location & budget search"],["Catchy captions","Structured property details"],["Visibility fades fast","Listing stays live"],["Paid ads required","Free organic reach"],["Likes & followers","Calls, WhatsApp & enquiries"]].map(([social,portal])=><tr key={social}><td>{social}</td><td><Check/>{portal}</td></tr>)}</tbody></table></div>
+        <div className={`comparison-card ${marketStyles.promise}`}>
+          <span><Play /> <b>Watch</b><small>Real walkthroughs</small></span>
+          <span><Check /> <b>Shortlist</b><small>Compare clear details</small></span>
+          <span><MessageCircle /> <b>Contact</b><small>Call or WhatsApp directly</small></span>
+          <p><ShieldCheck /> Every live listing is reviewed before publication.</p>
+        </div>
+      </div>
+      <div className={marketStyles.discovery}>
+        <span>Explore a city</span>
+        {cities.map((value) => (
+          <button key={value} className={city === value ? marketStyles.selected : ""} onClick={() => { setCity(value); setLocality("all"); }}>
+            {value}
+          </button>
+        ))}
+        {city !== "all" && localities.slice(0, 6).map((value) => (
+          <button key={value} className={locality === value ? marketStyles.selected : ""} onClick={() => setLocality(value)}>
+            {value}
+          </button>
+        ))}
       </div>
       <form
         className="search-panel"
@@ -943,8 +960,7 @@ function Marketplace({ onRequireLogin }: { onRequireLogin: () => void }) {
         <div>
           <span className="eyebrow">Properties for you</span>
           <h2>
-            {visibleItems.length} video{" "}
-            {visibleItems.length === 1 ? "property" : "properties"} loaded
+            {visibleItems.length ? `${visibleItems.length} video ${visibleItems.length === 1 ? "property" : "properties"}` : "Video properties"}
           </h2>
         </div>
         <span className="newest-label">Newest first</span>
@@ -991,17 +1007,18 @@ function Marketplace({ onRequireLogin }: { onRequireLogin: () => void }) {
       ) : (
         <div className="empty-panel">
           <Search />
-          <h2>No homes match these filters</h2>
-          <p>Try another locality, property type or budget.</p>
-          <button className="primary" onClick={clear}>
-            Reset filters
-          </button>
+          <h2>{items.length ? "No homes match these filters" : city !== "all" ? `We’re adding properties in ${city}.` : "We’re adding reviewed video properties."}</h2>
+          <p>{items.length ? "Try another locality, property type or budget." : "Check back soon for walkthroughs you can explore, compare and contact directly."}</p>
+          <div className={marketStyles.emptyActions}>
+            {items.length ? <button className="primary" onClick={clear}>Reset filters</button> : <button className="primary" onClick={onRequireLogin}><Plus /> Post a property</button>}
+            {city !== "all" && <button className={marketStyles.emptyReset} onClick={clear}>Explore all cities</button>}
+          </div>
         </div>
       )}
       <section className="about-reelestate">
         <span className="eyebrow">About ReelEstate</span>
-        <h2>A focused marketplace for people who want to see the property before they visit.</h2>
-        <p>ReelEstate is a free property-reel platform where buyers and tenants watch short walkthroughs, compare useful details and connect directly. Owners, agents and builders get a simple way to make every property video searchable and actionable.</p>
+        <h2>Watch. Shortlist. Contact. Visit.</h2>
+        <p>Every live listing is reviewed before it appears. Video checked means the video and listing content were moderated; ownership, contact identity and availability are not independently verified. Find a place that feels right, then speak directly with its contact.</p>
       </section>
       {feedbackListing&&<FeedbackModal listing={feedbackListing} onClose={()=>setFeedbackListing(null)} onUpload={()=>{setFeedbackListing(null);onRequireLogin()}}/>}
     </section>

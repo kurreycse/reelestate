@@ -1,0 +1,110 @@
+.discovery {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+  margin: 0 0 25px;
+}
+
+.discovery > span {
+  margin-right: 4px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.discovery button {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  padding: 9px 13px;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.discovery button:hover,
+.discovery button.selected {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: #fff;
+}
+
+.promise {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  padding: 24px;
+}
+
+.promise > span {
+  display: grid;
+  grid-template-columns: 30px 1fr;
+  align-items: center;
+  gap: 0 9px;
+}
+
+.promise > span svg {
+  grid-row: span 2;
+  width: 23px;
+  color: var(--coral);
+}
+
+.promise > span b {
+  font-size: 14px;
+}
+
+.promise > span small {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.promise > p {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 7px 0 0;
+  padding-top: 13px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.promise > p svg {
+  width: 17px;
+  color: var(--coral);
+}
+
+.emptyActions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.emptyReset {
+  border: 0;
+  background: none;
+  color: #fff;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  font-weight: 750;
+}
+
+@media (max-width: 620px) {
+  .promise {
+    grid-template-columns: 1fr;
+    padding: 20px;
+  }
+
+  .promise > p {
+    grid-column: auto;
+  }
+
+  .discovery {
+    gap: 7px;
+  }
+
+  .discovery > span {
+    width: 100%;
+  }
+}

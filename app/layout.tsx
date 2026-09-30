@@ -7,8 +7,8 @@ const serif = Cormorant_Garamond({ variable: "--font-serif", subsets: ["latin"],
 
 export function generateMetadata(): Metadata {
   const origin = process.env.NEXT_PUBLIC_SITE_URL ?? "https://reelestate.co.in";
-  const title = "ReelEstate — Property, in motion";
-  const description = "Discover reviewed property walkthroughs. Post a short video, get approved, and connect directly.";
+  const title = "ReelEstate — See the property before you visit";
+  const description = "Discover reviewed real estate video walkthroughs from owners and brokers. Compare property details, then connect directly by call or WhatsApp.";
   return {
     metadataBase: new URL(origin), title, description,
     icons: {
