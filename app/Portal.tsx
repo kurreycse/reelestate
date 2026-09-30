@@ -1802,15 +1802,14 @@ function InstagramReelPicker({
   contactPhone,
   onSaved,
   connected,
-  savedListings,
 }: {
   onClose: () => void;
   contactPhone: string;
   onSaved: () => void;
   connected: boolean;
-  savedListings: Listing[];
 }) {
   const [reels, setReels] = useState<ImportedInstagramReel[]>([]);
+  const [alreadySavedCount, setAlreadySavedCount] = useState(0);
   const [selectedReelIds, setSelectedReelIds] = useState<string[]>([]);
   const [reelDetails, setReelDetails] = useState<Record<string, ImportedReelDetails>>({});
   const [expandedReelIds, setExpandedReelIds] = useState<string[]>([]);
@@ -1821,41 +1820,6 @@ function InstagramReelPicker({
   const [saveProgress, setSaveProgress] = useState("");
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
-
-  const listingDetails = (listing: Listing): ImportedReelDetails => ({
-    title: listing.title,
-    purpose: listing.purpose,
-    price: String(listing.price_minor / 100),
-    city: listing.city,
-    locality: listing.locality,
-    propertyType: listing.property_type,
-    description: listing.description,
-    contactPhone: listing.contact_phone,
-  });
-  const savedReel = (listing: Listing): ImportedInstagramReel => ({
-    id: listing.instagram_media_id!,
-    listingId: listing.id,
-    caption: listing.description,
-    media_type: "VIDEO",
-    media_url: "",
-    permalink: listing.instagram_source_url || undefined,
-  });
-
-  useEffect(() => {
-    const saved = savedListings
-      .filter((listing) => listing.instagram_media_id)
-      .map(savedReel);
-    if (!saved.length) return;
-    setReels((current) => current.length ? current : saved);
-    setReelDetails((current) => ({
-      ...Object.fromEntries(saved.map((reel) => {
-        const listing = savedListings.find((item) => item.id === reel.listingId)!;
-        return [reel.id, listingDetails(listing)];
-      })),
-      ...current,
-    }));
-    setSelectedReelIds((current) => [...new Set([...current, ...saved.map((reel) => reel.id)])]);
-  }, [savedListings, contactPhone]);
 
   const fetchReels = useCallback(async () => {
     const token = localStorage.getItem(INSTAGRAM_TOKEN_KEY);
@@ -1891,11 +1855,8 @@ function InstagramReelPicker({
           timestamp: item.timestamp,
         };
       });
-      const fetchedIds = new Set(fetched.map((reel) => reel.id));
-      const savedOnly = savedListings
-        .filter((listing) => listing.instagram_media_id && !fetchedIds.has(listing.instagram_media_id))
-        .map(savedReel);
-      const next = [...fetched.filter((reel) => !reel.listingId), ...fetched.filter((reel) => reel.listingId), ...savedOnly];
+      const next = fetched.filter((reel) => !reel.listingId);
+      setAlreadySavedCount(fetched.length - next.length);
       let savedDetails: Record<string, ImportedReelDetails> = {};
       try {
         savedDetails = JSON.parse(
@@ -1905,16 +1866,10 @@ function InstagramReelPicker({
         localStorage.removeItem(instagramReelDraftStorageKey());
       }
       setReels(next);
-      setSelectedReelIds(next.filter((reel) => reel.listingId).map((reel) => reel.id));
+      setSelectedReelIds([]);
       setExpandedReelIds([]);
       const detailsByReel = Object.fromEntries(next.map((reel) => {
         const caption = reel.caption.replace(/\s+/g, " ").trim();
-        const existingListing = savedListings
-          .filter((listing) => listing.instagram_media_id === reel.id)
-          .sort((first, second) =>
-            Number(second.status === "published") - Number(first.status === "published") ||
-            second.created_at.localeCompare(first.created_at),
-          )[0];
         const defaults: ImportedReelDetails = {
           title: caption.slice(0, 70).length >= 5 ? caption.slice(0, 70) : "Instagram property reel",
           purpose: "sale",
@@ -1927,8 +1882,7 @@ function InstagramReelPicker({
             : `${reel.caption} Property walkthrough imported from Instagram.`.slice(0, 2000),
           contactPhone,
         };
-        const stored = existingListing ? listingDetails(existingListing) : {};
-        return [reel.id, { ...defaults, ...savedDetails[reel.id], ...stored }];
+        return [reel.id, { ...defaults, ...savedDetails[reel.id] }];
       }));
       setReelDetails(detailsByReel);
       localStorage.setItem(instagramReelDraftStorageKey(), JSON.stringify(detailsByReel));
@@ -1941,7 +1895,7 @@ function InstagramReelPicker({
     } finally {
       setBusy(false);
     }
-  }, [contactPhone, savedListings]);
+  }, [contactPhone]);
 
   useEffect(() => {
     if (connected && localStorage.getItem(INSTAGRAM_TOKEN_KEY)) {
@@ -1969,8 +1923,7 @@ function InstagramReelPicker({
     .filter((reel) => selectedReelIds.includes(reel.id))
     .map((reel) => ({ ...reel, listingDetails: reelDetails[reel.id] }));
   const newReels = reels.filter((reel) => !reel.listingId);
-  const previouslySavedReels = reels.filter((reel) => reel.listingId);
-  const allSelected = reels.length > 0 && reels.every((reel) => selectedReelIds.includes(reel.id));
+  const allSelected = newReels.length > 0 && newReels.every((reel) => selectedReelIds.includes(reel.id));
 
   useEffect(() => {
     if (selectAllRef.current) {
@@ -2182,17 +2135,19 @@ function InstagramReelPicker({
         {error && <div className="form-error" role="alert"><CircleAlert size={16} />{error}</div>}
         {notice && <div className="form-success" role="status"><Check size={16} />{notice}</div>}
         {saveProgress && <p className="instagram-save-progress" role="status"><Loader2 className="spin" size={16} />{saveProgress}</p>}
-        {!busy && !error && connected && reels.length === 0 && (
-          <p className="instagram-empty">No Instagram reels were found for this account.</p>
+        {!busy && !error && connected && reels.length === 0 && alreadySavedCount > 0 && (
+          <p className="instagram-empty">All {alreadySavedCount} fetched reels already have saved listings.</p>
+        )}
+        {!busy && !error && connected && reels.length === 0 && alreadySavedCount === 0 && (
+          <p className="instagram-empty">No new Instagram reels were found for this account.</p>
         )}
         {reels.length > 0 && (
           <>
             <label className="instagram-select-all">
-              <input ref={selectAllRef} type="checkbox" checked={allSelected} onChange={(event) => setSelectedReelIds(event.target.checked ? reels.map((reel) => reel.id) : [])} />
+              <input ref={selectAllRef} type="checkbox" checked={allSelected} onChange={(event) => setSelectedReelIds(event.target.checked ? newReels.map((reel) => reel.id) : [])} />
               Select all reels
             </label>
-            {newReels.length > 0 && <section className="instagram-reel-section"><h3>New additions</h3><div className="instagram-reel-grid">{newReels.map(renderReel)}</div></section>}
-            {previouslySavedReels.length > 0 && <section className="instagram-reel-section"><h3>Previously saved</h3><p>These listings are pre-selected with their saved property details.</p><div className="instagram-reel-grid">{previouslySavedReels.map(renderReel)}</div></section>}
+            <section className="instagram-reel-section"><h3>New additions</h3><div className="instagram-reel-grid">{newReels.map(renderReel)}</div></section>
             <button
               type="button"
               className="primary full"
@@ -2358,7 +2313,6 @@ function Dashboard({
           connected={instagramConnected}
           contactPhone={contactPhone}
           onSaved={onRefresh}
-          savedListings={items}
         />
       )}
       {availabilityError && <p className="form-error" role="alert"><CircleAlert size={16} />{availabilityError}</p>}
