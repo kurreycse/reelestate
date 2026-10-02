@@ -1042,6 +1042,7 @@ function PostForm({
   onClearInstagramImport?: () => void;
 }) {
   const [busy, setBusy] = useState(false);
+  const [submissionStatus, setSubmissionStatus] = useState<"draft" | "pending_review">("pending_review");
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState("");
   const [video, setVideo] = useState<File | null>(null);
@@ -1167,6 +1168,7 @@ function PostForm({
     e.preventDefault();
     const submitter = (e.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
     const targetStatus = submitter?.value === "draft" ? "draft" : "pending_review";
+    setSubmissionStatus(targetStatus);
     if ((!initial && (!video || !poster)) || (video && !poster)) {
       setError(
         "Choose a compatible property video and wait for its thumbnail.",
@@ -1738,12 +1740,12 @@ function PostForm({
           )}
           <div className={marketStyles.postSubmitActions}>
             {!initial && <button type="submit" name="listing_status" value="draft" className="secondary submit" disabled={busy}>
-              {busy && targetStatus === "draft" ? <Loader2 className="spin" /> : <Check />}
-              {busy && targetStatus === "draft" ? "Saving draft…" : "Save as draft"}
+              {busy && submissionStatus === "draft" ? <Loader2 className="spin" /> : <Check />}
+              {busy && submissionStatus === "draft" ? "Saving draft…" : "Save as draft"}
             </button>}
             <button type="submit" name="listing_status" value="pending_review" className="primary submit" disabled={busy}>
-              {busy && targetStatus === "pending_review" ? <Loader2 className="spin" /> : <Send />} {" "}
-              {busy && targetStatus === "pending_review" ? "Uploading…" : initial ? "Resubmit for review" : "Submit for review"}
+              {busy && submissionStatus === "pending_review" ? <Loader2 className="spin" /> : <Send />} {" "}
+              {busy && submissionStatus === "pending_review" ? "Uploading…" : initial ? "Resubmit for review" : "Submit for review"}
             </button>
           </div>
         </div>
@@ -2700,7 +2702,7 @@ function Dashboard({
                       : x.status === "archived" ? "Restore to portal" : "Remove from portal"}
                   </button>
                 ) : (
-                  <span className={marketStyles.listingStatusNote}>{x.status === "pending_review" ? "Awaiting review" : x.status === "draft" ? "Draft saved" : x.status.replaceAll("_", " ")}</span>
+                  <span className={marketStyles.listingStatusNote}>{x.status === "pending_review" ? "Awaiting review" : x.status.replaceAll("_", " ")}</span>
                 )}
                 <button
                   type="button"
