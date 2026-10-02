@@ -209,6 +209,7 @@ async function submissionError(error: unknown, fallback = "The property could no
 }
 function LoginModal({ onClose }: { onClose: () => void }) {
   const [busy, setBusy] = useState(false);
+  const [consentAccepted, setConsentAccepted] = useState(false);
   const [error, setError] = useState("");
   async function loginWithFacebook() {
     setBusy(true);
@@ -233,13 +234,23 @@ function LoginModal({ onClose }: { onClose: () => void }) {
         <span className="eyebrow">Welcome to ReelEstate</span>
         <h2 id="auth-title">Your next move starts here.</h2>
         <p>Sign in or create your account with Facebook.</p>
-        <button type="button" className="primary full" disabled={busy || !isSupabaseConfigured} onClick={loginWithFacebook}>
+        <div className={marketStyles.legalConsent}>
+          <input
+            id="facebook-legal-consent"
+            type="checkbox"
+            checked={consentAccepted}
+            onChange={(event) => setConsentAccepted(event.target.checked)}
+          />
+          <label htmlFor="facebook-legal-consent">
+            By continuing, you agree to our <Link href="/terms-conditions"><strong>Terms</strong></Link> and <Link href="/privacy"><strong>Privacy Policy</strong></Link>.
+          </label>
+        </div>
+        <button type="button" className="primary full" disabled={busy || !isSupabaseConfigured || !consentAccepted} onClick={loginWithFacebook}>
           {busy ? <Loader2 className="spin" /> : <UserRound size={18} />}
           {busy ? "Connecting to Facebook…" : "Continue with Facebook"}
         </button>
         {!isSupabaseConfigured && <p role="alert">Sign-in is temporarily unavailable.</p>}
         {error && <div className="form-error" role="alert"><CircleAlert size={16} />{error}</div>}
-        <p className="legal">By continuing, you agree to our <Link href="/terms-conditions">Terms</Link> and <Link href="/privacy">Privacy Policy</Link>.</p>
       </div>
     </div>
   );
@@ -2419,6 +2430,9 @@ function Dashboard({
   const [deleteError, setDeleteError] = useState("");
   const [draftSubmitBusyId, setDraftSubmitBusyId] = useState<string | null>(null);
   const [draftSubmitError, setDraftSubmitError] = useState("");
+  const [playbackListing, setPlaybackListing] = useState<Listing | null>(null);
+  const [playbackBusyId, setPlaybackBusyId] = useState<string | null>(null);
+  const [playbackError, setPlaybackError] = useState("");
   const [instagramAccount, setInstagramAccount] = useState<{
     username: string;
     profilePictureUrl?: string;
@@ -2504,6 +2518,28 @@ function Dashboard({
       return;
     }
     onRefresh();
+  }
+
+  async function playListing(listing: Listing) {
+    setPlaybackError("");
+    if (listing.instagram_source_url) {
+      setPlaybackListing(listing);
+      return;
+    }
+    if (!listing.video_path) {
+      setPlaybackError("The reel video is not available for this listing.");
+      return;
+    }
+    setPlaybackBusyId(listing.id);
+    const { data, error } = await supabase.storage
+      .from("property-videos")
+      .createSignedUrl(listing.video_path, 1800);
+    setPlaybackBusyId(null);
+    if (error || !data?.signedUrl) {
+      setPlaybackError("The reel could not be loaded. Please retry.");
+      return;
+    }
+    setPlaybackListing({ ...listing, video_url: data.signedUrl });
   }
 
   async function deleteListing(listing: Listing) {
@@ -2610,6 +2646,7 @@ function Dashboard({
       {availabilityError && <p className="form-error" role="alert"><CircleAlert size={16} />{availabilityError}</p>}
       {deleteError && <p className="form-error" role="alert"><CircleAlert size={16} />{deleteError}</p>}
       {draftSubmitError && <p className="form-error" role="alert"><CircleAlert size={16} />{draftSubmitError}</p>}
+      {playbackError && <p className="form-error" role="alert"><CircleAlert size={16} />{playbackError}</p>}
       <div className={marketStyles.statusFilters} aria-label="Filter listings by status">
         {statusFilters.map((filter) => <button key={filter.id} type="button" onClick={() => setListingFilter(filter.id)} className={listingFilter === filter.id ? marketStyles.statusFilterActive : ""} aria-pressed={listingFilter === filter.id}>
           <span>{filter.label}</span><b>{filter.count}</b>
@@ -2681,6 +2718,16 @@ function Dashboard({
                 <button type="button" className="secondary" onClick={() => setDetailsListing(x)}>
                   Edit details
                 </button>
+                {(x.video_path || x.instagram_source_url) && <button
+                  type="button"
+                  className="secondary"
+                  disabled={playbackBusyId === x.id}
+                  onClick={() => void playListing(x)}
+                  aria-label={`Play reel: ${x.title}`}
+                >
+                  {playbackBusyId === x.id ? <Loader2 className="spin" /> : <Play />}
+                  {playbackBusyId === x.id ? "Loading reel…" : "Play reel"}
+                </button>}
                 {x.status === "draft" ? (
                   <button type="button" className="primary" disabled={draftSubmitBusyId === x.id} onClick={() => void submitDraft(x)}>
                     {draftSubmitBusyId === x.id ? <Loader2 className="spin" /> : <Send />}
@@ -2720,6 +2767,21 @@ function Dashboard({
         </div>
       )}
       {detailsListing && <ListingDetailsModal listing={detailsListing} onClose={() => setDetailsListing(null)} onSaved={() => { setDetailsListing(null); onRefresh(); }} />}
+      {playbackListing && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setPlaybackListing(null); }}>
+        <div className={`auth-modal ${marketStyles.reelPlaybackModal}`} role="dialog" aria-modal="true" aria-labelledby="reel-playback-title">
+          <button type="button" className="icon-btn close" onClick={() => setPlaybackListing(null)} aria-label="Close reel player"><X /></button>
+          <span className="eyebrow">{playbackListing.status.replaceAll("_", " ")}</span>
+          <h2 id="reel-playback-title">{playbackListing.title}</h2>
+          <div className={marketStyles.reelPlayback}>
+            {playbackListing.instagram_source_url ? <iframe
+              src={`${playbackListing.instagram_source_url.replace(/\/+$/, "")}/embed/`}
+              title={`${playbackListing.title} Instagram reel`}
+              allow="autoplay; encrypted-media; picture-in-picture; web-share"
+              allowFullScreen
+            /> : playbackListing.video_url ? <video src={playbackListing.video_url} controls autoPlay playsInline poster={playbackListing.poster_url} /> : <p>Reel unavailable.</p>}
+          </div>
+        </div>
+      </div>}
       <EnquiryInbox items={enquiries} onChanged={onRefresh} />
     </section>
   );
