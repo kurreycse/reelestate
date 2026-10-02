@@ -120,10 +120,6 @@ Deno.serve(async (request) => {
     const propertyType = String(input.property_type || "");
     const postedBy = String(input.posted_by || "owner");
     const contactPreference = String(input.contact_preference || "both");
-    const requestedStatus = String(input.status || "pending_review");
-    if (!["draft", "pending_review"].includes(requestedStatus)) {
-      return json({ error: "invalid_listing_status" }, 400, origin);
-    }
     const priceMinor = Number(input.price_minor);
     const fieldErrors: Record<string, string> = {};
     if (title.length < 5 || title.length > 120) fieldErrors.title = "Enter a title between 5 and 120 characters.";
@@ -192,25 +188,14 @@ Deno.serve(async (request) => {
       throw saveError;
     }
 
-    if (requestedStatus === "draft") {
-      const { error: statusError } = await admin
-        .from("listings")
-        .update({ status: "draft", updated_at: new Date().toISOString() })
-        .eq("id", listingId)
-        .eq("owner_id", user.id);
-      if (statusError) throw statusError;
-    }
-
-    if (requestedStatus === "pending_review") {
-      await notifyListing(admin, "listing_submitted", {
-        id: String(listingId),
-        owner_id: user.id,
-        title,
-        city,
-        locality,
-      });
-    }
-    return json({ accepted: true, listing_id: listingId, status: requestedStatus }, 201, origin);
+    await notifyListing(admin, "listing_submitted", {
+      id: String(listingId),
+      owner_id: user.id,
+      title,
+      city,
+      locality,
+    });
+    return json({ accepted: true, listing_id: listingId }, 201, origin);
   } catch (error) {
     const detail = error instanceof Error ? error.message : "listing_submission_failed";
     console.error("Instagram listing save failed", detail);
