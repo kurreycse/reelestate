@@ -26,7 +26,6 @@ import {
   Menu,
   MessageCircle,
   MessageSquare,
-  MoreHorizontal,
   Pause,
   Phone,
   Play,
@@ -1287,7 +1286,7 @@ function PostForm({
           <ShieldCheck />
           <span>
             <b>Free to upload</b>
-            <small>Every post is reviewed before it goes live.</small>
+            <small>Your listing goes live after review and approval.</small>
           </span>
         </div>
       </header>
@@ -1322,8 +1321,9 @@ function PostForm({
           <h2>Property details</h2>
           {instagramReel && (
             <div className="instagram-import-banner">
-              <span className="eyebrow">Imported from Instagram</span>
+              <span className="eyebrow">Step 2 · Confirm property details</span>
               <p>{instagramReel.username || "Instagram reel"}</p>
+              <small>Reel connected · review the prefilled caption and complete the listing details.</small>
               {instagramQueueTotal > 1 && (
                 <small>Listing {instagramQueuePosition} of {instagramQueueTotal}</small>
               )}
@@ -2012,6 +2012,9 @@ function InstagramReelPicker({
     setSelectedReelIds((current) => selected
       ? [...new Set([...current, id])]
       : current.filter((reelId) => reelId !== id));
+    setExpandedReelIds((current) => selected
+      ? [...new Set([...current, id])]
+      : current.filter((reelId) => reelId !== id));
   }
 
   function setVisibleReelsSelected(selected: boolean) {
@@ -2067,7 +2070,7 @@ function InstagramReelPicker({
     if (Object.keys(invalid).length) {
       setReelFieldErrors(invalid);
       setExpandedReelIds((current) => [...new Set([...current, ...Object.keys(invalid)])]);
-      setError("Complete the highlighted property details before saving.");
+      setError("Complete the highlighted property details before submitting.");
       window.setTimeout(() => document.getElementById(`instagram-reel-${Object.keys(invalid)[0]}`)?.scrollIntoView({ behavior: "smooth", block: "center" }), 0);
       return;
     }
@@ -2084,7 +2087,7 @@ function InstagramReelPicker({
     }
 
     for (const [index, reel] of selectedReels.entries()) {
-      setSaveProgress(`Saving reel ${index + 1} of ${selectedReels.length}…`);
+      setSaveProgress(`Submitting listing ${index + 1} of ${selectedReels.length}…`);
       try {
         const details = reel.listingDetails!;
         const { error: saveError } = await supabase.functions.invoke("save-instagram-listing", {
@@ -2147,7 +2150,7 @@ function InstagramReelPicker({
 
     if (savedCount > 0) {
       setAlreadySavedCount((current) => current + savedCount);
-      setNotice(`Saved ${savedCount} reel ${savedCount === 1 ? "listing" : "listings"} to the database. ${savedCount === 1 ? "It is" : "They are"} pending review.`);
+      setNotice(`${savedCount} ${savedCount === 1 ? "listing was" : "listings were"} submitted. ${savedCount === 1 ? "It is" : "They are"} now in review and will go live after approval.`);
       onSaved();
     }
     setSaveProgress("");
@@ -2172,7 +2175,7 @@ function InstagramReelPicker({
       {details && <>
         <button type="button" className="instagram-details-toggle" aria-expanded={expandedReelIds.includes(reel.id)} onClick={() => toggleDetails(reel.id)}>
           {expandedReelIds.includes(reel.id) ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-          {expandedReelIds.includes(reel.id) ? "Hide property details" : "Edit property details"}
+          {expandedReelIds.includes(reel.id) ? "Hide property details" : "Add property details"}
         </button>
         {expandedReelIds.includes(reel.id) && <div className="instagram-reel-details">
           <label>Listing title<input value={details.title} maxLength={120} minLength={5} aria-invalid={fieldErrors.some((message) => message.includes("title"))} onChange={(event) => updateReelDetails(reel.id, { title: event.target.value })} /></label>
@@ -2203,8 +2206,8 @@ function InstagramReelPicker({
       </div>
         <p className="modal-intro">
           {connected
-            ? "Add listing details to each reel, select the listings you want, and save them directly for review."
-            : "Connect Instagram to fetch your reels and save property listings."}
+            ? "Choose a reel, confirm the property details, then submit it for review. Caption text is prefilled where available; check every detail before submitting."
+            : "Connect Instagram to import your reels as structured property listings."}
         </p>
         {!connected && (
           <button className="primary full" disabled={busy} onClick={() => void connect()}>
@@ -2222,13 +2225,18 @@ function InstagramReelPicker({
         {notice && <div className="form-success" role="status"><Check size={16} />{notice}</div>}
         {saveProgress && <p className="instagram-save-progress" role="status"><Loader2 className="spin" size={16} />{saveProgress}</p>}
         {!busy && !error && connected && reels.length === 0 && alreadySavedCount > 0 && (
-          <p className="instagram-empty">{alreadySavedCount === 1 ? "The fetched reel already has a saved listing." : `All ${alreadySavedCount} fetched reels already have saved listings.`}</p>
+          <p className="instagram-empty">{alreadySavedCount === 1 ? "This reel is already imported into My Listings. Check its status there." : `All ${alreadySavedCount} fetched reels are already imported into My Listings. Check their status there.`}</p>
         )}
         {!busy && !error && connected && reels.length === 0 && alreadySavedCount === 0 && (
           <p className="instagram-empty">No new Instagram reels were found for this account.</p>
         )}
         {reels.length > 0 && (
           <>
+            <ol className={marketStyles.importSteps}>
+              <li><b>1</b><span><strong>Choose a reel</strong><small>Select a walkthrough to import.</small></span></li>
+              <li><b>2</b><span><strong>Add property details</strong><small>Confirm price, location and contact.</small></span></li>
+              <li><b>3</b><span><strong>Submit for review</strong><small>It goes live after approval.</small></span></li>
+            </ol>
             <div className="instagram-reel-summary" aria-live="polite">
               <span><strong>{newReels.length}</strong> new reels</span>
               <span><strong>{alreadySavedCount}</strong> already listed</span>
@@ -2260,14 +2268,117 @@ function InstagramReelPicker({
             </section>
             <div className="instagram-save-bar">
               <span aria-live="polite">{selectedReels.length} selected</span>
+              <div className={marketStyles.submitCopy}><b>{selectedReels.length ? `${selectedReels.length} reel${selectedReels.length === 1 ? "" : "s"} selected` : "Select a reel to get started"}</b><small>Property detail changes are saved as drafts in this browser until submitted.</small></div>
               <button type="button" className="primary" disabled={!selectedReels.length || busy || saving} onClick={() => void continueWithSelected()}>
                 {saving ? <Loader2 className="spin" /> : <Check />}
-                {saving ? "Saving selected…" : `Save ${selectedReels.length || "selected"}`}
+                {saving ? "Submitting…" : `Submit ${selectedReels.length || "selected"} for review`}
               </button>
             </div>
           </>
         )}
     </section>
+  );
+}
+
+function ListingDetailsModal({
+  listing,
+  onClose,
+  onSaved,
+}: {
+  listing: Listing;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBusy(true);
+    setError("");
+    const form = new FormData(event.currentTarget);
+    const numberOrNull = (name: string) => {
+      const value = String(form.get(name) || "").trim();
+      return value ? Number(value) : null;
+    };
+    const details = {
+      title: String(form.get("title") || "").trim(),
+      property_type: String(form.get("property_type") || ""),
+      purpose: String(form.get("purpose") || ""),
+      price_minor: Math.round(Number(form.get("price")) * 100),
+      city: String(form.get("city") || "").trim(),
+      locality: String(form.get("locality") || "").trim(),
+      description: String(form.get("description") || "").trim(),
+      contact_preference: String(form.get("contact_preference") || ""),
+      contact_phone: String(form.get("contact_phone") || "").trim(),
+      bedrooms: numberOrNull("bedrooms"),
+      bathrooms: numberOrNull("bathrooms"),
+      carpet_area_sqft: numberOrNull("carpet_area_sqft"),
+      builtup_area_sqft: numberOrNull("builtup_area_sqft"),
+      project_name: String(form.get("project_name") || "").trim() || null,
+      posted_by: String(form.get("posted_by") || ""),
+    };
+    const { error } = await supabase.rpc("update_my_listing_details", {
+      p_listing_id: listing.id,
+      p_data: details,
+    });
+    setBusy(false);
+    if (error) {
+      console.error("Listing details update failed", { code: error.code });
+      setError("The listing details could not be saved. Check the fields and retry.");
+      return;
+    }
+    onSaved();
+  }
+
+  const stageMessage = listing.status === "published"
+    ? "Saving changes sends this live listing back for review. It will be temporarily removed from the portal until it is approved."
+    : listing.status === "approved"
+      ? "Saving changes sends this listing back for review so the updated details can be approved."
+    : listing.status === "rejected"
+      ? "Saving changes resubmits this listing for review."
+      : listing.status === "archived"
+        ? "This listing will remain removed from the portal while you edit its details."
+        : listing.status === "draft"
+          ? "This listing will remain a draft when you save."
+          : "This listing will remain in review when you save.";
+
+  return (
+    <div className="modal-backdrop" role="presentation">
+      <div className={`auth-modal ${marketStyles.detailsModal}`} role="dialog" aria-modal="true" aria-labelledby="listing-details-title">
+        <button className="icon-btn close" type="button" onClick={onClose} aria-label="Close"><X /></button>
+        <span className="eyebrow">Edit listing details</span>
+        <h2 id="listing-details-title">{listing.title}</h2>
+        <p className="modal-intro">{stageMessage}</p>
+        <form onSubmit={submit}>
+          <label>Listing title<input name="title" defaultValue={listing.title} required minLength={5} maxLength={120} /></label>
+          <div className="form-grid two">
+            <label>Property type<select name="property_type" defaultValue={listing.property_type} required>{["Apartment", "Villa", "Independent house", "Plot", "Commercial"].map((type) => <option key={type}>{type}</option>)}</select></label>
+            <label>Listing type<select name="purpose" defaultValue={listing.purpose}><option value="sale">For sale</option><option value="rent">For rent</option></select></label>
+          </div>
+          <label>Sale price / monthly rent (₹)<input name="price" type="number" min="1" step="1" defaultValue={listing.price_minor / 100} required /></label>
+          <div className="form-grid two">
+            <label>City<input name="city" defaultValue={listing.city} required minLength={2} maxLength={100} /></label>
+            <label>Locality<input name="locality" defaultValue={listing.locality} required minLength={2} maxLength={150} /></label>
+          </div>
+          <div className="form-grid two">
+            <label>Bedrooms<input name="bedrooms" type="number" min="0" max="20" defaultValue={listing.bedrooms ?? ""} /></label>
+            <label>Bathrooms<input name="bathrooms" type="number" min="0" max="20" defaultValue={listing.bathrooms ?? ""} /></label>
+            <label>Carpet area (sq.ft.)<input name="carpet_area_sqft" type="number" min="1" defaultValue={listing.carpet_area_sqft ?? ""} /></label>
+            <label>Built-up area (sq.ft.)<input name="builtup_area_sqft" type="number" min="1" defaultValue={listing.builtup_area_sqft ?? ""} /></label>
+          </div>
+          <label>Project / society<input name="project_name" defaultValue={listing.project_name || ""} maxLength={120} /></label>
+          <label>Description<textarea name="description" defaultValue={listing.description} required minLength={20} maxLength={2000} /></label>
+          <div className="form-grid two">
+            <label>Contact phone<input name="contact_phone" type="tel" defaultValue={listing.contact_phone} required minLength={8} maxLength={20} /></label>
+            <label>Contact preference<select name="contact_preference" defaultValue={listing.contact_preference}><option value="both">Call or WhatsApp</option><option value="call">Call only</option><option value="whatsapp">WhatsApp only</option></select></label>
+          </div>
+          <label>Posted by<select name="posted_by" defaultValue={listing.posted_by || "owner"}><option value="owner">Property owner</option><option value="agent">Real-estate agent</option><option value="builder">Builder / developer</option></select></label>
+          {error && <div className="form-error" role="alert"><CircleAlert size={16} />{error}</div>}
+          <button className="primary full" disabled={busy}>{busy ? <Loader2 className="spin" /> : <Check />}{busy ? "Saving…" : "Save details"}</button>
+        </form>
+      </div>
+    </div>
   );
 }
 
@@ -2287,9 +2398,13 @@ function Dashboard({
   onRefresh: () => void;
 }) {
   const [instagramOpen, setInstagramOpen] = useState(false);
+  const [detailsListing, setDetailsListing] = useState<Listing | null>(null);
+  const [listingFilter, setListingFilter] = useState<Listing["status"] | "all">("all");
   const [instagramConnected, setInstagramConnected] = useState(false);
   const [availabilityBusyId, setAvailabilityBusyId] = useState<string | null>(null);
   const [availabilityError, setAvailabilityError] = useState("");
+  const [deleteBusyId, setDeleteBusyId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState("");
   const [instagramAccount, setInstagramAccount] = useState<{
     username: string;
     profilePictureUrl?: string;
@@ -2337,19 +2452,59 @@ function Dashboard({
     setInstagramOpen(false);
   };
 
+  const filteredItems = items.filter((item) => listingFilter === "all" || item.status === listingFilter);
+  const statusFilters = [
+    { id: "all" as const, label: "All", count: items.length },
+    { id: "draft" as const, label: "Drafts", count: items.filter((item) => item.status === "draft").length },
+    { id: "pending_review" as const, label: "In review", count: items.filter((item) => item.status === "pending_review").length },
+    { id: "published" as const, label: "Live", count: items.filter((item) => item.status === "published").length },
+    { id: "archived" as const, label: "Removed", count: items.filter((item) => item.status === "archived").length },
+    { id: "rejected" as const, label: "Needs attention", count: items.filter((item) => item.status === "rejected").length },
+  ];
+
   async function toggleAvailability(listing: Listing) {
     setAvailabilityBusyId(listing.id);
     setAvailabilityError("");
-    const { error } = await supabase.rpc("set_my_listing_availability", {
-      p_listing_id: listing.id,
-      p_is_available: listing.is_available === false,
-    });
+    const { error } = listing.status === "archived"
+      ? await supabase.rpc("restore_my_listing", { p_listing_id: listing.id })
+      : await supabase.rpc("mark_my_listing_unavailable", { p_listing_id: listing.id });
     setAvailabilityBusyId(null);
     if (error) {
+      console.error("Listing portal status could not be updated", { code: error.code });
       setAvailabilityError("Availability could not be updated. Please retry.");
       return;
     }
     onRefresh();
+  }
+
+  async function deleteListing(listing: Listing) {
+    const confirmed = window.confirm(
+      `Permanently delete “${listing.title}”? This also removes its video, thumbnail, enquiries and engagement history. This cannot be undone.`,
+    );
+    if (!confirmed) return;
+    setDeleteBusyId(listing.id);
+    setDeleteError("");
+    const { error } = await supabase.rpc("delete_my_listing", { p_listing_id: listing.id });
+    if (error) {
+      console.error("Listing deletion failed", { code: error.code });
+      setDeleteBusyId(null);
+      setDeleteError("The listing could not be deleted. Please retry.");
+      return;
+    }
+
+    const mediaDeletes = await Promise.all([
+      listing.video_path
+        ? supabase.storage.from("property-videos").remove([listing.video_path])
+        : Promise.resolve({ error: null }),
+      listing.poster_path
+        ? supabase.storage.from("property-posters").remove([listing.poster_path])
+        : Promise.resolve({ error: null }),
+    ]);
+    setDeleteBusyId(null);
+    onRefresh();
+    if (mediaDeletes.some((result) => result.error)) {
+      setDeleteError("The listing was deleted, but a stored video or thumbnail could not be removed.");
+    }
   }
 
   return (
@@ -2357,8 +2512,8 @@ function Dashboard({
       <header className="section-head compact">
         <div>
           <span className="eyebrow">Your portfolio</span>
-          <h1>My property posts</h1>
-          <p>Track every draft, review and live listing in one place.</p>
+          <h1>My Listings</h1>
+          <p>Manage your listings, imported reels and buyer enquiries in one place.</p>
         </div>
         <div className="dashboard-actions">
           {instagramConnected && instagramAccount && (
@@ -2424,23 +2579,11 @@ function Dashboard({
         />
       )}
       {availabilityError && <p className="form-error" role="alert"><CircleAlert size={16} />{availabilityError}</p>}
-      <div className="stats">
-        <div>
-          <span>All posts</span>
-          <b>{items.length}</b>
-        </div>
-        <div>
-          <span>Live</span>
-          <b>{items.filter((x) => x.status === "published").length}</b>
-        </div>
-        <div>
-          <span>In review</span>
-          <b>{items.filter((x) => x.status === "pending_review").length}</b>
-        </div>
-        <div>
-          <span>Needs attention</span>
-          <b>{items.filter((x) => x.status === "rejected").length}</b>
-        </div>
+      {deleteError && <p className="form-error" role="alert"><CircleAlert size={16} />{deleteError}</p>}
+      <div className={marketStyles.statusFilters} aria-label="Filter listings by status">
+        {statusFilters.map((filter) => <button key={filter.id} type="button" onClick={() => setListingFilter(filter.id)} className={listingFilter === filter.id ? marketStyles.statusFilterActive : ""} aria-pressed={listingFilter === filter.id}>
+          <span>{filter.label}</span><b>{filter.count}</b>
+        </button>)}
       </div>
       {items.length === 0 ? (
         <div className="empty-panel">
@@ -2454,9 +2597,16 @@ function Dashboard({
             Create free listing
           </button>
         </div>
+      ) : filteredItems.length === 0 ? (
+        <div className="empty-panel">
+          <Video />
+          <h2>No {statusFilters.find((filter) => filter.id === listingFilter)?.label.toLowerCase()} listings yet.</h2>
+          <p>When a listing reaches this stage, it will appear here.</p>
+          <button className="primary" onClick={() => setListingFilter("all")}>View all listings</button>
+        </div>
       ) : (
         <div className="listing-list">
-          {items.map((x) => (
+          {filteredItems.map((x) => (
             <article key={x.id}>
               <div className="thumb">
                 {x.poster_url ? (
@@ -2473,7 +2623,7 @@ function Dashboard({
               </div>
               <div className="listing-main">
                 <span className={`status ${x.status}`}>
-                  {x.status.replace("_", " ")}
+                  {x.status === "archived" ? "Removed from portal" : x.status === "pending_review" ? "In review" : x.status === "published" ? "Live" : x.status === "rejected" ? "Needs attention" : x.status === "draft" ? "Draft" : x.status.replaceAll("_", " ")}
                 </span>
                 <h3>{x.title}</h3>
                 <p>
@@ -2498,29 +2648,43 @@ function Dashboard({
                     year: "numeric",
                   })}
                 </small>
+                <button type="button" className="secondary" onClick={() => setDetailsListing(x)}>
+                  Edit details
+                </button>
                 {x.status === "rejected" ? (
                   <button className="primary" onClick={() => onEdit(x)}>
                     Edit &amp; resubmit
                   </button>
-                ) : x.status === "published" ? (
+                ) : x.status === "published" || x.status === "archived" ? (
                   <button
                     className="secondary availability-toggle"
                     disabled={availabilityBusyId === x.id}
                     onClick={() => void toggleAvailability(x)}
-                    aria-label={`${x.is_available === false ? "Mark available" : "Mark unavailable"}: ${x.title}`}
+                    aria-label={`${x.status === "archived" ? "Restore to portal" : "Remove from portal"}: ${x.title}`}
                   >
                     {availabilityBusyId === x.id
                       ? <Loader2 className="spin" />
-                      : x.is_available === false ? "Mark available" : "Mark unavailable"}
+                      : x.status === "archived" ? "Restore to portal" : "Remove from portal"}
                   </button>
                 ) : (
-                  <MoreHorizontal />
+                  <span className={marketStyles.listingStatusNote}>{x.status === "pending_review" ? "Awaiting review" : x.status === "draft" ? "Draft saved" : x.status.replaceAll("_", " ")}</span>
                 )}
+                <button
+                  type="button"
+                  className={marketStyles.deleteButton}
+                  disabled={deleteBusyId === x.id}
+                  onClick={() => void deleteListing(x)}
+                  aria-label={`Delete listing: ${x.title}`}
+                >
+                  {deleteBusyId === x.id ? <Loader2 className="spin" /> : <Trash2 />}
+                  {deleteBusyId === x.id ? "Deleting…" : "Delete listing"}
+                </button>
               </div>
             </article>
           ))}
         </div>
       )}
+      {detailsListing && <ListingDetailsModal listing={detailsListing} onClose={() => setDetailsListing(null)} onSaved={() => { setDetailsListing(null); onRefresh(); }} />}
       <EnquiryInbox items={enquiries} onChanged={onRefresh} />
     </section>
   );

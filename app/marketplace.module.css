@@ -90,6 +90,139 @@
   font-weight: 750;
 }
 
+.statusFilters {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+  margin: 24px 0;
+}
+
+.statusFilters button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: var(--paper);
+  color: var(--muted);
+  text-align: left;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.statusFilters button b {
+  color: var(--ink);
+  font-size: 19px;
+}
+
+.statusFilters .statusFilterActive {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: #fff;
+}
+
+.statusFilters .statusFilterActive b {
+  color: #fff;
+}
+
+.listingStatusNote {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.deleteButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid #e3b7b1;
+  border-radius: 999px;
+  background: #fff8f6;
+  color: #9e3328;
+  padding: 10px 13px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.deleteButton:hover {
+  border-color: #9e3328;
+  background: #fff0ed;
+}
+
+.deleteButton:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.deleteButton svg {
+  width: 15px;
+  height: 15px;
+}
+
+.detailsModal {
+  width: min(720px, calc(100vw - 32px));
+  max-height: min(90svh, 900px);
+  overflow-y: auto;
+}
+
+.importSteps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 14px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.importSteps li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+}
+
+.importSteps li > b {
+  display: grid;
+  place-items: center;
+  flex: 0 0 25px;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: #fff;
+  font-size: 11px;
+}
+
+.importSteps li span,
+.submitCopy {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.importSteps strong,
+.submitCopy b {
+  font-size: 12px;
+}
+
+.importSteps small,
+.submitCopy small {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.submitCopy {
+  max-width: 400px;
+}
+
 @media (max-width: 620px) {
   .promise {
     grid-template-columns: 1fr;
@@ -106,5 +239,23 @@
 
   .discovery > span {
     width: 100%;
+  }
+
+  .statusFilters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .importSteps {
+    grid-template-columns: 1fr;
+  }
+
+  .submitCopy {
+    display: none;
+  }
+}
+
+@media (min-width: 621px) and (max-width: 900px) {
+  .statusFilters {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
