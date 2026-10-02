@@ -1165,6 +1165,8 @@ function PostForm({
   };
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const submitter = (e.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
+    const targetStatus = submitter?.value === "draft" ? "draft" : "pending_review";
     if ((!initial && (!video || !poster)) || (video && !poster)) {
       setError(
         "Choose a compatible property video and wait for its thumbnail.",
@@ -1212,6 +1214,7 @@ function PostForm({
     const amenities = form.getAll("amenities").map(String);
     const payload = {
       id,
+      status: targetStatus,
       title: form.get("title"),
       property_type: form.get("type"),
       purpose,
@@ -1733,16 +1736,16 @@ function PostForm({
               <i style={{ width: `${progress}%` }} />
             </div>
           )}
-          <button className="primary submit" disabled={busy}>
-            {busy ? <Loader2 className="spin" /> : <Send />}{" "}
-            {busy
-              ? "Uploading…"
-              : initial
-                ? "Resubmit for review"
-                : instagramReel
-                  ? "Save to database and submit for review"
-                  : "Submit for review"}
-          </button>
+          <div className={marketStyles.postSubmitActions}>
+            {!initial && <button type="submit" name="listing_status" value="draft" className="secondary submit" disabled={busy}>
+              {busy && targetStatus === "draft" ? <Loader2 className="spin" /> : <Check />}
+              {busy && targetStatus === "draft" ? "Saving draft…" : "Save as draft"}
+            </button>}
+            <button type="submit" name="listing_status" value="pending_review" className="primary submit" disabled={busy}>
+              {busy && targetStatus === "pending_review" ? <Loader2 className="spin" /> : <Send />} {" "}
+              {busy && targetStatus === "pending_review" ? "Uploading…" : initial ? "Resubmit for review" : "Submit for review"}
+            </button>
+          </div>
         </div>
       </form>
     </section>
@@ -2059,7 +2062,7 @@ function InstagramReelPicker({
     );
   }
 
-  async function continueWithSelected() {
+  async function continueWithSelected(targetStatus: "draft" | "pending_review") {
     if (!selectedReels.length) {
       setError("Select at least one reel before saving.");
       return;
@@ -2070,7 +2073,7 @@ function InstagramReelPicker({
     if (Object.keys(invalid).length) {
       setReelFieldErrors(invalid);
       setExpandedReelIds((current) => [...new Set([...current, ...Object.keys(invalid)])]);
-      setError("Complete the highlighted property details before submitting.");
+      setError("Complete the highlighted property details before saving this listing.");
       window.setTimeout(() => document.getElementById(`instagram-reel-${Object.keys(invalid)[0]}`)?.scrollIntoView({ behavior: "smooth", block: "center" }), 0);
       return;
     }
@@ -2087,12 +2090,13 @@ function InstagramReelPicker({
     }
 
     for (const [index, reel] of selectedReels.entries()) {
-      setSaveProgress(`Submitting listing ${index + 1} of ${selectedReels.length}…`);
+      setSaveProgress(`${targetStatus === "draft" ? "Saving draft" : "Submitting listing"} ${index + 1} of ${selectedReels.length}…`);
       try {
         const details = reel.listingDetails!;
         const { error: saveError } = await supabase.functions.invoke("save-instagram-listing", {
           body: {
             id: reel.listingId || crypto.randomUUID(),
+            status: targetStatus,
             title: details.title.trim(),
             property_type: details.propertyType,
             purpose: details.purpose,
@@ -2150,7 +2154,9 @@ function InstagramReelPicker({
 
     if (savedCount > 0) {
       setAlreadySavedCount((current) => current + savedCount);
-      setNotice(`${savedCount} ${savedCount === 1 ? "listing was" : "listings were"} submitted. ${savedCount === 1 ? "It is" : "They are"} now in review and will go live after approval.`);
+      setNotice(targetStatus === "draft"
+        ? `${savedCount} ${savedCount === 1 ? "listing was" : "listings were"} saved to My Listings as ${savedCount === 1 ? "a draft" : "drafts"}. Submit ${savedCount === 1 ? "it" : "them"} for review whenever you are ready.`
+        : `${savedCount} ${savedCount === 1 ? "listing was" : "listings were"} submitted. ${savedCount === 1 ? "It is" : "They are"} now in review and will go live after approval.`);
       onSaved();
     }
     setSaveProgress("");
@@ -2206,7 +2212,7 @@ function InstagramReelPicker({
       </div>
         <p className="modal-intro">
           {connected
-            ? "Choose a reel, confirm the property details, then submit it for review. Caption text is prefilled where available; check every detail before submitting."
+            ? "Choose a reel, confirm the property details, then save it as a draft or submit it for review. Caption text is prefilled where available; check every detail before saving."
             : "Connect Instagram to import your reels as structured property listings."}
         </p>
         {!connected && (
@@ -2235,7 +2241,7 @@ function InstagramReelPicker({
             <ol className={marketStyles.importSteps}>
               <li><b>1</b><span><strong>Choose a reel</strong><small>Select a walkthrough to import.</small></span></li>
               <li><b>2</b><span><strong>Add property details</strong><small>Confirm price, location and contact.</small></span></li>
-              <li><b>3</b><span><strong>Submit for review</strong><small>It goes live after approval.</small></span></li>
+              <li><b>3</b><span><strong>Save or submit</strong><small>Keep a database draft or send it for review.</small></span></li>
             </ol>
             <div className="instagram-reel-summary" aria-live="polite">
               <span><strong>{newReels.length}</strong> new reels</span>
@@ -2268,9 +2274,13 @@ function InstagramReelPicker({
             </section>
             <div className="instagram-save-bar">
               <span aria-live="polite">{selectedReels.length} selected</span>
-              <div className={marketStyles.submitCopy}><b>{selectedReels.length ? `${selectedReels.length} reel${selectedReels.length === 1 ? "" : "s"} selected` : "Select a reel to get started"}</b><small>Property detail changes are saved as drafts in this browser until submitted.</small></div>
-              <button type="button" className="primary" disabled={!selectedReels.length || busy || saving} onClick={() => void continueWithSelected()}>
+              <div className={marketStyles.submitCopy}><b>{selectedReels.length ? `${selectedReels.length} reel${selectedReels.length === 1 ? "" : "s"} selected` : "Select a reel to get started"}</b><small>Save a complete listing to My Listings as a database draft, or submit it for review now.</small></div>
+              <button type="button" className={`secondary ${marketStyles.draftButton}`} disabled={!selectedReels.length || busy || saving} onClick={() => void continueWithSelected("draft")}>
                 {saving ? <Loader2 className="spin" /> : <Check />}
+                {saving ? "Saving…" : "Save as draft"}
+              </button>
+              <button type="button" className={`primary ${marketStyles.draftButton}`} disabled={!selectedReels.length || busy || saving} onClick={() => void continueWithSelected("pending_review")}>
+                {saving ? <Loader2 className="spin" /> : <Send />}
                 {saving ? "Submitting…" : `Submit ${selectedReels.length || "selected"} for review`}
               </button>
             </div>
@@ -2405,6 +2415,8 @@ function Dashboard({
   const [availabilityError, setAvailabilityError] = useState("");
   const [deleteBusyId, setDeleteBusyId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState("");
+  const [draftSubmitBusyId, setDraftSubmitBusyId] = useState<string | null>(null);
+  const [draftSubmitError, setDraftSubmitError] = useState("");
   const [instagramAccount, setInstagramAccount] = useState<{
     username: string;
     profilePictureUrl?: string;
@@ -2472,6 +2484,21 @@ function Dashboard({
     if (error) {
       console.error("Listing portal status could not be updated", { code: error.code });
       setAvailabilityError("Availability could not be updated. Please retry.");
+      return;
+    }
+    onRefresh();
+  }
+
+  async function submitDraft(listing: Listing) {
+    setDraftSubmitBusyId(listing.id);
+    setDraftSubmitError("");
+    const { error } = await supabase.functions.invoke("submit-draft-property-listing", {
+      body: { listing_id: listing.id },
+    });
+    setDraftSubmitBusyId(null);
+    if (error) {
+      console.error("Draft listing could not be submitted", { code: error.code });
+      setDraftSubmitError("The draft could not be submitted for review. Please retry.");
       return;
     }
     onRefresh();
@@ -2580,6 +2607,7 @@ function Dashboard({
       )}
       {availabilityError && <p className="form-error" role="alert"><CircleAlert size={16} />{availabilityError}</p>}
       {deleteError && <p className="form-error" role="alert"><CircleAlert size={16} />{deleteError}</p>}
+      {draftSubmitError && <p className="form-error" role="alert"><CircleAlert size={16} />{draftSubmitError}</p>}
       <div className={marketStyles.statusFilters} aria-label="Filter listings by status">
         {statusFilters.map((filter) => <button key={filter.id} type="button" onClick={() => setListingFilter(filter.id)} className={listingFilter === filter.id ? marketStyles.statusFilterActive : ""} aria-pressed={listingFilter === filter.id}>
           <span>{filter.label}</span><b>{filter.count}</b>
@@ -2651,7 +2679,12 @@ function Dashboard({
                 <button type="button" className="secondary" onClick={() => setDetailsListing(x)}>
                   Edit details
                 </button>
-                {x.status === "rejected" ? (
+                {x.status === "draft" ? (
+                  <button type="button" className="primary" disabled={draftSubmitBusyId === x.id} onClick={() => void submitDraft(x)}>
+                    {draftSubmitBusyId === x.id ? <Loader2 className="spin" /> : <Send />}
+                    {draftSubmitBusyId === x.id ? "Submitting…" : "Submit for review"}
+                  </button>
+                ) : x.status === "rejected" ? (
                   <button className="primary" onClick={() => onEdit(x)}>
                     Edit &amp; resubmit
                   </button>

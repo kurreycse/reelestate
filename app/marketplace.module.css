@@ -223,6 +223,20 @@
   max-width: 400px;
 }
 
+.postSubmitActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.postSubmitActions button {
+  margin-top: 8px;
+}
+
+.draftButton {
+  white-space: nowrap;
+}
+
 @media (max-width: 620px) {
   .promise {
     grid-template-columns: 1fr;
@@ -251,6 +265,10 @@
 
   .submitCopy {
     display: none;
+  }
+
+  .postSubmitActions {
+    grid-template-columns: 1fr;
   }
 }
 
