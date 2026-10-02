@@ -2718,7 +2718,7 @@ function Dashboard({
                 <button type="button" className="secondary" onClick={() => setDetailsListing(x)}>
                   Edit details
                 </button>
-                {(x.video_path || x.instagram_source_url) && <button
+                <button
                   type="button"
                   className="secondary"
                   disabled={playbackBusyId === x.id}
@@ -2727,7 +2727,7 @@ function Dashboard({
                 >
                   {playbackBusyId === x.id ? <Loader2 className="spin" /> : <Play />}
                   {playbackBusyId === x.id ? "Loading reel…" : "Play reel"}
-                </button>}
+                </button>
                 {x.status === "draft" ? (
                   <button type="button" className="primary" disabled={draftSubmitBusyId === x.id} onClick={() => void submitDraft(x)}>
                     {draftSubmitBusyId === x.id ? <Loader2 className="spin" /> : <Send />}
@@ -2990,8 +2990,17 @@ export default function Portal() {
             .limit(100),
         ]);
       const ownListings = (own || []) as Listing[];
-      const listingMap = new Map(ownListings.map((item) => [item.id, item]));
-      setMine(ownListings);
+      const posterPaths = ownListings.flatMap((item) => item.poster_path ? [item.poster_path] : []);
+      const { data: signedPosters } = posterPaths.length
+        ? await supabase.storage.from("property-posters").createSignedUrls(posterPaths, 1800)
+        : { data: [] };
+      const posterUrls = new Map((signedPosters || []).flatMap((poster) => poster.path && poster.signedUrl ? [[poster.path, poster.signedUrl] as const] : []));
+      const listingsWithPosters = ownListings.map((item) => ({
+        ...item,
+        poster_url: item.poster_path ? posterUrls.get(item.poster_path) : undefined,
+      }));
+      const listingMap = new Map(listingsWithPosters.map((item) => [item.id, item]));
+      setMine(listingsWithPosters);
       setEnquiries(
         ((leadData || []) as PropertyEnquiry[]).map((lead) => ({
           ...lead,
