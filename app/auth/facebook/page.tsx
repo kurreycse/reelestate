@@ -11,6 +11,8 @@ async function completeFacebookLogin() {
   const code = url.searchParams.get("code");
   const denied = url.searchParams.has("error") || new URLSearchParams(url.hash.slice(1)).has("error");
   window.history.replaceState(null, "", url.pathname);
+  const returnTo = window.sessionStorage.getItem("reelestate-auth-return-to");
+  window.sessionStorage.removeItem("reelestate-auth-return-to");
   if (denied || !code) throw new Error("Facebook sign-in was cancelled or the sign-in link has expired. Please try again.");
   const { error } = await supabase.auth.exchangeCodeForSession(code);
   if (error) throw new Error("Facebook sign-in could not be verified. Please try again in the same browser tab.");
@@ -19,7 +21,9 @@ async function completeFacebookLogin() {
     await supabase.auth.signOut();
     throw new Error("Your account could not be prepared. Please try again shortly.");
   }
-  window.location.replace("/");
+  window.location.replace(
+    returnTo === "/user-account-delete" ? returnTo : "/",
+  );
 }
 
 export default function FacebookCallback() {

@@ -49,11 +49,13 @@ export default function DeleteAccountRequest() {
     return (
       <div className="account-delete-signin">
         <p>
-          To protect your account, sign in with the account you want to delete.
-          You can then return to this page or delete it from My profile in the
-          app.
+          To protect your data, sign in with Facebook using the account you
+          want to delete. After sign-in, you will return here to confirm
+          deletion.
         </p>
-        <Link href="/">Go to ReelEstate to sign in</Link>
+        <Link className="primary full" href="/?accountDeletion=1">
+          Sign in with Facebook to continue
+        </Link>
       </div>
     );
   }

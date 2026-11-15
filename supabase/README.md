@@ -1,6 +1,6 @@
 # Supabase activation
 
-1. Apply `migrations/202608210001_reelestate.sql` in the Supabase SQL Editor or CLI.
+1. Apply every SQL file in `migrations/` in filename order (including migrations added after initial setup) in the Supabase SQL Editor or CLI. In particular, `202609300001_owner_listing_availability.sql` enables owners to take their published listings offline; the dashboard action will fail until this migration is applied to the connected project.
 2. In Authentication > Providers > Phone, enable phone authentication and configure Twilio Verify using a newly rotated Auth Token.
 3. Set OTP expiry to 600 seconds and rate limits appropriate to the launch country.
 4. Create an administrator, complete their profile, then run the commented role-promotion statement at the end of the migration.
@@ -28,8 +28,9 @@ Facebook replaces the phone/password, OTP, and registration screens. Existing ac
 2. Enable Facebook in Supabase Authentication > Providers using app ID `2639177136554797`. Store the app secret only in the provider settings, never in source or browser environment variables.
 3. In Meta Facebook Login settings, allow the exact Valid OAuth Redirect URI `https://uyizcipakauppzhmeqxu.supabase.co/auth/v1/callback`.
 4. Enable Facebook email permission and live access for users beyond app roles/testers.
-5. Allow the app callback in Supabase URL Configuration: `http://localhost:3002/auth/facebook` for this preview and `https://reelestate-property-video.rabartkurrey.chatgpt.site/auth/facebook` for Sites. Add the exact callback for any other deployment domain.
-6. Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in the build environment.
+5. Set the Meta User Data Deletion URL to `https://reelestate.co.in/user-account-delete`. This public page explains what ReelEstate deletes and lets signed-in users submit a deletion request.
+6. Allow the app callback in Supabase URL Configuration: `http://localhost:3002/auth/facebook` for this preview and `https://reelestate-property-video.rabartkurrey.chatgpt.site/auth/facebook` for Sites. Add the exact callback for any other deployment domain.
+7. Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in the build environment.
 
 The callback exchanges the one-time code with PKCE, clears the URL, and creates a poster profile through a restricted RPC. Existing profiles and roles are preserved; disabled accounts are rejected.
 

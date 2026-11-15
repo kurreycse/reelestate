@@ -145,6 +145,43 @@ test("Bilaspur and custom localities are available for listing and search", () =
   assert.match(portal, /Object\.keys\(CITY_LOCALITIES\)/);
 });
 
+test("marketplace is WhatsApp-first and keeps live inventory distinct from demos", () => {
+  const portal = read("app/Portal.tsx");
+  const propertyPage = read("app/property/[id]/page.tsx");
+  const enquiry = read("app/property/[id]/EnquiryForm.tsx");
+  assert.match(portal, /Send property on WhatsApp/);
+  assert.match(portal, /WHATSAPP_LISTING_MESSAGE/);
+  assert.match(portal, /canonicalSearch/);
+  assert.match(portal, /Bengaluru \/ Bangalore/);
+  assert.match(portal, /const liveItems =/);
+  assert.match(portal, /Demo property previews/);
+  assert.match(portal, /Demo · Not available/);
+  assert.match(portal, /More filters/);
+  assert.match(portal, /href="\/terms"/);
+  assert.match(portal, /href="\/privacy"/);
+  assert.match(enquiry, /consent to sharing these details/);
+  assert.match(propertyPage, /const images=poster\?/);
+  assert.match(propertyPage, /Plot area/);
+  assert.match(propertyPage, /What “checked” means/);
+});
+
+test("Instagram handles provide public broker catalogues with private phone access", () => {
+  const portal = read("app/Portal.tsx");
+  const catalogue = read("app/broker/[handle]/page.tsx");
+  const migration = read(
+    "supabase/migrations/202609100001_public_broker_catalogues.sql",
+  );
+  assert.match(portal, /creates your catalogue link/);
+  assert.match(portal, /View my public catalogue/);
+  assert.match(portal, /view"\) !== "dashboard"/);
+  assert.match(catalogue, /get_public_broker_catalogue/);
+  assert.match(catalogue, /Use your verified phone number/);
+  assert.match(catalogue, /Open broker dashboard/);
+  assert.match(migration, /where l\.status = 'published'/);
+  assert.match(migration, /unique index.*profiles_instagram_id_unique_idx/s);
+  assert.doesNotMatch(migration, /'email'|'phone_e164'/);
+});
+
 test("property badges cannot cover or intercept the video play control", () => {
   const css = read("app/globals.css");
   assert.match(css, /\.tile-play\{z-index:4\}/);
@@ -316,17 +353,24 @@ test("account deletion is authenticated, confirmed, and removes linked data", ()
   const action = read("app/user-account-delete/DeleteAccountAction.tsx");
   const request = read("app/user-account-delete/DeleteAccountRequest.tsx");
   const portal = read("app/Portal.tsx");
+  const callback = read("app/auth/facebook/page.tsx");
   const deletion = read("supabase/functions/delete-account/index.ts");
   const migration = read(
     "supabase/migrations/202611140001_account_deletion.sql",
   );
   assert.match(page, /Delete your ReelEstate account/);
+  assert.match(page, /Facebook data deletion/);
+  assert.match(page, /facebook\.com\/settings\/\?tab=applications/);
   assert.match(request, /supabase\.auth\.getSession/);
   assert.match(request, /DeleteAccountAction/);
+  assert.match(request, /accountDeletion=1/);
   assert.match(action, /delete-account/);
   assert.match(action, /confirm: true/);
   assert.match(action, /permanently deletes/);
   assert.match(portal, /Delete account/);
+  assert.match(portal, /accountDeletion/);
+  assert.match(portal, /AUTH_RETURN_TO_KEY/);
+  assert.match(callback, /returnTo === "\/user-account-delete"/);
   assert.match(deletion, /admin\.auth\.getUser\(token\)/);
   assert.match(deletion, /payload\.confirm !== true/);
   assert.match(deletion, /property_enquiries/);
