@@ -53,7 +53,6 @@ type View = "feed" | "post" | "dashboard" | "admin";
 
 const INSTAGRAM_TOKEN_KEY = "reelestate-instagram-access-token";
 const INSTAGRAM_ACCOUNT_KEY = "reelestate-instagram-account";
-const AUTH_RETURN_TO_KEY = "reelestate-auth-return-to";
 
 type ImportedReelDetails = {
   title: string;
@@ -209,7 +208,7 @@ async function submissionError(error: unknown, fallback = "The property could no
       return fallback;
   }
 }
-function LoginModal({ onClose, returnTo = "/" }: { onClose: () => void; returnTo?: string }) {
+function LoginModal({ onClose }: { onClose: () => void }) {
   const [busy, setBusy] = useState(false);
   const [consentAccepted, setConsentAccepted] = useState(false);
   const [error, setError] = useState("");
@@ -218,14 +217,12 @@ function LoginModal({ onClose, returnTo = "/" }: { onClose: () => void; returnTo
     setError("");
     try {
       if (!isSupabaseConfigured) throw new Error("Authentication is not configured");
-      window.sessionStorage.setItem(AUTH_RETURN_TO_KEY, returnTo);
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "facebook",
         options: { redirectTo: `${window.location.origin}/auth/facebook`, scopes: "email" },
       });
       if (error) throw error;
     } catch {
-      window.sessionStorage.removeItem(AUTH_RETURN_TO_KEY);
       setError("Facebook sign-in could not start. Please try again shortly.");
       setBusy(false);
     }
@@ -2969,7 +2966,6 @@ export default function Portal() {
   const [authReady, setAuthReady] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [login, setLogin] = useState(false);
-  const [loginReturnTo, setLoginReturnTo] = useState("/");
   const [showProfile, setShowProfile] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [menu, setMenu] = useState(false);
@@ -3086,17 +3082,6 @@ export default function Portal() {
     void Promise.resolve().then(() => setView("dashboard"));
   }, []);
   useEffect(() => {
-    const url = new URL(window.location.href);
-    if (url.searchParams.get("accountDeletion") !== "1") return;
-    url.searchParams.delete("accountDeletion");
-    window.history.replaceState(null, "", url.pathname);
-    const timer = window.setTimeout(() => {
-      setLoginReturnTo("/user-account-delete");
-      setLogin(true);
-    }, 0);
-    return () => window.clearTimeout(timer);
-  }, []);
-  useEffect(() => {
     const stop = () =>
       document.querySelectorAll("video").forEach((v) => v.pause());
     document.addEventListener("visibilitychange", stop);
@@ -3198,6 +3183,14 @@ export default function Portal() {
                   <button onClick={() => guarded("dashboard")}>
                     <UserRound /> My posts
                   </button>
+                  <button
+                    onClick={() => {
+                      setMenu(false);
+                      window.location.assign("/user-account-delete");
+                    }}
+                  >
+                    <Trash2 /> Delete account
+                  </button>
                   <button onClick={() => void logout()}>
                     <LogOut /> Sign out
                   </button>
@@ -3297,7 +3290,7 @@ export default function Portal() {
           </button>
         ))}
       </nav>
-      {login && <LoginModal onClose={() => setLogin(false)} returnTo={loginReturnTo} />}
+      {login && <LoginModal onClose={() => setLogin(false)} />}
       {showProfile && profile && (
         <ProfileModal
           profile={profile}

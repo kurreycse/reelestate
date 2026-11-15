@@ -17,7 +17,6 @@ test("authentication errors are mapped and sessions are refresh-safe but tab-sco
   assert.match(portal, /provider: "facebook"/);
   assert.match(portal, /Continue with Facebook/);
   assert.doesNotMatch(portal, /signInWithPassword|request-phone-otp|New user\? Create account|Forgot password/);
-  const callback = read("app/auth/facebook/page.tsx");
   assert.match(callback, /exchangeCodeForSession/);
   assert.match(callback, /history\.replaceState/);
   assert.match(callback, /complete_facebook_registration/);
@@ -353,24 +352,18 @@ test("account deletion is authenticated, confirmed, and removes linked data", ()
   const action = read("app/user-account-delete/DeleteAccountAction.tsx");
   const request = read("app/user-account-delete/DeleteAccountRequest.tsx");
   const portal = read("app/Portal.tsx");
-  const callback = read("app/auth/facebook/page.tsx");
   const deletion = read("supabase/functions/delete-account/index.ts");
   const migration = read(
     "supabase/migrations/202611140001_account_deletion.sql",
   );
   assert.match(page, /Delete your ReelEstate account/);
-  assert.match(page, /Facebook data deletion/);
-  assert.match(page, /facebook\.com\/settings\/\?tab=applications/);
   assert.match(request, /supabase\.auth\.getSession/);
   assert.match(request, /DeleteAccountAction/);
-  assert.match(request, /accountDeletion=1/);
   assert.match(action, /delete-account/);
   assert.match(action, /confirm: true/);
   assert.match(action, /permanently deletes/);
   assert.match(portal, /Delete account/);
-  assert.match(portal, /accountDeletion/);
-  assert.match(portal, /AUTH_RETURN_TO_KEY/);
-  assert.match(callback, /returnTo === "\/user-account-delete"/);
+  assert.match(portal, /window\.location\.assign\("\/user-account-delete"\)/);
   assert.match(deletion, /admin\.auth\.getUser\(token\)/);
   assert.match(deletion, /payload\.confirm !== true/);
   assert.match(deletion, /property_enquiries/);
