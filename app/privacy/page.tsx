@@ -109,8 +109,9 @@ export default function PrivacyPage() {
               Depending on your location, you may have rights to access, correct,
               update, restrict, or delete the personal data we hold about you, and
               to withdraw consent where processing is based on consent. You may
-              also object to certain processing activities. To exercise those
-              rights, please contact us using the details below.
+              also object to certain processing activities. You can request
+              account and associated data deletion from the{" "}
+              <Link href="/user-account-delete">account deletion page</Link>.
             </p>
           </section>
 

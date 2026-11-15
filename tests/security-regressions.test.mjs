@@ -310,3 +310,31 @@ test("dormant publisher-interest function is absent", () => {
     false,
   );
 });
+
+test("account deletion is authenticated, confirmed, and removes linked data", () => {
+  const page = read("app/user-account-delete/page.tsx");
+  const action = read("app/user-account-delete/DeleteAccountAction.tsx");
+  const request = read("app/user-account-delete/DeleteAccountRequest.tsx");
+  const portal = read("app/Portal.tsx");
+  const deletion = read("supabase/functions/delete-account/index.ts");
+  const migration = read(
+    "supabase/migrations/202611140001_account_deletion.sql",
+  );
+  assert.match(page, /Delete your ReelEstate account/);
+  assert.match(request, /supabase\.auth\.getSession/);
+  assert.match(request, /DeleteAccountAction/);
+  assert.match(action, /delete-account/);
+  assert.match(action, /confirm: true/);
+  assert.match(action, /permanently deletes/);
+  assert.match(portal, /Delete account/);
+  assert.match(deletion, /admin\.auth\.getUser\(token\)/);
+  assert.match(deletion, /payload\.confirm !== true/);
+  assert.match(deletion, /property_enquiries/);
+  assert.match(deletion, /user_feedback/);
+  assert.match(deletion, /publisher_interests/);
+  assert.match(deletion, /property-videos/);
+  assert.match(deletion, /property-posters/);
+  assert.match(deletion, /admin\.auth\.admin\.deleteUser\(user\.id\)/);
+  assert.match(migration, /on delete set null/);
+  assert.doesNotMatch(deletion, /NEXT_PUBLIC_SUPABASE/);
+});

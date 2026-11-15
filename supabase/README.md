@@ -15,6 +15,7 @@ Security invariants:
 - Owners and staff read listings through scoped RPCs. Direct `authenticated` and `anon` table selection is revoked.
 - Public Edge Functions consume atomic database rate-limit buckets using trusted proxy-header precedence.
 - Enquiry and publisher-interest PII is purged after 180 days by the `reelestate-private-data-retention` cron job; owners can delete enquiries earlier.
+- Account deletion is available at `/user-account-delete` and from My profile. Apply `migrations/202611140001_account_deletion.sql` and deploy `functions/delete-account` before enabling the request; it uses only server-side `SUPABASE_SERVICE_ROLE_KEY`, removes account-owned media and data, and anonymizes staff references.
 - Keep `tests/security-regressions.test.mjs` in the default test command so these controls cannot be silently removed.
 
 Never place the Twilio token or Supabase service-role key in browser environment variables.

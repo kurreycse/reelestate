@@ -47,6 +47,7 @@ import type { Listing, Profile, PropertyEnquiry } from "../lib/types";
 import { isDummyListing } from "../lib/dummyListings";
 import { appConfig } from "../lib/config";
 import marketStyles from "./marketplace.module.css";
+import DeleteAccountAction from "./user-account-delete/DeleteAccountAction";
 
 type View = "feed" | "post" | "dashboard" | "admin";
 
@@ -256,7 +257,7 @@ function LoginModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-function ProfileModal({ profile, onClose, onSaved }: { profile: Profile; onClose: () => void; onSaved: (profile: Profile) => void }) {
+function ProfileModal({ profile, onClose, onSaved, onDeleted }: { profile: Profile; onClose: () => void; onSaved: (profile: Profile) => void; onDeleted: () => void }) {
   const [firstName, setFirstName] = useState(profile.first_name);
   const [lastName, setLastName] = useState(profile.last_name);
   const [email, setEmail] = useState(profile.email);
@@ -265,6 +266,7 @@ function ProfileModal({ profile, onClose, onSaved }: { profile: Profile; onClose
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
   async function save(event: FormEvent) {
     event.preventDefault();setBusy(true);setError("");setSaved(false);
     const { data, error } = await supabase.rpc("update_my_profile", { p_first_name: firstName, p_last_name: lastName, p_email: email, p_instagram_id: instagram || null });
@@ -282,6 +284,8 @@ function ProfileModal({ profile, onClose, onSaved }: { profile: Profile; onClose
     <label>Verified phone<input value={profile.phone_e164 || "Not available"} disabled/></label><label>Account type<input value={profile.role === "poster" ? "Property user" : profile.role} disabled/></label>
     {error&&<div className="form-error" role="alert"><CircleAlert size={16}/>{error}</div>}{saved&&<div className="form-success" role="status"><Check size={16}/>Profile updated successfully.</div>}
     {editing?<div className="profile-actions"><button type="button" className="back-link" disabled={busy} onClick={()=>setEditing(false)}>Cancel</button><button className="primary" disabled={busy}>{busy?<Loader2 className="spin"/>:<Check size={18}/>} Save changes</button></div>:<button type="button" className="primary full" onClick={()=>{setEditing(true);setSaved(false)}}>Edit profile</button>}
+    {!editing && !deletingAccount && <button type="button" className="account-delete-link" onClick={()=>setDeletingAccount(true)}>Delete account</button>}
+    {deletingAccount && <DeleteAccountAction onCancel={()=>setDeletingAccount(false)} onDeleted={onDeleted}/>}
     </form></div></div>;
 }
 
@@ -3284,6 +3288,7 @@ export default function Portal() {
           profile={profile}
           onClose={() => setShowProfile(false)}
           onSaved={setProfile}
+          onDeleted={() => setShowProfile(false)}
         />
       )}
       {showFeedback && <FeedbackModal onClose={() => setShowFeedback(false)} />}
