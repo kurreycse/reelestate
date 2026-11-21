@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ReelEstate</string>
+    <string name="connection_title">You’re offline</string>
+    <string name="connection_error">Check your internet connection and try again.</string>
+    <string name="retry">Try again</string>
+    <string name="no_file_picker">No file picker is available on this device.</string>
+    <string name="no_app_for_link">No app is available to open this link.</string>
+</resources>
+

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { Eye, MessageCircle, Phone } from "lucide-react";
+import { Eye, MessageCircle, Phone, ShieldCheck } from "lucide-react";
 import { recordEngagement } from "../../../lib/analytics";
 import type { Listing } from "../../../lib/types";
 
@@ -10,6 +10,7 @@ export default function PropertyEngagement({listing,videoUrl,posterUrl}:{listing
   return <>
     <div className="property-page-video">{listing.instagram_source_url?<iframe src={`${listing.instagram_source_url.replace(/\/+$/, "")}/embed/`} title={`${listing.title} Instagram reel`} allow="autoplay; encrypted-media; picture-in-picture; web-share" allowFullScreen/>:videoUrl?<video src={videoUrl} poster={posterUrl} controls playsInline preload="metadata" onPlay={()=>recordEngagement(listing.id,"play")} onTimeUpdate={event=>{const video=event.currentTarget;if(!completionSent.current&&video.duration&&video.currentTime/video.duration>=.9){completionSent.current=true;recordEngagement(listing.id,"complete")}}}/>:<div className="video-loading">Video unavailable</div>}</div>
     <div className="public-view-count"><Eye/>{(listing.view_count||0).toLocaleString("en-IN")} views</div>
+    <p className="review-scope"><ShieldCheck/> <span><b>Video checked</b> means the video and listing content were moderated. Ownership, contact identity and availability are not independently verified.</span></p>
     <div className="detail-contact">{listing.contact_preference!=="whatsapp"&&<a href={`tel:${listing.contact_phone}`} onClick={()=>recordEngagement(listing.id,"call")}><Phone/> Call</a>}{listing.contact_preference!=="call"&&<a href={`https://wa.me/${contact}`} target="_blank" rel="noreferrer" onClick={()=>recordEngagement(listing.id,"whatsapp")}><MessageCircle/> WhatsApp</a>}</div>
   </>;
 }

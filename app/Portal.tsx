@@ -46,6 +46,7 @@ import { recordEngagement } from "../lib/analytics";
 import type { Listing, Profile, PropertyEnquiry } from "../lib/types";
 import { isDummyListing } from "../lib/dummyListings";
 import { appConfig } from "../lib/config";
+import { startAuthInactivityTimer } from "../lib/auth-inactivity";
 import marketStyles from "./marketplace.module.css";
 import DeleteAccountAction from "./user-account-delete/DeleteAccountAction";
 
@@ -209,49 +210,164 @@ async function submissionError(error: unknown, fallback = "The property could no
   }
 }
 function LoginModal({ onClose }: { onClose: () => void }) {
-  const [busy, setBusy] = useState(false);
+  const [busyAction, setBusyAction] = useState<"none" | "otp" | "facebook" | "verify">("none");
   const [consentAccepted, setConsentAccepted] = useState(false);
   const [error, setError] = useState("");
-  async function loginWithFacebook() {
-    setBusy(true);
+  const [mobile, setMobile] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const busy = busyAction !== "none";
+
+  const phone = mobile.replace(/\D/g, "").length === 10
+    ? `+91${mobile.replace(/\D/g, "")}`
+    : mobile.trim();
+
+  async function sendOtp(event?: FormEvent) {
+    event?.preventDefault();
+    setBusyAction("otp");
     setError("");
     try {
       if (!isSupabaseConfigured) throw new Error("Authentication is not configured");
-      const { error } = await supabase.auth.signInWithOAuth({
+      if (!/^\+[1-9][0-9]{7,14}$/.test(phone)) throw new Error("invalid_phone");
+
+      let { error: sendError } = await supabase.functions.invoke("request-phone-otp", {
+        body: { phone, purpose: "login" },
+      });
+
+      if (sendError) {
+        let code = "";
+        try {
+          const body = await (sendError as { context?: Response }).context?.clone().json() as { error?: string };
+          code = body?.error || "";
+        } catch { /* Use the generic response when context parsing is unavailable. */ }
+
+        if (code === "account_not_found") {
+          const registration = await supabase.functions.invoke("request-phone-otp", {
+            body: { phone, purpose: "register" },
+          });
+          sendError = registration.error;
+        }
+      }
+
+      if (sendError) throw sendError;
+      setOtpSent(true);
+    } catch (requestError) {
+      let code = requestError instanceof Error ? requestError.message : "";
+      try {
+        const body = await (requestError as { context?: Response }).context?.clone().json() as { error?: string };
+        code = body?.error || code;
+      } catch { /* Keep the generic fallback when no structured response is available. */ }
+      const messages: Record<string, string> = {
+        invalid_phone: "Enter a valid 10-digit mobile number.",
+        otp_rate_limited: "Too many OTP requests were sent. Please wait and try again.",
+        account_not_found: "This number is not registered yet. Try Facebook login or register through the OTP flow.",
+        account_exists: "This mobile number is already registered. Return to login and verify it.",
+        otp_send_failed: "SMS delivery was rejected by the phone provider. Please try again or use Facebook login.",
+        server_not_configured: "Mobile OTP is not configured yet. Please use Facebook login.",
+        origin_not_allowed: "Mobile OTP is not enabled for this website address.",
+      };
+      setError(messages[code] || "The OTP could not be sent. Please check the number and try again.");
+    } finally {
+      setBusyAction("none");
+    }
+  }
+
+  async function loginWithFacebook() {
+    setBusyAction("facebook");
+    setError("");
+    try {
+      if (!isSupabaseConfigured) throw new Error("Authentication is not configured");
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "facebook",
         options: { redirectTo: `${window.location.origin}/auth/facebook`, scopes: "email" },
       });
-      if (error) throw error;
+      if (oauthError) throw oauthError;
     } catch {
       setError("Facebook sign-in could not start. Please try again shortly.");
-      setBusy(false);
+      setBusyAction("none");
     }
   }
+
+  async function verifyOtp(event: FormEvent) {
+    event.preventDefault();
+    setBusyAction("verify");
+    setError("");
+    try {
+      const { error: verifyError } = await supabase.auth.verifyOtp({
+        phone,
+        token: otp,
+        type: "sms",
+      });
+      if (verifyError) throw verifyError;
+      onClose();
+    } catch {
+      setError("The OTP is incorrect or expired. Check the code and try again.");
+    } finally {
+      setBusyAction("none");
+    }
+  }
+
   return (
     <div className="modal-backdrop" role="presentation">
-      <div className="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-title">
-        <button className="icon-btn close" onClick={onClose} aria-label="Close"><X /></button>
-        <div className="brand-mark"><Building2 /></div>
-        <span className="eyebrow">Welcome to ReelEstate</span>
-        <h2 id="auth-title">Your next move starts here.</h2>
-        <p>Sign in or create your account with Facebook.</p>
-        <div className={marketStyles.legalConsent}>
-          <input
-            id="facebook-legal-consent"
-            type="checkbox"
-            checked={consentAccepted}
-            onChange={(event) => setConsentAccepted(event.target.checked)}
-          />
-          <label htmlFor="facebook-legal-consent">
-            By continuing, you agree to our <Link href="/terms-conditions"><strong>Terms</strong></Link> and <Link href="/privacy"><strong>Privacy Policy</strong></Link>.
-          </label>
+      <div className={marketStyles.authModalSplit} role="dialog" aria-modal="true" aria-labelledby="auth-title">
+        <aside className={marketStyles.authPromo}>
+          <div className={marketStyles.authPromoBrand}><span><Building2 /></span><b>ReelEstate</b></div>
+          <h2>Discover &amp;<br />Showcase<br />Properties<br /><em>with Reels.</em></h2>
+          <ul>
+            <li><span><Video /></span>Real Property Videos</li>
+            <li><span><UserRound /></span>Direct Owner &amp; Broker Connect</li>
+            <li><span><Building2 /></span>List &amp; Grow Your Reach</li>
+          </ul>
+          <div className={marketStyles.authPromoImage}><Play fill="currentColor" /></div>
+        </aside>
+        <div className={marketStyles.authModalContent}>
+          <button className={`icon-btn close ${marketStyles.authClose}`} onClick={onClose} aria-label="Close"><X /></button>
+          <span className="eyebrow">Welcome to ReelEstate</span>
+          <h2 id="auth-title">Sign in to continue</h2>
+          <p className={marketStyles.authIntro}>Discover properties, post your listings and manage your account.</p>
+        {!otpSent ? (
+          <form onSubmit={sendOtp}>
+            <div className={marketStyles.mobileOptionHeading}><span><Phone /></span><div><strong>Continue with mobile number</strong><small>We&apos;ll send a 6-digit OTP to your number.</small></div></div>
+            <p>Enter your mobile number. We&apos;ll send a 6-digit OTP.</p>
+            <label className={marketStyles.mobileInputLabel}>Mobile number
+              <span className={marketStyles.mobileInputRow}><span className={marketStyles.countryCode}>+91 <ChevronDown /></span><input
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                value={mobile}
+                onChange={(event) => setMobile(event.target.value.replace(/\D/g, "").slice(0, 10))}
+                placeholder="Enter 10-digit mobile number"
+                minLength={10}
+                maxLength={10}
+                required
+              /></span>
+            </label>
+            <button type="submit" className="primary full" disabled={busy || !isSupabaseConfigured || !consentAccepted || mobile.replace(/\D/g, "").length !== 10}>
+              {busyAction === "otp" ? <Loader2 className="spin" /> : <Phone size={18} />}{busyAction === "otp" ? "Sending OTP…" : "Send OTP"}
+            </button>
+            <div className={marketStyles.authDivider}><span /> <b>OR</b> <span /></div>
+            <button type="button" className={marketStyles.facebookAuthButton} disabled={busy || !isSupabaseConfigured || !consentAccepted} onClick={() => void loginWithFacebook()}>
+              {busyAction === "facebook" ? <Loader2 className="spin" /> : <span className={marketStyles.facebookMark}>f</span>}<span>{busyAction === "facebook" ? "Connecting…" : "Continue with Facebook"}</span>
+            </button>
+            <div className={marketStyles.loginConsentBottom}>
+              <input id="mobile-legal-consent" type="checkbox" checked={consentAccepted} onChange={(event) => setConsentAccepted(event.target.checked)} />
+              <label htmlFor="mobile-legal-consent">By continuing, you agree to our <Link href="/terms-conditions"><strong>Terms of Service</strong></Link> and <Link href="/privacy"><strong>Privacy Policy</strong></Link>.</label>
+            </div>
+          </form>
+        ) : (
+          <form onSubmit={verifyOtp}>
+            <p>Enter the 6-digit code sent to <strong>{phone}</strong>.</p>
+            <label>
+              OTP
+              <input className="otp" type="text" inputMode="numeric" autoComplete="one-time-code" value={otp} onChange={(event) => setOtp(event.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="••••••" required minLength={6} maxLength={6} />
+            </label>
+            <button type="submit" className="primary full" disabled={busy || otp.length !== 6}>{busy ? <Loader2 className="spin" /> : <Check size={18} />}{busy ? "Verifying…" : "Verify & sign in"}</button>
+            <div className={marketStyles.authOtpActions}><button type="button" className="back-link" disabled={busy} onClick={() => { setOtp(""); setOtpSent(false); setError(""); }}>Back to login</button><button type="button" className="back-link" disabled={busy} onClick={() => void sendOtp()}>Resend OTP</button></div>
+          </form>
+        )}
+          {!isSupabaseConfigured && <p role="alert">Sign-in is temporarily unavailable.</p>}
+          {error && <div className="form-error" role="alert"><CircleAlert size={16} />{error}</div>}
         </div>
-        <button type="button" className="primary full" disabled={busy || !isSupabaseConfigured || !consentAccepted} onClick={loginWithFacebook}>
-          {busy ? <Loader2 className="spin" /> : <UserRound size={18} />}
-          {busy ? "Connecting to Facebook…" : "Continue with Facebook"}
-        </button>
-        {!isSupabaseConfigured && <p role="alert">Sign-in is temporarily unavailable.</p>}
-        {error && <div className="form-error" role="alert"><CircleAlert size={16} />{error}</div>}
       </div>
     </div>
   );
@@ -501,10 +617,10 @@ function PropertyTile({
         /> : <video
           ref={videoRef}
           poster={listing.poster_url}
+          controls
           playsInline
           preload="none"
           loop
-          onClick={toggle}
           onPause={() => setPlaying(false)}
           onTimeUpdate={(event) => {
             const video = event.currentTarget;
@@ -519,7 +635,7 @@ function PropertyTile({
           }}
         />}
         {!listing.instagram_source_url && <button
-          className="tile-play"
+          className={`tile-play${playing ? " is-playing" : ""}`}
           onClick={isDummyListing(listing) ? onDummyAction : toggle}
           disabled={videoBusy}
           aria-label={`${playing ? "Pause" : "Play"} ${listing.title}`}
@@ -1039,6 +1155,84 @@ function Marketplace({ onRequireLogin }: { onRequireLogin: () => void }) {
   );
 }
 
+function PublisherJourney({ onDirect, onInstagram }: { onDirect: () => void; onInstagram: () => void }) {
+  const [step, setStep] = useState<"account" | "profile" | "source">(() => {
+    try { return localStorage.getItem("reelestate-publisher-profile") ? "source" : "account"; } catch { return "account"; }
+  });
+  const [accountType, setAccountType] = useState("owner");
+  const [fullName, setFullName] = useState("");
+  const [city, setCity] = useState("Raipur");
+  const [email, setEmail] = useState("");
+
+  function saveProfile(event: FormEvent) {
+    event.preventDefault();
+    const profile = { accountType, fullName: fullName.trim(), city, email: email.trim() };
+    try { localStorage.setItem("reelestate-publisher-profile", JSON.stringify(profile)); } catch { /* Profile setup can continue in-memory. */ }
+    setStep("source");
+  }
+
+  if (step === "account") return (
+    <section className="workspace publisher-journey">
+      <div className="publisher-panel">
+        <span className="eyebrow">Welcome to ReelEstate</span>
+        <h1>How would you like to use ReelEstate?</h1>
+        <p>Select your account type. You can add other roles later.</p>
+        <div className="publisher-role-grid">
+          {[{ id: "owner", title: "Property Owner", copy: "List your own properties." }, { id: "broker", title: "Broker / Agent", copy: "Manage property listings." }, { id: "builder", title: "Builder / Developer", copy: "Promote projects and properties." }].map((role) => (
+            <button type="button" key={role.id} className={accountType === role.id ? "selected" : ""} onClick={() => setAccountType(role.id)}>
+              <Building2 /><span><strong>{role.title}</strong><small>{role.copy}</small></span><Check />
+            </button>
+          ))}
+        </div>
+        <button className="primary full" onClick={() => setStep("profile")}>Continue</button>
+      </div>
+    </section>
+  );
+
+  if (step === "profile") return (
+    <section className="workspace publisher-journey">
+      <form className="publisher-panel" onSubmit={saveProfile}>
+        <span className="eyebrow">Complete your profile</span>
+        <h1>A quick introduction</h1>
+        <p>Keep this short. We will use it for your publisher identity.</p>
+        <div className="form-grid two">
+          <label>Full name<input value={fullName} onChange={(event) => setFullName(event.target.value)} minLength={2} maxLength={120} required /></label>
+          <label>Email <small>(optional)</small><input type="email" value={email} onChange={(event) => setEmail(event.target.value)} maxLength={254} /></label>
+          <label>Account type<select value={accountType} onChange={(event) => setAccountType(event.target.value)}><option value="owner">Property owner</option><option value="broker">Broker / Agent</option><option value="builder">Builder / Developer</option></select></label>
+          <label>City<select value={city} onChange={(event) => setCity(event.target.value)}>{(Object.keys(CITY_LOCALITIES) as SupportedCity[]).map((value) => <option key={value}>{value}</option>)}</select></label>
+        </div>
+        <div className="publisher-actions"><button type="button" className="secondary" onClick={() => setStep("account")}>Back</button><button className="primary">Continue</button></div>
+      </form>
+    </section>
+  );
+
+  return (
+    <section className="workspace publisher-journey">
+      <div className="publisher-panel">
+        <span className="eyebrow">Let&apos;s showcase your property</span>
+        <h1>Choose how to add your property video</h1>
+        <p>Both options use the same property details, preview and approval process.</p>
+        <div className="publisher-source-grid">
+          <button type="button" className="publisher-source recommended" onClick={onInstagram}>
+            <span className="publisher-source-icon"><InstagramIcon /></span>
+            <span><small>Recommended</small><strong>Connect Instagram</strong><p>Import an authorized reel from your professional account.</p></span>
+            <span className="publisher-source-action">Connect Instagram</span>
+          </button>
+          <button type="button" className="publisher-source" onClick={onDirect}>
+            <span className="publisher-source-icon"><Upload /></span>
+            <span><strong>Upload Video</strong><p>Upload directly from your phone or computer.</p><small>MP4 / MOV · up to 200 MB</small></span>
+            <span className="publisher-source-action">Upload a Video</span>
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function InstagramIcon() {
+  return <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.35" cy="6.65" r="1" fill="currentColor" stroke="none"/></svg>;
+}
+
 function PostForm({
   user,
   onDone,
@@ -1057,6 +1251,8 @@ function PostForm({
   onClearInstagramImport?: () => void;
 }) {
   const [busy, setBusy] = useState(false);
+  const [submittedStatus, setSubmittedStatus] = useState<"draft" | "pending_review" | null>(null);
+  const [previewData, setPreviewData] = useState<Record<string, string> | null>(null);
   const [submissionStatus, setSubmissionStatus] = useState<"draft" | "pending_review">("pending_review");
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState("");
@@ -1184,6 +1380,12 @@ function PostForm({
     const submitter = (e.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
     const targetStatus = submitter?.value === "draft" ? "draft" : "pending_review";
     setSubmissionStatus(targetStatus);
+    const form = new FormData(e.currentTarget);
+    if (submitter?.value === "preview") {
+      setPreviewData(Object.fromEntries(Array.from(form.entries()).map(([key, value]) => [key, String(value)])));
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
     if ((!initial && (!video || !poster)) || (video && !poster)) {
       setError(
         "Choose a compatible property video and wait for its thumbnail.",
@@ -1193,7 +1395,6 @@ function PostForm({
     setBusy(true);
     setProgress(12);
     setError("");
-    const form = new FormData(e.currentTarget);
     const id = initial?.id || crypto.randomUUID();
     const ext = video?.name.split(".").pop()?.toLowerCase() || "mp4";
     const path = initial?.video_path || `${user.id}/${id}.${ext}`;
@@ -1287,8 +1488,39 @@ function PostForm({
       return;
     }
     setProgress(100);
-    setTimeout(onDone, 450);
+    setSubmittedStatus(targetStatus);
   }
+  if (submittedStatus) return (
+    <section className="workspace publisher-success">
+      <div className="publisher-success-card" role="status">
+        <div className="publisher-success-icon"><Check /></div>
+        <span className="eyebrow">{submittedStatus === "draft" ? "Draft saved" : "Listing submitted"}</span>
+        <h1>{submittedStatus === "draft" ? "Your draft is ready when you are." : "Listing submitted!"}</h1>
+        <p>{submittedStatus === "draft" ? "You can continue editing it or submit it for review from My Listings." : "Your property is awaiting approval from the ReelEstate team."}</p>
+        {submittedStatus === "pending_review" && <ol><li><b>1</b><span>Our team reviews your property and video.</span></li><li><b>2</b><span>You receive an update on the listing status.</span></li><li><b>3</b><span>Approved properties become visible on ReelEstate.</span></li></ol>}
+        <button className="primary full" onClick={onDone}>Go to My Listings</button>
+      </div>
+    </section>
+  );
+
+  if (previewData) return (
+    <section className="workspace publisher-preview">
+      <div className="publisher-preview-header"><div><span className="eyebrow">Listing preview</span><h1>See how visitors will see your property</h1></div><button className="secondary" onClick={() => setPreviewData(null)}>Edit details</button></div>
+      <div className="publisher-preview-layout">
+        <div className="publisher-preview-media">{preview ? <video src={preview} controls playsInline /> : <div className="video-loading">Video unavailable</div>}</div>
+        <article className="publisher-preview-card">
+          <span className="eyebrow">{previewData.type} · For {purpose}</span>
+          <h2>{previewData.title}</h2>
+          <p className="detail-location"><MapPin /> {previewData.locality}, {previewData.city}</p>
+          <div className="detail-price">{money(Math.round(Number(previewData.price || 0) * 100), "INR")}</div>
+          <p className="detail-description">{previewData.description}</p>
+          <div className="detail-facts"><span><small>Area</small><b>{previewData.carpet_area || "Not specified"} sq.ft.</b></span>{previewData.bedrooms && <span><small>Bedrooms</small><b>{previewData.bedrooms} BHK</b></span>}</div>
+          <div className="publisher-preview-actions"><button className="secondary" onClick={() => setPreviewData(null)}>Edit</button>{!initial && <button className="secondary" onClick={() => { setPreviewData(null); window.setTimeout(() => document.querySelector<HTMLButtonElement>('button[name="listing_status"][value="draft"]')?.click(), 0); }}>Save as Draft</button>}<button className="primary" onClick={() => { setPreviewData(null); window.setTimeout(() => document.querySelector<HTMLButtonElement>('button[name="listing_status"][value="pending_review"]')?.click(), 0); }}>{initial ? "Resubmit for review" : "Submit for Review"}</button></div>
+        </article>
+      </div>
+    </section>
+  );
+
   return (
     <section className="workspace">
       <header className="section-head">
@@ -1754,6 +1986,7 @@ function PostForm({
             </div>
           )}
           <div className={marketStyles.postSubmitActions}>
+            {!initial && <button type="submit" name="listing_status" value="preview" className="secondary submit" disabled={busy}>Check listing preview</button>}
             {!initial && <button type="submit" name="listing_status" value="draft" className="secondary submit" disabled={busy}>
               {busy && submissionStatus === "draft" ? <Loader2 className="spin" /> : <Check />}
               {busy && submissionStatus === "draft" ? "Saving draft…" : "Save as draft"}
@@ -2974,6 +3207,7 @@ export default function Portal() {
   const [queue, setQueue] = useState<Listing[]>([]);
   const [analyticsItems, setAnalyticsItems] = useState<Listing[]>([]);
   const [editing, setEditing] = useState<Listing | null>(null);
+  const [publisherSource, setPublisherSource] = useState<"source" | "direct" | "instagram">("source");
   const [instagramImportQueue, setInstagramImportQueue] = useState<ImportedInstagramReel[]>([]);
   const [instagramQueueTotal, setInstagramQueueTotal] = useState(0);
   const load = useCallback(async () => {
@@ -3061,6 +3295,23 @@ export default function Portal() {
     return () => data.subscription.unsubscribe();
   }, []);
   useEffect(() => {
+    if (!session?.user) return;
+
+    return startAuthInactivityTimer(async () => {
+      setView("feed");
+      setMenu(false);
+      setShowProfile(false);
+      setProfile(null);
+      setMine([]);
+      setEnquiries([]);
+      setQueue([]);
+      setAnalyticsItems([]);
+      setSession(null);
+      setLogin(true);
+      await supabase.auth.signOut();
+    });
+  }, [session?.user?.id]);
+  useEffect(() => {
     const timer = window.setTimeout(() => void load(), 0);
     return () => window.clearTimeout(timer);
   }, [load]);
@@ -3092,6 +3343,7 @@ export default function Portal() {
       setLogin(true);
       return;
     }
+    if (next === "post") setPublisherSource("source");
     setView(next);
     setMenu(false);
   }
@@ -3221,7 +3473,8 @@ export default function Portal() {
       {view === "feed" ? (
         <Marketplace onRequireLogin={() => setLogin(true)} />
       ) : view === "post" && session ? (
-        <PostForm
+        editing || instagramImportQueue.length > 0 ? (
+          <PostForm
           key={editing?.id || instagramImportQueue[0]?.id || "new"}
           user={session.user}
           initial={editing || undefined}
@@ -3254,7 +3507,32 @@ export default function Portal() {
               setView("dashboard");
             }
           }}
-        />
+          />
+        ) : publisherSource === "instagram" ? (
+          <InstagramReelPicker
+            onClose={() => setPublisherSource("source")}
+            connected={Boolean(localStorage.getItem(INSTAGRAM_TOKEN_KEY))}
+            contactPhone={profile?.phone_e164 || session.user.phone || ""}
+            onSaved={() => void load()}
+          />
+        ) : publisherSource === "direct" ? (
+          <PostForm
+            key="direct-new"
+            user={session.user}
+            instagramQueuePosition={1}
+            instagramQueueTotal={1}
+            onDone={() => {
+              void load();
+              setPublisherSource("source");
+              setView("dashboard");
+            }}
+          />
+        ) : (
+          <PublisherJourney
+            onDirect={() => setPublisherSource("direct")}
+            onInstagram={() => setPublisherSource("instagram")}
+          />
+        )
       ) : view === "dashboard" && session ? (
         <Dashboard
           items={mine}

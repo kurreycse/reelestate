@@ -1,8 +1,29 @@
-# vinext-starter
+# ReelEstate
 
-A clean full-stack starter running on
-[vinext](https://github.com/cloudflare/vinext), with optional Cloudflare D1 and
-Drizzle support.
+ReelEstate is a Next.js app running on
+[vinext](https://github.com/cloudflare/vinext).
+
+## Deploying ReelEstate to Cloudflare Workers
+
+The production Worker is named `reelestate` and is configured to serve
+`reelestate.co.in`. Before the first deployment, authenticate Wrangler with the
+Cloudflare account that owns the domain:
+
+```bash
+npx wrangler login
+npm run deploy:cloudflare
+```
+
+The build needs `NEXT_PUBLIC_SUPABASE_URL` and
+`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`; set them in the local ignored
+`.env.local` file or the deployment environment. Set `NEXT_PUBLIC_SITE_URL` to
+`https://reelestate.co.in` if using a non-production value locally.
+
+The custom domain route requires `reelestate.co.in` to be an active zone in
+that Cloudflare account. The domain currently uses GoDaddy nameservers, so
+import and verify all existing DNS records in Cloudflare before changing the
+nameservers at GoDaddy. Keep the existing Vercel deployment available until the
+Cloudflare Worker and domain have both been verified.
 
 ## Prerequisites
 
@@ -15,8 +36,6 @@ npm install
 npm run dev
 npm run build
 ```
-
-This starter does not use `wrangler.jsonc`.
 
 ## Included Shape
 

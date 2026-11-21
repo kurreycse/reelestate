@@ -1,0 +1,24 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "reelestate",
+  "account_id": "902af9f73a296f5d3cbbaf8240df2b0e",
+  "compatibility_date": "2026-05-22",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "main": "./worker/index.ts",
+  "routes": [
+    {
+      "pattern": "reelestate.co.in",
+      "custom_domain": true
+    }
+  ],
+  "assets": {
+    "directory": "dist/client",
+    "not_found_handling": "none",
+    "binding": "ASSETS"
+  },
+  "images": {
+    "binding": "IMAGES"
+  }
+}
