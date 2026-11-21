@@ -1,6 +1,6 @@
 # Supabase activation
 
-1. Apply every SQL file in `migrations/` in filename order (including migrations added after initial setup) in the Supabase SQL Editor or CLI. In particular, `202609300001_owner_listing_availability.sql` enables owners to take their published listings offline; the dashboard action will fail until this migration is applied to the connected project.
+1. Apply every SQL file in `migrations/` in filename order (including migrations added after initial setup) in the Supabase SQL Editor or CLI. In particular, `202611210001_owner_listing_availability.sql` enables owners to take their published listings offline; the dashboard action will fail until this migration is applied to the connected project.
 2. In Authentication > Providers > Phone, enable phone authentication and configure Twilio Verify using a newly rotated Auth Token.
 3. Set OTP expiry to 600 seconds and rate limits appropriate to the launch country.
 4. Create an administrator, complete their profile, then run the commented role-promotion statement at the end of the migration.
