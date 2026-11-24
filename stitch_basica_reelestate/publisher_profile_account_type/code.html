@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "surface": "#fdf8ff", "on-secondary-container": "#44118d", "on-primary": "#ffffff", "surface-container-high": "#ebe5ff", "error-container": "#ffdad6", "outline": "#7a7583", "on-surface": "#1c1831", "on-secondary-fixed": "#260059", "secondary-container": "#b188ff", "on-primary-fixed": "#21005d", "inverse-on-surface": "#f4eeff", "surface-container-lowest": "#ffffff", "secondary-fixed": "#ebdcff", "tertiary-container": "#5a1400", "on-primary-fixed-variant": "#4f3397", "primary": "#1e0056", "background": "#fdf8ff", "primary-fixed-dim": "#cfbdff", "on-tertiary-fixed": "#3b0900", "surface-container": "#f1ebff", "on-primary-container": "#9f84ed", "surface-bright": "#fdf8ff", "inverse-surface": "#312d48", "on-secondary": "#ffffff", "error": "#ba1a1a", "secondary": "#6f46b9", "tertiary": "#360800", "on-secondary-fixed-variant": "#572ba0", "tertiary-fixed": "#ffdbd1", "surface-container-highest": "#e6deff", "primary-fixed": "#e8ddff", "primary-container": "#35127d", "on-error-container": "#93000a", "on-surface-variant": "#494552", "outline-variant": "#cac4d3", "surface-tint": "#674cb1", "on-tertiary": "#ffffff", "inverse-primary": "#cfbdff", "surface-variant": "#e6deff", "surface-container-low": "#f7f1ff", "on-background": "#1c1831", "secondary-fixed-dim": "#d3bbff", "on-error": "#ffffff", "tertiary-fixed-dim": "#ffb5a0", "on-tertiary-container": "#ff6131", "on-tertiary-fixed-variant": "#862200", "surface-dim": "#ddd6f8" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "margin": "1rem", "gutter-md": "1.5rem", "margin-lg": "3rem", "gutter-lg": "2rem", "space-lg": "1.5rem", "space-sm": "0.5rem", "gutter": "1rem", "margin-md": "2rem", "space-xs": "0.25rem", "space-xl": "2.5rem", "space-md": "1rem" }, fontFamily: { "label-sm": ["Plus Jakarta Sans"], "body-lg": ["Plus Jakarta Sans"], "headline-lg": ["Plus Jakarta Sans"], "label-md": ["Plus Jakarta Sans"], "body-md": ["Plus Jakarta Sans"], "price-numeric": ["Plus Jakarta Sans"], "label-lg": ["Plus Jakarta Sans"], "headline-lg-mobile": ["Plus Jakarta Sans"], "display-hero": ["Plus Jakarta Sans"], "body-sm": ["Plus Jakarta Sans"], "title-md": ["Plus Jakarta Sans"], "headline-md": ["Plus Jakarta Sans"], "display-hero-mobile": ["Plus Jakarta Sans"], "headline-sm": ["Plus Jakarta Sans"] }, fontSize: { "label-sm": ["11px", { lineHeight: "14px", letterSpacing: "0.04em", fontWeight: "700" }], "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }], "headline-lg": ["32px", { lineHeight: "40px", letterSpacing: "-0.02em", fontWeight: "700" }], "label-md": ["12px", { lineHeight: "16px", letterSpacing: "0.02em", fontWeight: "600" }], "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }], "price-numeric": ["22px", { lineHeight: "28px", letterSpacing: "-0.02em", fontWeight: "800" }], "label-lg": ["14px", { lineHeight: "20px", letterSpacing: "0.01em", fontWeight: "600" }], "headline-lg-mobile": ["24px", { lineHeight: "32px", letterSpacing: "-0.01em", fontWeight: "700" }], "display-hero": ["48px", { lineHeight: "56px", letterSpacing: "-0.03em", fontWeight: "800" }], "body-sm": ["12px", { lineHeight: "16px", fontWeight: "400" }], "title-md": ["16px", { lineHeight: "24px", fontWeight: "600" }], "headline-md": ["24px", { lineHeight: "32px", letterSpacing: "-0.01em", fontWeight: "600" }], "display-hero-mobile": ["32px", { lineHeight: "40px", letterSpacing: "-0.02em", fontWeight: "800" }], "headline-sm": ["20px", { lineHeight: "28px", fontWeight: "600" }] } } } };</script><style>@layer base { html, body { width: 100vw; margin: 0; padding: 0; } body { overscroll-behavior-y: none; } .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); } .pt-safe { padding-top: env(safe-area-inset-top, 0px); } main > :first-child { margin-top: 0 !important; } main > :last-child { margin-bottom: 0 !important; } } ::-webkit-scrollbar { display: none; }</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-on-surface antialiased flex flex-col min-h-screen selection:bg-secondary-fixed"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 px-gutter flex items-center justify-between"><button aria-label="Go back" class="min-w-[44px] min-h-[44px] -ml-2 rounded-full flex items-center justify-center text-on-surface hover:bg-surface-container-high transition-colors" onclick="window.history.back()" type="button"><span class="material-symbols-outlined text-[24px]">arrow_back</span></button><div class="flex items-center gap-space-xs"><div class="w-7 h-7 rounded-lg bg-primary-container flex items-center justify-center text-on-primary"><span class="material-symbols-outlined text-[18px]">play_circle</span></div><span class="font-headline-sm text-headline-sm text-primary tracking-tight">ReelEstate</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></header><main class="flex-1 flex flex-col relative w-full pt-16 bg-surface"><div class="flex flex-col w-full pb-28">
+<!-- Progress Stepper -->
+<div class="px-gutter pt-3 pb-2">
+<div class="flex items-center justify-between mb-1.5">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-on-tertiary-container animate-pulse"></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Publisher Setup</span>
+</div>
+<span class="font-label-md text-label-md text-secondary font-bold">Step 1 of 2</span>
+</div>
+<div class="w-full h-1.5 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-primary-container to-secondary w-1/2 rounded-full"></div>
+</div>
+</div>
+<!-- Header Section -->
+<div class="px-gutter pt-3 pb-4">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-primary tracking-tight">How will you be using ReelEstate?</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Select your profile type to customize your listing tools, video studio features, and instant buyer alerts.</p>
+</div>
+<!-- Profile Details Card (Quick Capture) -->
+<div class="px-gutter mb-6">
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm">
+<div class="flex items-center gap-2 mb-3">
+<div class="w-6 h-6 rounded-lg bg-surface-container flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-[16px]">badge</span>
+</div>
+<span class="font-title-md text-title-md text-on-surface">Quick Profile Details</span>
+</div>
+<div class="space-y-3">
+<!-- Full Name Field -->
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-1" for="publisher-fullname">Full Legal Name</label>
+<div class="relative flex items-center">
+<span class="absolute left-3 text-outline material-symbols-outlined text-[20px] pointer-events-none">person</span>
+<input class="w-full bg-surface-container-low text-on-surface font-body-md text-body-md rounded-lg py-2.5 pl-10 pr-3 focus:outline-none focus:bg-surface-container-lowest focus:shadow-md transition-all placeholder:text-outline" id="publisher-fullname" placeholder="Enter your full name" type="text" value="Vikramaditya Singhania"/>
+</div>
+</div>
+<!-- WhatsApp Number for Buyer Leads -->
+<div>
+<div class="flex items-center justify-between mb-1">
+<label class="font-label-md text-label-md text-on-surface-variant" for="publisher-whatsapp">WhatsApp Number for Leads</label>
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm bg-surface-container text-secondary px-2 py-0.5 rounded-full">
+<span class="material-symbols-outlined text-[13px] text-emerald-600" style="font-variation-settings: 'FILL' 1;">verified</span>
+              Verified via OTP
+            </span>
+</div>
+<div class="relative flex items-center">
+<span class="absolute left-3 text-outline material-symbols-outlined text-[20px] pointer-events-none">chat</span>
+<input class="w-full bg-surface-container-high/60 text-on-surface font-body-md text-body-md rounded-lg py-2.5 pl-10 pr-24 cursor-not-allowed select-none" id="publisher-whatsapp" readonly="" type="tel" value="+91 98765 43210"/>
+<span class="absolute right-3 font-label-sm text-label-sm text-secondary bg-surface-container-highest px-2 py-1 rounded">Primary</span>
+</div>
+</div>
+<!-- City / Location Selector -->
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-1" for="publisher-city">City / Operating Hub</label>
+<div class="relative flex items-center">
+<span class="absolute left-3 text-outline material-symbols-outlined text-[20px] pointer-events-none">location_on</span>
+<select class="w-full bg-surface-container-low text-on-surface font-body-md text-body-md rounded-lg py-2.5 pl-10 pr-10 focus:outline-none focus:bg-surface-container-lowest focus:shadow-md transition-all appearance-none" id="publisher-city">
+<option selected="" value="mumbai">Mumbai MMR (South, Suburbs, Navi Mumbai)</option>
+<option value="bengaluru">Bengaluru (East, Central, North)</option>
+<option value="pune">Pune (Baner, Hinjawadi, Kalyani Nagar)</option>
+<option value="delhincr">Delhi NCR (Gurugram, Noida, South Delhi)</option>
+<option value="hyderabad">Hyderabad (Hitec City, Gachibowli)</option>
+</select>
+<span class="absolute right-3 text-outline material-symbols-outlined text-[20px] pointer-events-none">expand_more</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Role Selection Title -->
+<div class="px-gutter mb-2.5 flex items-center justify-between">
+<span class="font-title-md text-title-md text-on-surface">Choose Your Publishing Role</span>
+<span class="font-label-sm text-label-sm text-secondary uppercase tracking-wider">Tap to select</span>
+</div>
+<!-- Account Type Selection Cards -->
+<div class="px-gutter space-y-3 mb-6" id="role-selection-group">
+<!-- Card 1: Direct Owner -->
+<div class="role-card cursor-pointer rounded-xl p-4 bg-surface-container-lowest shadow-sm transition-all duration-200" id="role-card-owner" onclick="selectRole('owner')">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-surface-container-high flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-[22px]">cottage</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h2 class="font-title-md text-title-md text-on-surface">Direct Owner</h2>
+<span class="font-label-sm text-label-sm bg-surface-container-highest text-primary-container px-2 py-0.5 rounded-full">Zero Brokerage</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">I am selling or renting my personal flat, villa, or commercial space.</p>
+</div>
+</div>
+<div class="w-6 h-6 rounded-full bg-surface-container flex items-center justify-center shrink-0" id="check-owner">
+<span class="material-symbols-outlined text-[16px] text-surface-container-highest">done</span>
+</div>
+</div>
+<!-- Perks list -->
+<div class="mt-3 pt-3 bg-surface-container-low/60 rounded-lg p-2.5 flex flex-col gap-1.5">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[15px] text-secondary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-normal">1 Free 9:16 Video Reel listing with auto-stabilize</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[15px] text-secondary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-normal">Direct verified buyer WhatsApp chats &amp; call connect</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[15px] text-secondary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-normal">Verified "Zero Brokerage" badge pinned on feed</span>
+</div>
+</div>
+</div>
+<!-- Card 2: Real Estate Broker / Agent (Selected by Default) -->
+<div class="role-card cursor-pointer rounded-xl p-4 bg-primary-container text-on-primary shadow-lg transition-all duration-200 relative overflow-hidden" id="role-card-broker" onclick="selectRole('broker')">
+<!-- Glow ambient overlay -->
+<div class="absolute -right-12 -top-12 w-32 h-32 rounded-full bg-secondary-container/20 blur-2xl pointer-events-none"></div>
+<div class="flex items-start justify-between gap-2 relative z-10">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-on-primary-container/20 flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined text-[22px]">real_estate_agent</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h2 class="font-title-md text-title-md text-on-primary font-bold">Real Estate Broker / Agent</h2>
+<span class="font-label-sm text-label-sm bg-on-tertiary-container text-on-primary px-2 py-0.5 rounded-full font-bold shadow-sm">Most Popular</span>
+</div>
+<p class="font-body-sm text-body-sm text-surface-container-highest mt-0.5">I am a registered consultant or agency marketing multiple client properties.</p>
+</div>
+</div>
+<div class="w-6 h-6 rounded-full bg-on-tertiary-container text-on-primary flex items-center justify-center shrink-0 shadow-sm" id="check-broker">
+<span class="material-symbols-outlined text-[16px] font-bold">check</span>
+</div>
+</div>
+<!-- Perks list -->
+<div class="mt-3 pt-3 bg-primary/40 rounded-lg p-2.5 flex flex-col gap-1.5 relative z-10">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[15px] text-secondary-fixed" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="font-label-sm text-label-sm text-surface-bright font-normal">Bulk 4K Reel uploads with branded watermark &amp; custom CTA</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[15px] text-secondary-fixed" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="font-label-sm text-label-sm text-surface-bright font-normal">Verified Agency Partner badge + Lead Management CRM</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[15px] text-secondary-fixed" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="font-label-sm text-label-sm text-surface-bright font-normal">Instant RERA linking for faster buyer trust &amp; compliance</span>
+</div>
+</div>
+</div>
+<!-- Card 3: Builder / Developer -->
+<div class="role-card cursor-pointer rounded-xl p-4 bg-surface-container-lowest shadow-sm transition-all duration-200" id="role-card-builder" onclick="selectRole('builder')">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-surface-container-high flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-[22px]">domain</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h2 class="font-title-md text-title-md text-on-surface">Builder / Developer</h2>
+<span class="font-label-sm text-label-sm bg-surface-container text-secondary px-2 py-0.5 rounded-full">Project Showcase</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">I represent a construction firm, township, or new residential project launch.</p>
+</div>
+</div>
+<div class="w-6 h-6 rounded-full bg-surface-container flex items-center justify-center shrink-0" id="check-builder">
+<span class="material-symbols-outlined text-[16px] text-surface-container-highest">done</span>
+</div>
+</div>
+<!-- Perks list -->
+<div class="mt-3 pt-3 bg-surface-container-low/60 rounded-lg p-2.5 flex flex-col gap-1.5">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[15px] text-secondary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-normal">Full project walkthrough reels &amp; sample flat 360° video tours</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[15px] text-secondary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-normal">Dedicated project microsite tab with instant PDF floor plan download</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[15px] text-secondary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-normal">Priority placement in "New Launches" feed carousel</span>
+</div>
+</div>
+</div>
+</div>
+<!-- RERA Compliance Notice -->
+<div class="px-gutter mb-6">
+<div class="bg-surface-container-high/70 rounded-xl p-3.5 flex items-start gap-3">
+<div class="w-7 h-7 rounded-lg bg-surface-container-highest flex items-center justify-center text-primary-container shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[18px]">verified_user</span>
+</div>
+<div>
+<h4 class="font-label-md text-label-md text-primary font-bold">RERA Trust Guarantee</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5 leading-snug">Brokers and Builders will enter their official RERA registration number in Step 2 to receive the 100% verified shield.</p>
+</div>
+</div>
+</div>
+<!-- Fixed Sticky Bottom CTA Ribbon -->
+<div class="fixed bottom-0 left-0 right-0 z-40 bg-surface/90 backdrop-blur-xl shadow-xl px-gutter pt-3 pb-safe">
+<div class="max-w-md mx-auto flex flex-col gap-2">
+<!-- Main Action Button -->
+<button class="w-full h-12 rounded-xl bg-on-tertiary-container text-on-primary font-label-lg text-label-lg flex items-center justify-center gap-2 shadow-lg hover:brightness-105 active:scale-[0.99] transition-transform" onclick="handleContinue()" type="button">
+<span>Complete Profile &amp; Start Publishing</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+<!-- Soft Skip Link -->
+<button class="w-full py-1.5 text-center font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" onclick="handleSkip()" type="button">
+        I only want to browse properties for now
+      </button>
+</div>
+</div>
+</div>
+<script>
+  let selectedRoleType = 'broker';
+
+  function selectRole(role) {
+    selectedRoleType = role;
+    const roles = ['owner', 'broker', 'builder'];
+
+    roles.forEach(r => {
+      const card = document.getElementById('role-card-' + r);
+      const check = document.getElementById('check-' + r);
+      if (!card || !check) return;
+
+      if (r === role) {
+        // Highlight active card
+        card.className = 'role-card cursor-pointer rounded-xl p-4 bg-primary-container text-on-primary shadow-lg transition-all duration-200 relative overflow-hidden';
+        check.className = 'w-6 h-6 rounded-full bg-on-tertiary-container text-on-primary flex items-center justify-center shrink-0 shadow-sm';
+        check.innerHTML = '<span class="material-symbols-outlined text-[16px] font-bold">check</span>';
+
+        // Update perks styling for active
+        const perksBox = card.querySelector('.mt-3');
+        if (perksBox) {
+          perksBox.className = 'mt-3 pt-3 bg-primary/40 rounded-lg p-2.5 flex flex-col gap-1.5 relative z-10';
+          const perksText = perksBox.querySelectorAll('span:last-child');
+          perksText.forEach(span => span.className = 'font-label-sm text-label-sm text-surface-bright font-normal');
+          const perkIcons = perksBox.querySelectorAll('.material-symbols-outlined');
+          perkIcons.forEach(icon => icon.className = 'material-symbols-outlined text-[15px] text-secondary-fixed');
+        }
+
+        // Subtitles color
+        const subtitle = card.querySelector('.font-body-sm');
+        if (subtitle) subtitle.className = 'font-body-sm text-body-sm text-surface-container-highest mt-0.5';
+        const title = card.querySelector('.font-title-md');
+        if (title) title.className = 'font-title-md text-title-md text-on-primary font-bold';
+      } else {
+        // Reset inactive card
+        card.className = 'role-card cursor-pointer rounded-xl p-4 bg-surface-container-lowest shadow-sm transition-all duration-200';
+        check.className = 'w-6 h-6 rounded-full bg-surface-container flex items-center justify-center shrink-0';
+        check.innerHTML = '<span class="material-symbols-outlined text-[16px] text-surface-container-highest">done</span>';
+
+        const perksBox = card.querySelector('.mt-3');
+        if (perksBox) {
+          perksBox.className = 'mt-3 pt-3 bg-surface-container-low/60 rounded-lg p-2.5 flex flex-col gap-1.5';
+          const perksText = perksBox.querySelectorAll('span:last-child');
+          perksText.forEach(span => span.className = 'font-label-sm text-label-sm text-on-surface-variant font-normal');
+          const perkIcons = perksBox.querySelectorAll('.material-symbols-outlined');
+          perkIcons.forEach(icon => icon.className = 'material-symbols-outlined text-[15px] text-secondary');
+        }
+
+        const subtitle = card.querySelector('.font-body-sm');
+        if (subtitle) subtitle.className = 'font-body-sm text-body-sm text-on-surface-variant mt-0.5';
+        const title = card.querySelector('.font-title-md');
+        if (title) title.className = 'font-title-md text-title-md text-on-surface';
+      }
+    });
+  }
+
+  function handleContinue() {
+    const fullName = document.getElementById('publisher-fullname').value;
+    const city = document.getElementById('publisher-city').value;
+    // Tactile feedback
+    const btn = event.currentTarget;
+    btn.style.transform = 'scale(0.97)';
+    setTimeout(() => {
+      btn.style.transform = '';
+      alert('Selected Profile: ' + selectedRoleType.toUpperCase() + ' for ' + fullName + ' (' + city + '). Proceeding to Step 2: Verification & Video Studio.');
+    }, 150);
+  }
+
+  function handleSkip() {
+    alert('Switching to Buyer Explorer feed mode.');
+  }
+</script></main></body></html>

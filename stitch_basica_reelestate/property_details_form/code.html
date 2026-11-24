@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "surface": "#fdf8ff", "on-secondary-container": "#44118d", "on-primary": "#ffffff", "surface-container-high": "#ebe5ff", "error-container": "#ffdad6", "outline": "#7a7583", "on-surface": "#1c1831", "on-secondary-fixed": "#260059", "secondary-container": "#b188ff", "on-primary-fixed": "#21005d", "inverse-on-surface": "#f4eeff", "surface-container-lowest": "#ffffff", "secondary-fixed": "#ebdcff", "tertiary-container": "#5a1400", "on-primary-fixed-variant": "#4f3397", "primary": "#1e0056", "background": "#fdf8ff", "primary-fixed-dim": "#cfbdff", "on-tertiary-fixed": "#3b0900", "surface-container": "#f1ebff", "on-primary-container": "#9f84ed", "surface-bright": "#fdf8ff", "inverse-surface": "#312d48", "on-secondary": "#ffffff", "error": "#ba1a1a", "secondary": "#6f46b9", "tertiary": "#360800", "on-secondary-fixed-variant": "#572ba0", "tertiary-fixed": "#ffdbd1", "surface-container-highest": "#e6deff", "primary-fixed": "#e8ddff", "primary-container": "#35127d", "on-error-container": "#93000a", "on-surface-variant": "#494552", "outline-variant": "#cac4d3", "surface-tint": "#674cb1", "on-tertiary": "#ffffff", "inverse-primary": "#cfbdff", "surface-variant": "#e6deff", "surface-container-low": "#f7f1ff", "on-background": "#1c1831", "secondary-fixed-dim": "#d3bbff", "on-error": "#ffffff", "tertiary-fixed-dim": "#ffb5a0", "on-tertiary-container": "#ff6131", "on-tertiary-fixed-variant": "#862200", "surface-dim": "#ddd6f8" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "margin": "1rem", "gutter-md": "1.5rem", "margin-lg": "3rem", "gutter-lg": "2rem", "space-lg": "1.5rem", "space-sm": "0.5rem", "gutter": "1rem", "margin-md": "2rem", "space-xs": "0.25rem", "space-xl": "2.5rem", "space-md": "1rem" }, fontFamily: { "label-sm": ["Plus Jakarta Sans"], "body-lg": ["Plus Jakarta Sans"], "headline-lg": ["Plus Jakarta Sans"], "label-md": ["Plus Jakarta Sans"], "body-md": ["Plus Jakarta Sans"], "price-numeric": ["Plus Jakarta Sans"], "label-lg": ["Plus Jakarta Sans"], "headline-lg-mobile": ["Plus Jakarta Sans"], "display-hero": ["Plus Jakarta Sans"], "body-sm": ["Plus Jakarta Sans"], "title-md": ["Plus Jakarta Sans"], "headline-md": ["Plus Jakarta Sans"], "display-hero-mobile": ["Plus Jakarta Sans"], "headline-sm": ["Plus Jakarta Sans"] }, fontSize: { "label-sm": ["11px", { lineHeight: "14px", letterSpacing: "0.04em", fontWeight: "700" }], "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }], "headline-lg": ["32px", { lineHeight: "40px", letterSpacing: "-0.02em", fontWeight: "700" }], "label-md": ["12px", { lineHeight: "16px", letterSpacing: "0.02em", fontWeight: "600" }], "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }], "price-numeric": ["22px", { lineHeight: "28px", letterSpacing: "-0.02em", fontWeight: "800" }], "label-lg": ["14px", { lineHeight: "20px", letterSpacing: "0.01em", fontWeight: "600" }], "headline-lg-mobile": ["24px", { lineHeight: "32px", letterSpacing: "-0.01em", fontWeight: "700" }], "display-hero": ["48px", { lineHeight: "56px", letterSpacing: "-0.03em", fontWeight: "800" }], "body-sm": ["12px", { lineHeight: "16px", fontWeight: "400" }], "title-md": ["16px", { lineHeight: "24px", fontWeight: "600" }], "headline-md": ["24px", { lineHeight: "32px", letterSpacing: "-0.01em", fontWeight: "600" }], "display-hero-mobile": ["32px", { lineHeight: "40px", letterSpacing: "-0.02em", fontWeight: "800" }], "headline-sm": ["20px", { lineHeight: "28px", fontWeight: "600" }] } } } };</script><style>@layer base { html, body { width: 100vw; margin: 0; padding: 0; } body { overscroll-behavior-y: none; } .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); } .pt-safe { padding-top: env(safe-area-inset-top, 0px); } main > :first-child { margin-top: 0 !important; } main > :last-child { margin-bottom: 0 !important; } } ::-webkit-scrollbar { display: none; }</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-on-surface antialiased flex flex-col min-h-screen selection:bg-secondary-fixed"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(53,18,125,0.06)]"><div class="h-16 px-gutter flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-xs"><button aria-label="Go back" class="min-w-[44px] min-h-[44px] -ml-2 rounded-full flex items-center justify-center text-on-surface hover:bg-surface-container-high transition-colors" onclick="window.history.back()" type="button"><span class="material-symbols-outlined text-[24px]">arrow_back</span></button><div class="flex flex-col"><h1 class="font-title-md text-title-md text-primary tracking-tight truncate max-w-[180px]">Property Details Form</h1><span class="font-label-sm text-label-sm text-on-surface-variant">Post Property Flow</span></div></div><div class="flex items-center gap-space-xs"><div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container border border-surface-container-highest"><span class="w-2 h-2 rounded-full bg-on-tertiary-container animate-pulse"></span><span class="font-label-sm text-label-sm text-primary font-bold">Step 2/3</span></div><button aria-label="Cancel or close" class="min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors" onclick="window.history.back()" type="button"><span class="material-symbols-outlined text-[20px]">close</span></button></div></div></header><main class="flex-1 flex flex-col relative w-full pt-16 bg-surface"><div class="flex flex-col w-full pb-28">
+<!-- Progress Header Banner -->
+<div class="px-gutter pt-space-md pb-space-sm bg-surface-container-low">
+<div class="flex items-center justify-between mb-space-xs">
+<span class="font-label-sm text-label-sm text-on-secondary-fixed-variant tracking-wider uppercase">Step 2 of 3 • Property Specifications</span>
+<span class="font-label-sm text-label-sm text-primary font-bold">66% Complete</span>
+</div>
+<div class="w-full h-1.5 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary-container rounded-full w-2/3 transition-all duration-300"></div>
+</div>
+</div>
+<!-- Content Stream -->
+<div class="px-gutter pt-space-md space-y-space-lg">
+<!-- Title & Motivational Subtext -->
+<div class="space-y-space-xs">
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-primary tracking-tight">Tell buyers about this property</h2>
+<p class="font-body-md text-body-md text-on-surface-variant flex items-start gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-[18px] shrink-0 mt-0.5" style="font-variation-settings: 'FILL' 1;">verified</span>
+<span>Accurate details unlock the ReelEstate Verified Badge and receive up to 3.4x higher video feed reach.</span>
+</p>
+</div>
+<!-- Attached Reel Video Mini-Card -->
+<div class="bg-surface-container-lowest p-space-sm rounded-xl shadow-sm flex items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="relative w-11 h-14 rounded-lg overflow-hidden shrink-0 bg-inverse-surface shadow-inner">
+<div class="w-full h-full bg-cover bg-center" data-alt="Vertical 9:16 cinematic reel view of a high-end luxury living room overlooking Marine Drive Mumbai at sunset with warm amber highlights and modern furniture." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD4tXyDhSDtImvweX2gq8wgVHeewQufTWC2QI8r9HPGD0bH7dgukV8wVuW1ZOy-UcQ93fTBeGYfrafpRKyjNdDGCySMTo8OU_n58HViqWlSjyT6pdFxulgXDLKM3Va24nDkLY5Jc1Z0zgYo4tKnkNpj5RJDZLKoy8FLv8eKmHnQv4i0w6wE7K6MK_MM8tuZV8gG-pps7bFQ7vaz1-MvNL7Mp-9hZe9gTBhKxTxQ2TAe')"></div>
+<div class="absolute inset-0 bg-primary/30 flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">play_circle</span>
+</div>
+</div>
+<div class="min-w-0 flex flex-col">
+<div class="flex items-center gap-1">
+<span class="font-label-sm text-label-sm text-primary font-bold truncate">Marine_Drive_Sea_Penthouse.mp4</span>
+<span class="w-1.5 h-1.5 rounded-full bg-on-tertiary-container shrink-0"></span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">0:48s • 1080x1920 HD Ready</span>
+</div>
+</div>
+<button class="px-3 py-1.5 rounded-full bg-surface-container-high hover:bg-surface-container-highest transition-colors text-primary font-label-md text-label-md shrink-0" type="button">
+        Change
+      </button>
+</div>
+<!-- Section 1: Intent & Property Category -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm space-y-space-md">
+<div class="flex items-center justify-between">
+<span class="font-title-md text-title-md text-primary">Listing Intent</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Required</span>
+</div>
+<!-- Segmented Intent Toggle -->
+<div class="grid grid-cols-2 p-1 bg-surface-container rounded-xl gap-1">
+<button class="py-2.5 px-space-md rounded-lg font-label-lg text-label-lg font-bold text-center transition-all bg-primary-container text-on-primary shadow-sm" id="intentSale" type="button">
+          For Sale
+        </button>
+<button class="py-2.5 px-space-md rounded-lg font-label-lg text-label-lg font-semibold text-center text-on-surface-variant hover:text-primary transition-all" id="intentRent" type="button">
+          For Rent
+        </button>
+</div>
+<!-- Property Category Chips -->
+<div class="space-y-space-xs pt-space-xs">
+<label class="font-label-md text-label-md text-on-surface-variant">Property Category</label>
+<div class="flex flex-wrap gap-2">
+<button class="cat-pill px-3.5 py-2 rounded-full font-label-md text-label-md transition-colors bg-primary-container text-on-primary font-bold" type="button">
+            Apartment / Flat
+          </button>
+<button class="cat-pill px-3.5 py-2 rounded-full font-label-md text-label-md transition-colors bg-surface-container text-primary hover:bg-surface-container-high" type="button">
+            Independent Villa
+          </button>
+<button class="cat-pill px-3.5 py-2 rounded-full font-label-md text-label-md transition-colors bg-surface-container text-primary hover:bg-surface-container-high" type="button">
+            Penthouse
+          </button>
+<button class="cat-pill px-3.5 py-2 rounded-full font-label-md text-label-md transition-colors bg-surface-container text-primary hover:bg-surface-container-high" type="button">
+            Builder Floor
+          </button>
+<button class="cat-pill px-3.5 py-2 rounded-full font-label-md text-label-md transition-colors bg-surface-container text-primary hover:bg-surface-container-high" type="button">
+            Plot / Land
+          </button>
+</div>
+</div>
+</div>
+<!-- Section 2: Specifications & Dimensions -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm space-y-space-md">
+<div class="flex items-center justify-between">
+<h3 class="font-title-md text-title-md text-primary">Configuration &amp; Space</h3>
+<span class="material-symbols-outlined text-secondary text-[20px]">straighten</span>
+</div>
+<!-- BHK Selection -->
+<div class="space-y-space-xs">
+<label class="font-label-md text-label-md text-on-surface-variant">Bedrooms (BHK)</label>
+<div class="grid grid-cols-5 gap-1.5">
+<button class="bhk-pill py-2 text-center rounded-lg font-label-md text-label-md bg-surface-container text-primary hover:bg-surface-container-high transition-colors" type="button">1 BHK</button>
+<button class="bhk-pill py-2 text-center rounded-lg font-label-md text-label-md bg-surface-container text-primary hover:bg-surface-container-high transition-colors" type="button">2 BHK</button>
+<button class="bhk-pill py-2 text-center rounded-lg font-label-md text-label-md bg-primary-container text-on-primary font-bold shadow-sm transition-colors" type="button">3 BHK</button>
+<button class="bhk-pill py-2 text-center rounded-lg font-label-md text-label-md bg-surface-container text-primary hover:bg-surface-container-high transition-colors" type="button">4 BHK</button>
+<button class="bhk-pill py-2 text-center rounded-lg font-label-md text-label-md bg-surface-container text-primary hover:bg-surface-container-high transition-colors" type="button">5+ BHK</button>
+</div>
+</div>
+<!-- Baths and Balconies Counter Row -->
+<div class="grid grid-cols-2 gap-space-sm pt-space-xs">
+<div class="p-3 rounded-xl bg-surface-container-low space-y-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Bathrooms</span>
+<div class="flex items-center justify-between">
+<button class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-primary font-bold hover:bg-surface-dim transition-colors text-base" type="button">−</button>
+<span class="font-title-md text-title-md text-primary font-bold">3</span>
+<button class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-on-primary font-bold hover:opacity-90 transition-colors text-base" type="button">+</button>
+</div>
+</div>
+<div class="p-3 rounded-xl bg-surface-container-low space-y-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Balconies</span>
+<div class="flex items-center justify-between">
+<button class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-primary font-bold hover:bg-surface-dim transition-colors text-base" type="button">−</button>
+<span class="font-title-md text-title-md text-primary font-bold">2</span>
+<button class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-on-primary font-bold hover:opacity-90 transition-colors text-base" type="button">+</button>
+</div>
+</div>
+</div>
+<!-- Carpet Area Input -->
+<div class="space-y-space-xs pt-space-xs">
+<label class="font-label-md text-label-md text-on-surface-variant" for="carpetAreaInput">Carpet Area</label>
+<div class="flex items-center bg-surface-container-low rounded-xl px-space-md py-1 focus-within:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-secondary text-[20px] mr-2">crop_free</span>
+<input class="w-full bg-transparent font-title-md text-title-md text-primary font-bold focus:outline-none" id="carpetAreaInput" placeholder="e.g. 1,450" type="text" value="1,850"/>
+<div class="px-2.5 py-1 rounded-lg bg-surface-container-highest text-primary font-label-md text-label-md font-bold shrink-0">
+            sq.ft
+          </div>
+</div>
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-[14px]">info</span>
+<span class="font-body-sm text-body-sm">Super Built-up Area: approx. 2,220 sq.ft (~20% loading)</span>
+</div>
+</div>
+<!-- Furnishing Status -->
+<div class="space-y-space-xs pt-space-xs">
+<label class="font-label-md text-label-md text-on-surface-variant">Furnishing Status</label>
+<div class="grid grid-cols-3 gap-1.5">
+<button class="furnish-pill py-2 px-1 text-center rounded-lg font-label-md text-label-md bg-primary-container text-on-primary font-bold shadow-sm transition-colors truncate" type="button">
+            Fully Furnished
+          </button>
+<button class="furnish-pill py-2 px-1 text-center rounded-lg font-label-md text-label-md bg-surface-container text-primary hover:bg-surface-container-high transition-colors truncate" type="button">
+            Semi-Furnished
+          </button>
+<button class="furnish-pill py-2 px-1 text-center rounded-lg font-label-md text-label-md bg-surface-container text-primary hover:bg-surface-container-high transition-colors truncate" type="button">
+            Unfurnished
+          </button>
+</div>
+</div>
+</div>
+<!-- Section 3: Pricing & Financials -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm space-y-space-md">
+<div class="flex items-center justify-between">
+<h3 class="font-title-md text-title-md text-primary">Pricing &amp; Financials</h3>
+<span class="px-2 py-0.5 rounded-full bg-surface-container font-label-sm text-label-sm text-secondary font-bold">INR (₹)</span>
+</div>
+<!-- Total Asking Price -->
+<div class="space-y-space-xs">
+<label class="font-label-md text-label-md text-on-surface-variant" for="priceInput">Total Asking Price</label>
+<div class="flex items-center bg-surface-container-low rounded-xl px-space-md py-2 focus-within:bg-surface-container-high transition-colors">
+<span class="font-price-numeric text-price-numeric text-primary mr-2">₹</span>
+<input class="w-full bg-transparent font-price-numeric text-price-numeric text-primary focus:outline-none" id="priceInput" type="text" value="3,85,00,000"/>
+</div>
+<div class="flex items-center justify-between px-1">
+<span class="font-label-md text-label-md text-on-tertiary-container font-extrabold tracking-wide">₹ 3.85 Crore</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">₹ 20,810 / sq.ft</span>
+</div>
+</div>
+<!-- Maintenance Charges -->
+<div class="space-y-space-xs pt-space-xs">
+<label class="font-label-md text-label-md text-on-surface-variant" for="maintenanceInput">Maintenance Charges</label>
+<div class="flex items-center bg-surface-container-low rounded-xl px-space-md py-2 focus-within:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-secondary text-[20px] mr-2">receipt_long</span>
+<input class="w-full bg-transparent font-title-md text-title-md text-primary font-semibold focus:outline-none" id="maintenanceInput" type="text" value="₹ 8,500"/>
+<span class="font-label-md text-label-md text-on-surface-variant shrink-0">/ month</span>
+</div>
+</div>
+<!-- Price Negotiable Toggle -->
+<div class="pt-space-xs flex items-center justify-between p-3 rounded-xl bg-surface-container-low">
+<div class="flex flex-col">
+<span class="font-label-lg text-label-lg text-primary font-bold">Price Negotiable</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Signal flexibility to serious reel viewers</span>
+</div>
+<button class="w-12 h-7 rounded-full bg-primary-container p-1 flex items-center transition-colors" id="toggleNegotiable" type="button">
+<div class="w-5 h-5 rounded-full bg-on-primary shadow-sm transform translate-x-5 transition-transform duration-200"></div>
+</button>
+</div>
+</div>
+<!-- Section 4: Location & Building Details -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm space-y-space-md">
+<div class="flex items-center justify-between">
+<h3 class="font-title-md text-title-md text-primary">Location Details</h3>
+<span class="material-symbols-outlined text-secondary text-[20px]">location_on</span>
+</div>
+<!-- Building Name -->
+<div class="space-y-space-xs">
+<label class="font-label-md text-label-md text-on-surface-variant" for="buildingInput">Building / Society Name</label>
+<div class="flex items-center bg-surface-container-low rounded-xl px-space-md py-2 focus-within:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-secondary text-[20px] mr-2">apartment</span>
+<input class="w-full bg-transparent font-body-lg text-body-lg text-primary font-semibold focus:outline-none" id="buildingInput" type="text" value="Sea Breeze Heights"/>
+</div>
+</div>
+<!-- Locality / Suburb -->
+<div class="space-y-space-xs">
+<label class="font-label-md text-label-md text-on-surface-variant" for="localityInput">Locality / Area</label>
+<div class="flex items-center bg-surface-container-low rounded-xl px-space-md py-2 focus-within:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-secondary text-[20px] mr-2">pin_drop</span>
+<input class="w-full bg-transparent font-body-lg text-body-lg text-primary font-semibold focus:outline-none" id="localityInput" type="text" value="Pali Hill, Bandra West"/>
+</div>
+</div>
+<!-- City & Floor Details Split -->
+<div class="grid grid-cols-2 gap-space-sm pt-space-xs">
+<div class="space-y-space-xs">
+<label class="font-label-md text-label-md text-on-surface-variant" for="citySelect">City</label>
+<div class="flex items-center bg-surface-container-low rounded-xl px-3 py-2">
+<select class="w-full bg-transparent font-label-md text-label-md text-primary font-bold focus:outline-none" id="citySelect">
+<option selected="">Mumbai MMR</option>
+<option>Bengaluru</option>
+<option>Delhi NCR</option>
+<option>Pune</option>
+<option>Hyderabad</option>
+</select>
+</div>
+</div>
+<div class="space-y-space-xs">
+<label class="font-label-md text-label-md text-on-surface-variant" for="floorInput">Floor Details</label>
+<div class="flex items-center bg-surface-container-low rounded-xl px-3 py-2">
+<input class="w-full bg-transparent font-label-md text-label-md text-primary font-bold focus:outline-none" id="floorInput" type="text" value="14 of 22"/>
+</div>
+</div>
+</div>
+</div>
+<!-- Section 5: Key Reel Highlights & Amenities -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm space-y-space-md">
+<div class="flex items-center justify-between">
+<div>
+<h3 class="font-title-md text-title-md text-primary">Reel Highlights</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Selected tags appear directly as badges over your video</p>
+</div>
+<span class="material-symbols-outlined text-secondary text-[20px]">auto_awesome</span>
+</div>
+<div class="flex flex-wrap gap-2 pt-space-xs">
+<!-- Active Amenity Pills -->
+<button class="amenity-tag px-3 py-2 rounded-full font-label-md text-label-md flex items-center gap-1.5 bg-primary-container text-on-primary font-bold shadow-sm" type="button">
+<span class="material-symbols-outlined text-[16px]">waves</span>
+<span>Sea Facing</span>
+</button>
+<button class="amenity-tag px-3 py-2 rounded-full font-label-md text-label-md flex items-center gap-1.5 bg-primary-container text-on-primary font-bold shadow-sm" type="button">
+<span class="material-symbols-outlined text-[16px]">directions_car</span>
+<span>Covered Parking (2)</span>
+</button>
+<button class="amenity-tag px-3 py-2 rounded-full font-label-md text-label-md flex items-center gap-1.5 bg-primary-container text-on-primary font-bold shadow-sm" type="button">
+<span class="material-symbols-outlined text-[16px]">deck</span>
+<span>Private Terrace</span>
+</button>
+<!-- Inactive Amenity Pills -->
+<button class="amenity-tag px-3 py-2 rounded-full font-label-md text-label-md flex items-center gap-1.5 bg-surface-container text-primary hover:bg-surface-container-high transition-colors" type="button">
+<span class="material-symbols-outlined text-[16px]">pool</span>
+<span>Swimming Pool</span>
+</button>
+<button class="amenity-tag px-3 py-2 rounded-full font-label-md text-label-md flex items-center gap-1.5 bg-surface-container text-primary hover:bg-surface-container-high transition-colors" type="button">
+<span class="material-symbols-outlined text-[16px]">fitness_center</span>
+<span>Gymnasium</span>
+</button>
+<button class="amenity-tag px-3 py-2 rounded-full font-label-md text-label-md flex items-center gap-1.5 bg-surface-container text-primary hover:bg-surface-container-high transition-colors" type="button">
+<span class="material-symbols-outlined text-[16px]">shield</span>
+<span>24/7 Security</span>
+</button>
+<button class="amenity-tag px-3 py-2 rounded-full font-label-md text-label-md flex items-center gap-1.5 bg-surface-container text-primary hover:bg-surface-container-high transition-colors" type="button">
+<span class="material-symbols-outlined text-[16px]">sports_tennis</span>
+<span>Clubhouse</span>
+</button>
+</div>
+</div>
+<!-- Verification Encouragement Card -->
+<div class="p-space-md rounded-xl bg-surface-container-high flex items-center gap-space-md">
+<div class="w-12 h-12 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[26px]">workspace_premium</span>
+</div>
+<div class="space-y-0.5">
+<span class="font-title-md text-title-md text-primary font-bold">Ready for Fast-Track Review?</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Step 3 will let you preview the consumer feed reel with real-time HUD overlays.</p>
+</div>
+</div>
+</div>
+<!-- Sticky Mobile Action Ribbon -->
+<div class="fixed bottom-0 left-0 right-0 z-40 bg-surface-container-lowest/95 backdrop-blur-xl px-gutter py-space-sm shadow-[0_-4px_24px_rgba(17,13,38,0.08)]">
+<div class="max-w-md mx-auto flex items-center gap-space-sm">
+<button class="px-4 py-3 rounded-full bg-surface-container text-primary font-label-lg text-label-lg font-bold hover:bg-surface-container-high transition-colors shrink-0" type="button">
+        Save Draft
+      </button>
+<button class="flex-1 py-3.5 px-space-md rounded-full bg-on-tertiary-container hover:opacity-95 text-on-primary font-label-lg text-label-lg font-bold flex items-center justify-center gap-space-xs shadow-md active:scale-[0.99] transition-transform" type="button">
+<span>Continue to Review</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+<script>
+  (function() {
+    // Interactive Intent Toggle
+    const saleBtn = document.getElementById('intentSale');
+    const rentBtn = document.getElementById('intentRent');
+    if (saleBtn && rentBtn) {
+      saleBtn.addEventListener('click', () => {
+        saleBtn.className = "py-2.5 px-space-md rounded-lg font-label-lg text-label-lg font-bold text-center transition-all bg-primary-container text-on-primary shadow-sm";
+        rentBtn.className = "py-2.5 px-space-md rounded-lg font-label-lg text-label-lg font-semibold text-center text-on-surface-variant hover:text-primary transition-all";
+      });
+      rentBtn.addEventListener('click', () => {
+        rentBtn.className = "py-2.5 px-space-md rounded-lg font-label-lg text-label-lg font-bold text-center transition-all bg-primary-container text-on-primary shadow-sm";
+        saleBtn.className = "py-2.5 px-space-md rounded-lg font-label-lg text-label-lg font-semibold text-center text-on-surface-variant hover:text-primary transition-all";
+      });
+    }
+
+    // Toggle Negotiable switch
+    const toggleNegotiable = document.getElementById('toggleNegotiable');
+    if (toggleNegotiable) {
+      let isNegotiable = true;
+      toggleNegotiable.addEventListener('click', () => {
+        isNegotiable = !isNegotiable;
+        const knob = toggleNegotiable.querySelector('div');
+        if (isNegotiable) {
+          toggleNegotiable.className = "w-12 h-7 rounded-full bg-primary-container p-1 flex items-center transition-colors";
+          knob.className = "w-5 h-5 rounded-full bg-on-primary shadow-sm transform translate-x-5 transition-transform duration-200";
+        } else {
+          toggleNegotiable.className = "w-12 h-7 rounded-full bg-surface-container-highest p-1 flex items-center transition-colors";
+          knob.className = "w-5 h-5 rounded-full bg-surface-dim shadow-sm transform translate-x-0 transition-transform duration-200";
+        }
+      });
+    }
+
+    // Category Single Selection
+    const catPills = document.querySelectorAll('.cat-pill');
+    catPills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        catPills.forEach(p => {
+          p.className = "cat-pill px-3.5 py-2 rounded-full font-label-md text-label-md transition-colors bg-surface-container text-primary hover:bg-surface-container-high";
+        });
+        pill.className = "cat-pill px-3.5 py-2 rounded-full font-label-md text-label-md transition-colors bg-primary-container text-on-primary font-bold";
+      });
+    });
+
+    // BHK Single Selection
+    const bhkPills = document.querySelectorAll('.bhk-pill');
+    bhkPills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        bhkPills.forEach(p => {
+          p.className = "bhk-pill py-2 text-center rounded-lg font-label-md text-label-md bg-surface-container text-primary hover:bg-surface-container-high transition-colors";
+        });
+        pill.className = "bhk-pill py-2 text-center rounded-lg font-label-md text-label-md bg-primary-container text-on-primary font-bold shadow-sm transition-colors";
+      });
+    });
+
+    // Furnishing Single Selection
+    const furnishPills = document.querySelectorAll('.furnish-pill');
+    furnishPills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        furnishPills.forEach(p => {
+          p.className = "furnish-pill py-2 px-1 text-center rounded-lg font-label-md text-label-md bg-surface-container text-primary hover:bg-surface-container-high transition-colors truncate";
+        });
+        pill.className = "furnish-pill py-2 px-1 text-center rounded-lg font-label-md text-label-md bg-primary-container text-on-primary font-bold shadow-sm transition-colors truncate";
+      });
+    });
+
+    // Amenity Multi-Selection Toggle
+    const amenityTags = document.querySelectorAll('.amenity-tag');
+    amenityTags.forEach(tag => {
+      tag.addEventListener('click', () => {
+        const isActive = tag.classList.contains('bg-primary-container');
+        if (isActive) {
+          tag.className = "amenity-tag px-3 py-2 rounded-full font-label-md text-label-md flex items-center gap-1.5 bg-surface-container text-primary hover:bg-surface-container-high transition-colors";
+        } else {
+          tag.className = "amenity-tag px-3 py-2 rounded-full font-label-md text-label-md flex items-center gap-1.5 bg-primary-container text-on-primary font-bold shadow-sm";
+        }
+      });
+    });
+  })();
+</script></main></body></html>

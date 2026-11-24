@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-secondary-fixed": "#260059", "background": "#fdf8ff", "surface-container-lowest": "#ffffff", "tertiary": "#360800", "error-container": "#ffdad6", "surface-container-high": "#ebe5ff", "tertiary-container": "#5a1400", "on-error": "#ffffff", "primary-fixed": "#e8ddff", "on-primary-container": "#9f84ed", "on-secondary-fixed-variant": "#572ba0", "tertiary-fixed-dim": "#ffb5a0", "inverse-surface": "#312d48", "surface-tint": "#674cb1", "error": "#ba1a1a", "on-secondary": "#ffffff", "secondary": "#6f46b9", "on-primary-fixed": "#21005d", "tertiary-fixed": "#ffdbd1", "surface-dim": "#ddd6f8", "surface-container-highest": "#e6deff", "primary": "#1e0056", "on-error-container": "#93000a", "surface-container": "#f1ebff", "on-primary": "#ffffff", "on-primary-fixed-variant": "#4f3397", "primary-container": "#35127d", "surface-container-low": "#f7f1ff", "on-tertiary-container": "#ff6131", "on-surface-variant": "#494552", "on-tertiary": "#ffffff", "secondary-container": "#b188ff", "surface-bright": "#fdf8ff", "on-secondary-container": "#44118d", "on-surface": "#1c1831", "outline-variant": "#cac4d3", "primary-fixed-dim": "#cfbdff", "surface": "#fdf8ff", "inverse-primary": "#cfbdff", "outline": "#7a7583", "inverse-on-surface": "#f4eeff", "on-tertiary-fixed": "#3b0900", "on-tertiary-fixed-variant": "#862200", "on-background": "#1c1831", "surface-variant": "#e6deff", "secondary-fixed-dim": "#d3bbff", "secondary-fixed": "#ebdcff" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "margin-lg": "3rem", "gutter-md": "1.5rem", "margin-md": "2rem", "space-sm": "0.5rem", "gutter-lg": "2rem", "space-xs": "0.25rem", "space-md": "1rem", "gutter": "1rem", "space-lg": "1.5rem", "margin": "1rem", "space-xl": "2.5rem" }, "fontFamily": { "body-lg": ["Plus Jakarta Sans"], "headline-md": ["Plus Jakarta Sans"], "headline-lg-mobile": ["Plus Jakarta Sans"], "price-numeric": ["Plus Jakarta Sans"], "label-lg": ["Plus Jakarta Sans"], "body-md": ["Plus Jakarta Sans"], "display-hero": ["Plus Jakarta Sans"], "label-sm": ["Plus Jakarta Sans"], "body-sm": ["Plus Jakarta Sans"], "headline-sm": ["Plus Jakarta Sans"], "title-md": ["Plus Jakarta Sans"], "headline-lg": ["Plus Jakarta Sans"], "display-hero-mobile": ["Plus Jakarta Sans"], "label-md": ["Plus Jakarta Sans"] }, "fontSize": { "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }], "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "price-numeric": ["22px", { "lineHeight": "28px", "letterSpacing": "-0.02em", "fontWeight": "800" }], "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "display-hero": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.03em", "fontWeight": "800" }], "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "700" }], "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }], "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }], "title-md": ["16px", { "lineHeight": "24px", "fontWeight": "600" }], "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "display-hero-mobile": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "800" }], "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }] } } } };</script><style>@layer base{html,body{width:100vw;margin:0;padding:0;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-body-md text-on-surface antialiased flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] pt-safe"><div class="h-16 px-margin flex items-center justify-between"><div class="flex items-center gap-space-sm"><button aria-label="Go Back" class="w-11 h-11 flex items-center justify-center rounded-full text-on-surface hover:bg-surface-container transition-colors" onclick="history.back()" type="button"><span class="material-symbols-outlined text-[24px]">arrow_back</span></button><h1 class="font-title-md text-title-md text-on-surface tracking-tight select-none">Notification Center Banner</h1></div><div class="flex items-center gap-space-sm"><button aria-label="Notifications" class="w-11 h-11 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container transition-colors" type="button"><span class="material-symbols-outlined text-[22px]">notifications</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex-1 flex flex-col relative w-full pt-16 bg-surface"><div class="flex flex-col w-full pb-safe">
+<!-- Top Segmented Switcher & Channel Header -->
+<div class="px-margin pt-space-md pb-space-sm flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high text-on-secondary-fixed text-label-sm font-label-sm shadow-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>
+          Dual-Channel Dispatch
+        </span>
+</div>
+<span class="text-label-sm font-label-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-secondary">verified_user</span>
+        DLT &amp; APNs Tier-1
+      </span>
+</div>
+<!-- Segment Switcher -->
+<div class="w-full bg-surface-container p-1 rounded-xl flex items-center shadow-inner">
+<button class="flex-1 py-2 px-3 rounded-lg text-label-md font-label-md transition-all flex items-center justify-center gap-1.5 bg-surface-container-lowest text-primary shadow-sm" id="btn-push" onclick="switchChannel('push')">
+<span class="material-symbols-outlined text-[16px]">notifications_active</span>
+<span>Push &amp; Lock Screen</span>
+</button>
+<button class="flex-1 py-2 px-3 rounded-lg text-label-md font-label-md transition-all flex items-center justify-center gap-1.5 text-on-surface-variant hover:text-on-surface" id="btn-sms" onclick="switchChannel('sms')">
+<span class="material-symbols-outlined text-[16px]">sms</span>
+<span>SMS (VK-REELST)</span>
+</button>
+</div>
+</div>
+<!-- CHANNEL VIEW A: PUSH & LOCK SCREEN PRESENTATION -->
+<div class="flex flex-col w-full px-margin space-y-space-md" id="view-push">
+<!-- Lock Screen Simulation Container -->
+<div class="w-full rounded-2xl overflow-hidden shadow-xl relative bg-inverse-surface text-inverse-on-surface">
+<!-- Ambient Dusk Luxury Background -->
+<div class="absolute inset-0 bg-gradient-to-b from-primary via-primary-container/80 to-inverse-surface opacity-95"></div>
+<div class="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-secondary-container/20 blur-3xl"></div>
+<div class="absolute bottom-10 -left-10 w-44 h-44 rounded-full bg-on-tertiary-container/15 blur-2xl"></div>
+<!-- Lock Screen Frame Content -->
+<div class="relative z-10 p-space-md flex flex-col items-center">
+<!-- Status & Clock Display -->
+<div class="flex items-center gap-1.5 opacity-75 mb-1">
+<span class="material-symbols-outlined text-[14px]">lock</span>
+<span class="text-label-sm font-label-sm tracking-wide">Pali Hill, Mumbai • 5G</span>
+</div>
+<div class="text-[52px] leading-tight font-extrabold tracking-tight text-white mb-0.5">
+          09:41
+        </div>
+<div class="text-label-md font-label-md text-primary-fixed opacity-90 mb-space-lg">
+          Tuesday, October 24
+        </div>
+<!-- Rich Notification Card (iOS / Android High-Fidelity Hybrid) -->
+<div class="w-full bg-surface-container-lowest/90 backdrop-blur-xl rounded-2xl shadow-2xl p-space-md text-on-surface flex flex-col gap-space-sm transition-transform active:scale-[0.99]">
+<!-- App Header Strip inside Card -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-lg bg-primary-container flex items-center justify-center text-on-primary shadow-sm">
+<span class="material-symbols-outlined text-[14px]">videocam</span>
+</div>
+<span class="text-label-sm font-label-sm text-primary tracking-wider uppercase font-bold">REELSTATE PARTNER</span>
+</div>
+<span class="text-body-sm font-body-sm text-on-surface-variant flex items-center gap-1">
+              2m ago
+              <span class="w-1.5 h-1.5 rounded-full bg-on-tertiary-container"></span>
+</span>
+</div>
+<!-- Notification Title & Copy -->
+<div class="flex flex-col gap-0.5">
+<div class="text-title-md font-title-md text-on-surface font-bold flex items-center gap-1.5">
+<span>Action Required: Pali Hill Penthouse</span>
+<span class="text-label-sm font-label-sm px-1.5 py-0.5 rounded bg-surface-container-high text-primary font-semibold">#MOD-8942</span>
+</div>
+<p class="text-body-md font-body-md text-on-surface-variant leading-snug">
+              Moderation team flagged 2 items (Pricing +4.2% &amp; Reel Watermark). 48h SLA to retain feed priority.
+            </p>
+</div>
+<!-- Expanded Rich Media Thumbnail & Specs -->
+<div class="w-full bg-surface-container-low rounded-xl p-2.5 flex items-center gap-space-sm shadow-sm">
+<div class="relative w-16 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-surface-variant shadow-inner">
+<img class="w-full h-full object-cover" data-alt="Ultra luxury modern duplex penthouse living room with panoramic sea views from high floor balcony in Bandra West Mumbai warm golden hour lighting cinematic architectural photography" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC-NeRQbNcOdOzSfpQuikbRDGw4dNgpNFneWVuFQqx8y8e8c2p8QCpQj5U64sAWr6rEPrwn-C_ZwRy3ptxpmkwubg2iFMtNSwR53V1ROdWTcqiUynNXUgXjubddIKIKXEsULd1xfB3QhwsCrZOmH7qeXrikvQnaznil5_1Zyk9iMDeyMv43CifODBIZSmGLPJaGp3m5obaBDGgMsYDJc9Y88GlbMIVc3LDIwro7jw5u"/>
+<div class="absolute bottom-1 right-1 px-1 py-0.5 rounded bg-black/70 backdrop-blur-sm text-white text-[9px] font-bold tracking-tight">
+                0:45s
+              </div>
+<div class="absolute top-1 left-1 w-3.5 h-3.5 rounded-full bg-primary-container/80 flex items-center justify-center text-white">
+<span class="material-symbols-outlined text-[10px]">play_arrow</span>
+</div>
+</div>
+<div class="flex flex-col flex-1 min-w-0 justify-between py-0.5">
+<div>
+<div class="text-label-lg font-label-lg text-primary font-bold">₹3.85 Cr</div>
+<div class="text-body-sm font-body-sm text-on-surface-variant truncate">4 BHK Sky Penthouse • 3,420 sqft</div>
+</div>
+<!-- Flagged Tags Cluster -->
+<div class="flex flex-wrap gap-1 mt-1">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-error-container text-on-error-container text-label-sm font-label-sm">
+<span class="material-symbols-outlined text-[11px]">trending_up</span>
+                  Price Deviation (+4.2%)
+                </span>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-error-container text-on-error-container text-label-sm font-label-sm">
+<span class="material-symbols-outlined text-[11px]">branding_watermark</span>
+                  External Watermark
+                </span>
+</div>
+</div>
+</div>
+<!-- Push Interactive Quick Actions (3 CTA Stack) -->
+<div class="flex flex-col gap-1.5 pt-1">
+<button class="w-full h-11 rounded-xl bg-on-tertiary-container hover:bg-tertiary-container text-white flex items-center justify-center gap-2 font-label-lg text-label-lg shadow-md transition-transform active:scale-[0.98]">
+<span class="material-symbols-outlined text-[18px]">movie_edit</span>
+<span>Review &amp; Edit Reel</span>
+<span class="material-symbols-outlined text-[16px] opacity-80">north_east</span>
+</button>
+<div class="grid grid-cols-2 gap-1.5">
+<button class="h-10 rounded-xl bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center gap-1.5 font-label-md text-label-md shadow-sm">
+<span class="material-symbols-outlined text-[16px]">support_agent</span>
+<span>Request Callback</span>
+</button>
+<button class="h-10 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface-variant flex items-center justify-center gap-1.5 font-label-md text-label-md shadow-sm">
+<span class="material-symbols-outlined text-[16px]">snooze</span>
+<span>Snooze (1h)</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Lock Screen Footer Hint -->
+<div class="mt-space-md flex items-center gap-1.5 text-label-sm font-label-sm text-primary-fixed opacity-70">
+<span class="material-symbols-outlined text-[14px]">touch_app</span>
+<span>Press firmly or swipe left for push settings</span>
+</div>
+</div>
+</div>
+<!-- Section B: In-App System Notification Drop Banner -->
+<div class="flex flex-col gap-1.5 pt-space-xs">
+<div class="flex items-center justify-between px-1">
+<span class="text-label-md font-label-md text-on-surface font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-secondary">layers</span>
+          In-App Live Alert Drop Banner
+        </span>
+<span class="text-label-sm font-label-sm text-on-surface-variant">Active Session View</span>
+</div>
+<!-- Kinetic Luxury Floating Drop Banner -->
+<div class="w-full bg-surface-container-lowest rounded-2xl shadow-xl p-space-sm flex items-start gap-space-sm">
+<div class="w-9 h-9 rounded-xl bg-tertiary-fixed flex items-center justify-center text-on-tertiary-fixed flex-shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[20px]">notification_important</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between mb-0.5">
+<span class="text-label-sm font-label-sm text-on-tertiary-container font-extrabold uppercase tracking-wide flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-on-tertiary-container animate-ping"></span>
+              Urgent Listing Feedback
+            </span>
+<span class="text-body-sm font-body-sm text-on-surface-variant">Just Now</span>
+</div>
+<p class="text-body-md font-body-md text-on-surface leading-snug">
+            Listing <strong class="text-primary font-semibold">#MOD-8942</strong> requires 2 quick edits before syndication to <span class="font-semibold text-secondary">45,000+ Verified HNI Buyers</span>.
+          </p>
+</div>
+<button class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-primary flex-shrink-0 hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+<!-- CHANNEL VIEW B: OFFICIAL SMS THREAD (VK-REELST) -->
+<div class="hidden flex flex-col w-full px-margin space-y-space-md" id="view-sms">
+<!-- Telecom Native SMS App Chrome -->
+<div class="w-full bg-surface-container-lowest rounded-2xl shadow-xl overflow-hidden flex flex-col">
+<!-- SMS Header: DLT / Telecom Verified Identity -->
+<div class="bg-surface-container-low px-space-md py-3 flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary shadow-sm font-bold text-label-lg">
+            RS
+          </div>
+<div class="flex flex-col">
+<div class="flex items-center gap-1">
+<span class="font-title-md text-title-md font-bold text-on-surface">VK-REELST</span>
+<span class="material-symbols-outlined text-[16px] text-secondary" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+<span class="text-label-sm font-label-sm text-on-surface-variant">DLT Approved • Real Estate Enterprise Sender</span>
+</div>
+</div>
+<div class="flex items-center gap-1">
+<button class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">call</span>
+</button>
+<button class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">info</span>
+</button>
+</div>
+</div>
+<!-- SMS Conversation Stream -->
+<div class="p-space-md flex flex-col gap-space-md bg-background">
+<!-- Timestamp Pill -->
+<div class="self-center px-3 py-1 rounded-full bg-surface-container text-label-sm font-label-sm text-on-surface-variant">
+          Today 10:42 AM
+        </div>
+<!-- Realistic SMS Bubble -->
+<div class="max-w-[92%] self-start bg-surface-container-lowest rounded-2xl rounded-tl-sm p-space-md shadow-md flex flex-col gap-space-sm">
+<div class="flex items-center justify-between text-label-sm font-label-sm text-primary font-bold">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">shield</span>
+              REELSTATE OFFICIAL ALERT
+            </span>
+<span class="text-on-surface-variant font-normal">SIM 1</span>
+</div>
+<div class="text-body-md font-body-md text-on-surface leading-relaxed whitespace-pre-line">Dear Vikramaditya Singhania, action is needed on your Bandra West Penthouse (#MOD-8942). 2 items require review:
+
+1) Pricing benchmark check (+4.2%)
+2) Remove external watermark from reel.
+
+Update within 48h to secure Top Feed placement:
+<span class="text-secondary font-semibold underline underline-offset-2">https://reel.st/e/mod-8942</span>
+
+Help? Reply HELP or call your account manager at 1800-REEL-VIP</div>
+<div class="flex items-center justify-end gap-1 text-label-sm font-label-sm text-on-surface-variant pt-1">
+<span>Delivered</span>
+<span class="material-symbols-outlined text-[14px] text-secondary">done_all</span>
+</div>
+</div>
+<!-- One-Tap Deep-link Helper Action Card -->
+<div class="w-full bg-surface-container-high/60 rounded-xl p-space-sm flex items-center justify-between">
+<div class="flex items-center gap-2 min-w-0">
+<div class="w-8 h-8 rounded-lg bg-primary-container text-on-primary flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[16px]">link</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="text-label-sm font-label-sm text-on-surface-variant">Embedded Smart Link</span>
+<span class="text-label-md font-label-md text-primary font-bold truncate">reel.st/e/mod-8942</span>
+</div>
+</div>
+<div class="flex items-center gap-1.5 flex-shrink-0">
+<button class="px-2.5 py-1.5 rounded-lg bg-surface-container-lowest text-on-surface text-label-sm font-label-sm flex items-center gap-1 hover:bg-surface-container shadow-sm" id="copy-btn" onclick="copyLink()">
+<span class="material-symbols-outlined text-[14px]">content_copy</span>
+<span>Copy</span>
+</button>
+<button class="px-3 py-1.5 rounded-lg bg-on-tertiary-container text-white text-label-sm font-label-sm flex items-center gap-1 shadow-sm hover:bg-tertiary-container">
+<span>Open</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Quick Reply Chips -->
+<div class="flex items-center gap-2 overflow-x-auto py-1">
+<button class="px-3 py-1.5 rounded-full bg-surface-container-lowest text-primary text-label-sm font-label-sm shadow-sm whitespace-nowrap hover:bg-surface-container">
+            HELP
+          </button>
+<button class="px-3 py-1.5 rounded-full bg-surface-container-lowest text-primary text-label-sm font-label-sm shadow-sm whitespace-nowrap hover:bg-surface-container">
+            Call RM Now
+          </button>
+<button class="px-3 py-1.5 rounded-full bg-surface-container-lowest text-primary text-label-sm font-label-sm shadow-sm whitespace-nowrap hover:bg-surface-container">
+            Listing #MOD-8942 Status
+          </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Channel Performance & SLA Health Card -->
+<div class="px-margin pt-space-md">
+<div class="w-full bg-surface-container-low rounded-2xl p-space-md flex flex-col gap-space-sm shadow-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+<span class="text-title-md font-title-md text-on-surface font-bold">Dispatch Pipeline Health</span>
+</div>
+<span class="text-label-sm font-label-sm text-secondary font-semibold">99.8% Open Rate</span>
+</div>
+<div class="grid grid-cols-3 gap-2 py-1">
+<div class="bg-surface-container-lowest p-2.5 rounded-xl flex flex-col items-center justify-center text-center shadow-xs">
+<span class="text-label-sm font-label-sm text-on-surface-variant">Gateways</span>
+<span class="text-label-md font-label-md text-primary font-bold">APNs • DLT</span>
+</div>
+<div class="bg-surface-container-lowest p-2.5 rounded-xl flex flex-col items-center justify-center text-center shadow-xs">
+<span class="text-label-sm font-label-sm text-on-surface-variant">E2E Latency</span>
+<span class="text-label-md font-label-md text-emerald-600 font-bold">1.2s avg</span>
+</div>
+<div class="bg-surface-container-lowest p-2.5 rounded-xl flex flex-col items-center justify-center text-center shadow-xs">
+<span class="text-label-sm font-label-sm text-on-surface-variant">SLA Timer</span>
+<span class="text-label-md font-label-md text-on-tertiary-container font-bold">47h 58m</span>
+</div>
+</div>
+<!-- Action Simulation Tools -->
+<div class="pt-1 flex flex-col gap-2">
+<div class="text-label-sm font-label-sm text-on-surface-variant uppercase font-semibold tracking-wider">
+          Publisher QA Sandbox Tools
+        </div>
+<div class="flex flex-wrap gap-2">
+<button class="flex-1 min-w-[140px] h-9 rounded-xl bg-primary text-on-primary text-label-sm font-label-sm flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-transform" onclick="triggerFeedbackToast('Push notification re-dispatched to device token: APN_892b1')">
+<span class="material-symbols-outlined text-[16px]">send</span>
+<span>Simulate Push</span>
+</button>
+<button class="flex-1 min-w-[140px] h-9 rounded-xl bg-surface-container-highest text-primary text-label-sm font-label-sm flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-transform" onclick="triggerFeedbackToast('SMS payload routed via Airtel DLT Gateway')">
+<span class="material-symbols-outlined text-[16px]">sms</span>
+<span>Send Test SMS</span>
+</button>
+</div>
+<div class="flex items-center justify-between px-1 text-label-sm font-label-sm text-on-surface-variant">
+<span>Target: +91 98201 XXXXX</span>
+<a class="text-secondary font-semibold hover:underline flex items-center gap-0.5" href="#" onclick="triggerFeedbackToast('Webhook trace log #WH-78931 downloaded'); return false;">
+<span>View Webhook Log</span>
+<span class="material-symbols-outlined text-[12px]">open_in_new</span>
+</a>
+</div>
+</div>
+</div>
+</div>
+<!-- Dynamic Interaction Feedback Toast -->
+<div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-full bg-inverse-surface text-inverse-on-surface shadow-2xl text-label-md font-label-md flex items-center gap-2 transition-all opacity-0 pointer-events-none translate-y-4" id="toast">
+<span class="material-symbols-outlined text-[18px] text-secondary-fixed-dim">check_circle</span>
+<span id="toast-text">Payload Dispatched</span>
+</div>
+</div>
+<script>
+  function switchChannel(channel) {
+    const viewPush = document.getElementById('view-push');
+    const viewSms = document.getElementById('view-sms');
+    const btnPush = document.getElementById('btn-push');
+    const btnSms = document.getElementById('btn-sms');
+
+    if (channel === 'push') {
+      viewPush.classList.remove('hidden');
+      viewSms.classList.add('hidden');
+      btnPush.className = 'flex-1 py-2 px-3 rounded-lg text-label-md font-label-md transition-all flex items-center justify-center gap-1.5 bg-surface-container-lowest text-primary shadow-sm';
+      btnSms.className = 'flex-1 py-2 px-3 rounded-lg text-label-md font-label-md transition-all flex items-center justify-center gap-1.5 text-on-surface-variant hover:text-on-surface';
+    } else {
+      viewPush.classList.add('hidden');
+      viewSms.classList.remove('hidden');
+      btnSms.className = 'flex-1 py-2 px-3 rounded-lg text-label-md font-label-md transition-all flex items-center justify-center gap-1.5 bg-surface-container-lowest text-primary shadow-sm';
+      btnPush.className = 'flex-1 py-2 px-3 rounded-lg text-label-md font-label-md transition-all flex items-center justify-center gap-1.5 text-on-surface-variant hover:text-on-surface';
+    }
+  }
+
+  function triggerFeedbackToast(msg) {
+    const toast = document.getElementById('toast');
+    const toastText = document.getElementById('toast-text');
+    toastText.innerText = msg;
+    toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-4');
+    toast.classList.add('opacity-100', 'translate-y-0');
+    setTimeout(() => {
+      toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-4');
+      toast.classList.remove('opacity-100', 'translate-y-0');
+    }, 2800);
+  }
+
+  function copyLink() {
+    navigator.clipboard?.writeText('https://reel.st/e/mod-8942');
+    const btn = document.getElementById('copy-btn');
+    btn.innerHTML = '<span class="material-symbols-outlined text-[14px] text-emerald-600">done</span><span>Copied</span>';
+    triggerFeedbackToast('Link copied: reel.st/e/mod-8942');
+    setTimeout(() => {
+      btn.innerHTML = '<span class="material-symbols-outlined text-[14px]">content_copy</span><span>Copy</span>';
+    }, 2000);
+  }
+</script></main></body></html>

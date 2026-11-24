@@ -13,6 +13,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   Building2,
+  CalendarPlus,
   Check,
   ChevronDown,
   ChevronUp,
@@ -21,6 +22,7 @@ import {
   Eye,
   Home,
   Loader2,
+  LockKeyhole,
   LogOut,
   MapPin,
   Menu,
@@ -30,15 +32,18 @@ import {
   Phone,
   Play,
   Plus,
+  ArrowLeft,
   Search,
   Send,
   Share2,
+  Sparkles,
   ShieldCheck,
   SlidersHorizontal,
   Trash2,
   Upload,
   UserRound,
   Video,
+  Zap,
   X,
 } from "lucide-react";
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
@@ -210,7 +215,7 @@ async function submissionError(error: unknown, fallback = "The property could no
   }
 }
 function LoginModal({ onClose }: { onClose: () => void }) {
-  const [busyAction, setBusyAction] = useState<"none" | "otp" | "facebook" | "verify">("none");
+  const [busyAction, setBusyAction] = useState<"none" | "send" | "verify">("none");
   const [consentAccepted, setConsentAccepted] = useState(false);
   const [error, setError] = useState("");
   const [mobile, setMobile] = useState("");
@@ -218,74 +223,34 @@ function LoginModal({ onClose }: { onClose: () => void }) {
   const [otpSent, setOtpSent] = useState(false);
   const busy = busyAction !== "none";
 
-  const phone = mobile.replace(/\D/g, "").length === 10
-    ? `+91${mobile.replace(/\D/g, "")}`
-    : mobile.trim();
+  const digits = mobile.replace(/\D/g, "").slice(-10);
+  const phone = `+91${digits}`;
 
   async function sendOtp(event?: FormEvent) {
     event?.preventDefault();
-    setBusyAction("otp");
+    setBusyAction("send");
     setError("");
     try {
       if (!isSupabaseConfigured) throw new Error("Authentication is not configured");
-      if (!/^\+[1-9][0-9]{7,14}$/.test(phone)) throw new Error("invalid_phone");
-
-      let { error: sendError } = await supabase.functions.invoke("request-phone-otp", {
-        body: { phone, purpose: "login" },
+      const { error: otpError } = await supabase.auth.signInWithOtp({
+        phone,
+        options: { channel: "sms", shouldCreateUser: false },
       });
-
-      if (sendError) {
-        let code = "";
-        try {
-          const body = await (sendError as { context?: Response }).context?.clone().json() as { error?: string };
-          code = body?.error || "";
-        } catch { /* Use the generic response when context parsing is unavailable. */ }
-
-        if (code === "account_not_found") {
-          const registration = await supabase.functions.invoke("request-phone-otp", {
-            body: { phone, purpose: "register" },
-          });
-          sendError = registration.error;
-        }
-      }
-
-      if (sendError) throw sendError;
+      if (otpError) throw otpError;
       setOtpSent(true);
     } catch (requestError) {
-      let code = requestError instanceof Error ? requestError.message : "";
-      try {
-        const body = await (requestError as { context?: Response }).context?.clone().json() as { error?: string };
-        code = body?.error || code;
-      } catch { /* Keep the generic fallback when no structured response is available. */ }
-      const messages: Record<string, string> = {
-        invalid_phone: "Enter a valid 10-digit mobile number.",
-        otp_rate_limited: "Too many OTP requests were sent. Please wait and try again.",
-        account_not_found: "This number is not registered yet. Try Facebook login or register through the OTP flow.",
-        account_exists: "This mobile number is already registered. Return to login and verify it.",
-        otp_send_failed: "SMS delivery was rejected by the phone provider. Please try again or use Facebook login.",
-        server_not_configured: "Mobile OTP is not configured yet. Please use Facebook login.",
-        origin_not_allowed: "Mobile OTP is not enabled for this website address.",
+      const code = (requestError as { code?: string })?.code;
+      console.warn("WhatsApp login OTP request failed", { code });
+      const sendErrors: Record<string, string> = {
+        user_not_found: "No account is registered with this number. Use a registered ReelEstate number.",
+        over_sms_send_rate_limit: "Too many codes were requested. Wait a few minutes and try again.",
+        sms_send_failed: "WhatsApp OTP delivery is not configured on this project yet. The Supabase Send SMS hook and provider credentials must be enabled.",
       };
-      setError(messages[code] || "The OTP could not be sent. Please check the number and try again.");
-    } finally {
+      setError(sendErrors[code || ""] || "Could not request a WhatsApp code from Supabase. The Send SMS hook may not be deployed or enabled yet.");
       setBusyAction("none");
+      return;
     }
-  }
-
-  async function loginWithFacebook() {
-    setBusyAction("facebook");
-    setError("");
-    try {
-      if (!isSupabaseConfigured) throw new Error("Authentication is not configured");
-      const { error: oauthError } = await supabase.auth.signInWithOAuth({
-        provider: "facebook",
-        options: { redirectTo: `${window.location.origin}/auth/facebook`, scopes: "email" },
-      });
-      if (oauthError) throw oauthError;
-    } catch {
-      setError("Facebook sign-in could not start. Please try again shortly.");
-      setBusyAction("none");
-    }
+    setBusyAction("none");
   }
 
   async function verifyOtp(event: FormEvent) {
@@ -293,82 +258,53 @@ function LoginModal({ onClose }: { onClose: () => void }) {
     setBusyAction("verify");
     setError("");
     try {
-      const { error: verifyError } = await supabase.auth.verifyOtp({
-        phone,
-        token: otp,
-        type: "sms",
-      });
+      const { error: verifyError } = await supabase.auth.verifyOtp({ phone, token: otp, type: "sms" });
       if (verifyError) throw verifyError;
       onClose();
-    } catch {
-      setError("The OTP is incorrect or expired. Check the code and try again.");
-    } finally {
+    } catch (verifyError) {
+      console.warn("WhatsApp login OTP verification failed", { code: (verifyError as { code?: string })?.code });
+      setError("That code is incorrect or expired. Check it and try again.");
       setBusyAction("none");
     }
   }
 
   return (
-    <div className="modal-backdrop" role="presentation">
-      <div className={marketStyles.authModalSplit} role="dialog" aria-modal="true" aria-labelledby="auth-title">
-        <aside className={marketStyles.authPromo}>
-          <div className={marketStyles.authPromoBrand}><span><Building2 /></span><b>ReelEstate</b></div>
-          <h2>Discover &amp;<br />Showcase<br />Properties<br /><em>with Reels.</em></h2>
-          <ul>
-            <li><span><Video /></span>Real Property Videos</li>
-            <li><span><UserRound /></span>Direct Owner &amp; Broker Connect</li>
-            <li><span><Building2 /></span>List &amp; Grow Your Reach</li>
-          </ul>
-          <div className={marketStyles.authPromoImage}><Play fill="currentColor" /></div>
-        </aside>
-        <div className={marketStyles.authModalContent}>
-          <button className={`icon-btn close ${marketStyles.authClose}`} onClick={onClose} aria-label="Close"><X /></button>
-          <span className="eyebrow">Welcome to ReelEstate</span>
-          <h2 id="auth-title">Sign in to continue</h2>
-          <p className={marketStyles.authIntro}>Discover properties, post your listings and manage your account.</p>
-        {!otpSent ? (
-          <form onSubmit={sendOtp}>
-            <div className={marketStyles.mobileOptionHeading}><span><Phone /></span><div><strong>Continue with mobile number</strong><small>We&apos;ll send a 6-digit OTP to your number.</small></div></div>
-            <p>Enter your mobile number. We&apos;ll send a 6-digit OTP.</p>
-            <label className={marketStyles.mobileInputLabel}>Mobile number
-              <span className={marketStyles.mobileInputRow}><span className={marketStyles.countryCode}>+91 <ChevronDown /></span><input
-                type="tel"
-                inputMode="tel"
-                autoComplete="tel"
-                value={mobile}
-                onChange={(event) => setMobile(event.target.value.replace(/\D/g, "").slice(0, 10))}
-                placeholder="Enter 10-digit mobile number"
-                minLength={10}
-                maxLength={10}
-                required
-              /></span>
-            </label>
-            <button type="submit" className="primary full" disabled={busy || !isSupabaseConfigured || !consentAccepted || mobile.replace(/\D/g, "").length !== 10}>
-              {busyAction === "otp" ? <Loader2 className="spin" /> : <Phone size={18} />}{busyAction === "otp" ? "Sending OTP…" : "Send OTP"}
-            </button>
-            <div className={marketStyles.authDivider}><span /> <b>OR</b> <span /></div>
-            <button type="button" className={marketStyles.facebookAuthButton} disabled={busy || !isSupabaseConfigured || !consentAccepted} onClick={() => void loginWithFacebook()}>
-              {busyAction === "facebook" ? <Loader2 className="spin" /> : <span className={marketStyles.facebookMark}>f</span>}<span>{busyAction === "facebook" ? "Connecting…" : "Continue with Facebook"}</span>
-            </button>
-            <div className={marketStyles.loginConsentBottom}>
-              <input id="mobile-legal-consent" type="checkbox" checked={consentAccepted} onChange={(event) => setConsentAccepted(event.target.checked)} />
-              <label htmlFor="mobile-legal-consent">By continuing, you agree to our <Link href="/terms-conditions"><strong>Terms of Service</strong></Link> and <Link href="/privacy"><strong>Privacy Policy</strong></Link>.</label>
-            </div>
-          </form>
-        ) : (
-          <form onSubmit={verifyOtp}>
-            <p>Enter the 6-digit code sent to <strong>{phone}</strong>.</p>
-            <label>
-              OTP
-              <input className="otp" type="text" inputMode="numeric" autoComplete="one-time-code" value={otp} onChange={(event) => setOtp(event.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="••••••" required minLength={6} maxLength={6} />
-            </label>
-            <button type="submit" className="primary full" disabled={busy || otp.length !== 6}>{busy ? <Loader2 className="spin" /> : <Check size={18} />}{busy ? "Verifying…" : "Verify & sign in"}</button>
-            <div className={marketStyles.authOtpActions}><button type="button" className="back-link" disabled={busy} onClick={() => { setOtp(""); setOtpSent(false); setError(""); }}>Back to login</button><button type="button" className="back-link" disabled={busy} onClick={() => void sendOtp()}>Resend OTP</button></div>
-          </form>
-        )}
-          {!isSupabaseConfigured && <p role="alert">Sign-in is temporarily unavailable.</p>}
-          {error && <div className="form-error" role="alert"><CircleAlert size={16} />{error}</div>}
-        </div>
-      </div>
+    <div className="login-screen-backdrop" role="presentation">
+      <section className="login-screen" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+        <header className="login-header">
+          <button type="button" onClick={onClose} aria-label="Back to ReelEstate"><ArrowLeft /></button>
+          <button type="button" className="login-brand" onClick={onClose}><span><Play fill="currentColor" /></span><b>ReelEstate</b></button>
+          <button type="button" className="login-account-icon" aria-label="Account"><UserRound /></button>
+        </header>
+        <main className="login-content">
+          <div className="login-intro">
+            <span className="login-kicker"><Sparkles /> Video-First Real Estate</span>
+            <h1 id="auth-title">{otpSent ? "Verify your number" : "Welcome to ReelEstate"}</h1>
+            <p>{otpSent ? `Enter the 6-digit code sent to ${phone}.` : "Discover verified homes through immersive video tours or showcase your own listings for free."}</p>
+            <span className="login-live"><i /> 4.8k Live Video Tours Today</span>
+          </div>
+          <div className="login-card">
+            {!otpSent ? <form onSubmit={sendOtp}>
+              <div className="login-field-heading"><label htmlFor="login-mobile">Mobile Number</label><span>One Login for Buyers &amp; Creators</span></div>
+              <div className="login-phone-row"><span className="login-country"><span aria-hidden="true">🇮🇳</span> +91 <ChevronDown /></span><input id="login-mobile" type="tel" inputMode="numeric" autoComplete="tel-national" value={mobile} onChange={(event) => setMobile(event.target.value.replace(/\D/g, "").slice(0, 10))} placeholder="98765 43210" minLength={10} maxLength={10} required /></div>
+              <p className="login-delivery"><ShieldCheck /> We&apos;ll send a 6-digit verification code via SMS &amp; WhatsApp.</p>
+              <button type="submit" className="login-otp-button" disabled={busy || !isSupabaseConfigured || !consentAccepted || digits.length !== 10}>{busyAction === "send" ? <Loader2 className="spin" /> : null}{busyAction === "send" ? "Sending code…" : "Continue with OTP"}<span aria-hidden="true">→</span></button>
+              <div className="login-consent"><input id="login-consent" type="checkbox" checked={consentAccepted} onChange={(event) => setConsentAccepted(event.target.checked)} /><label htmlFor="login-consent">By clicking here you accept <Link href="/terms-conditions">Terms &amp; Conditions</Link></label></div>
+            </form> : <form onSubmit={verifyOtp}>
+              <label className="login-otp-label">6-digit verification code<input className="otp" type="text" inputMode="numeric" autoComplete="one-time-code" value={otp} onChange={(event) => setOtp(event.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="• • • • • •" minLength={6} maxLength={6} required /></label>
+              <button type="submit" className="login-otp-button" disabled={busy || otp.length !== 6}>{busy ? <Loader2 className="spin" /> : <Check />}{busy ? "Verifying…" : "Verify & Continue"}<span aria-hidden="true">→</span></button>
+              <div className="login-otp-links"><button type="button" disabled={busy} onClick={() => { setOtp(""); setOtpSent(false); setError(""); }}>Change mobile number</button><button type="button" disabled={busy} onClick={() => void sendOtp()}>Resend code</button></div>
+            </form>}
+            {!isSupabaseConfigured && <p role="alert">Sign-in is temporarily unavailable.</p>}
+            {error && <div className="form-error" role="alert"><CircleAlert size={16} />{error}</div>}
+          </div>
+          {!otpSent && <>
+            <div className="login-benefits"><div><span><Zap /></span><b>Instant Access</b></div><div><span><LockKeyhole /></span><b>100% Secure</b></div><div><span><CalendarPlus /></span><b>Free Publishing</b></div></div>
+            <button type="button" className="login-trending" onClick={onClose}><span className="login-trend-thumb"><Play fill="currentColor" /></span><span><b>TRENDING REEL</b><strong>Sky Villa duplex in Worli · 4 BHK</strong><small>Verified Broker Direct · 1.2k views</small></span><ChevronDown /></button>
+          </>}
+          <button type="button" className="login-guest" onClick={onClose}>Looking to browse first? <b>Explore as Guest <span aria-hidden="true">↗</span></b></button>
+        </main>
+      </section>
     </div>
   );
 }
@@ -1155,7 +1091,7 @@ function Marketplace({ onRequireLogin }: { onRequireLogin: () => void }) {
   );
 }
 
-function PublisherJourney({ onDirect, onInstagram }: { onDirect: () => void; onInstagram: () => void }) {
+function PublisherJourney({ onDirect, onInstagram, contactPhone }: { onDirect: () => void; onInstagram: () => void; contactPhone: string }) {
   const [step, setStep] = useState<"account" | "profile" | "source">(() => {
     try { return localStorage.getItem("reelestate-publisher-profile") ? "source" : "account"; } catch { return "account"; }
   });
@@ -1173,10 +1109,21 @@ function PublisherJourney({ onDirect, onInstagram }: { onDirect: () => void; onI
 
   if (step === "account") return (
     <section className="workspace publisher-journey">
-      <div className="publisher-panel">
+      <form className="publisher-panel" onSubmit={saveProfile}>
+        <div className="publisher-progress"><span>Publisher setup</span><b>Step 1 of 2</b><i><span /></i></div>
         <span className="eyebrow">Welcome to ReelEstate</span>
         <h1>How would you like to use ReelEstate?</h1>
         <p>Select your account type. You can add other roles later.</p>
+        <div className="publisher-quick-profile">
+          <h2><UserRound /> Quick profile details</h2>
+          <div className="form-grid two">
+            <label>Full legal name<input value={fullName} onChange={(event) => setFullName(event.target.value)} placeholder="Enter your full name" minLength={2} maxLength={120} required /></label>
+            <label>WhatsApp number<input value={contactPhone} readOnly aria-label="Verified WhatsApp number" /></label>
+            <label>Email <small>(optional)</small><input type="email" value={email} onChange={(event) => setEmail(event.target.value)} maxLength={254} /></label>
+            <label>City / operating hub<select value={city} onChange={(event) => setCity(event.target.value)}>{(Object.keys(CITY_LOCALITIES) as SupportedCity[]).map((value) => <option key={value}>{value}</option>)}</select></label>
+          </div>
+        </div>
+        <h2 className="publisher-role-heading">Choose your publishing role</h2>
         <div className="publisher-role-grid">
           {[{ id: "owner", title: "Property Owner", copy: "List your own properties." }, { id: "broker", title: "Broker / Agent", copy: "Manage property listings." }, { id: "builder", title: "Builder / Developer", copy: "Promote projects and properties." }].map((role) => (
             <button type="button" key={role.id} className={accountType === role.id ? "selected" : ""} onClick={() => setAccountType(role.id)}>
@@ -1184,24 +1131,7 @@ function PublisherJourney({ onDirect, onInstagram }: { onDirect: () => void; onI
             </button>
           ))}
         </div>
-        <button className="primary full" onClick={() => setStep("profile")}>Continue</button>
-      </div>
-    </section>
-  );
-
-  if (step === "profile") return (
-    <section className="workspace publisher-journey">
-      <form className="publisher-panel" onSubmit={saveProfile}>
-        <span className="eyebrow">Complete your profile</span>
-        <h1>A quick introduction</h1>
-        <p>Keep this short. We will use it for your publisher identity.</p>
-        <div className="form-grid two">
-          <label>Full name<input value={fullName} onChange={(event) => setFullName(event.target.value)} minLength={2} maxLength={120} required /></label>
-          <label>Email <small>(optional)</small><input type="email" value={email} onChange={(event) => setEmail(event.target.value)} maxLength={254} /></label>
-          <label>Account type<select value={accountType} onChange={(event) => setAccountType(event.target.value)}><option value="owner">Property owner</option><option value="broker">Broker / Agent</option><option value="builder">Builder / Developer</option></select></label>
-          <label>City<select value={city} onChange={(event) => setCity(event.target.value)}>{(Object.keys(CITY_LOCALITIES) as SupportedCity[]).map((value) => <option key={value}>{value}</option>)}</select></label>
-        </div>
-        <div className="publisher-actions"><button type="button" className="secondary" onClick={() => setStep("account")}>Back</button><button className="primary">Continue</button></div>
+        <button className="primary full">Complete profile &amp; start publishing <ArrowLeft className="publisher-forward-icon" /></button>
       </form>
     </section>
   );
@@ -1209,9 +1139,10 @@ function PublisherJourney({ onDirect, onInstagram }: { onDirect: () => void; onI
   return (
     <section className="workspace publisher-journey">
       <div className="publisher-panel">
+        <div className="publisher-progress"><span>Post property flow</span><b>Step 2 of 2</b><i><span /></i></div>
         <span className="eyebrow">Let&apos;s showcase your property</span>
-        <h1>Choose how to add your property video</h1>
-        <p>Both options use the same property details, preview and approval process.</p>
+        <h1>How would you like to add your property reel?</h1>
+        <p>Choose a video source. Both options continue to the same property details and review process.</p>
         <div className="publisher-source-grid">
           <button type="button" className="publisher-source recommended" onClick={onInstagram}>
             <span className="publisher-source-icon"><InstagramIcon /></span>
@@ -2718,6 +2649,9 @@ function Dashboard({
   };
 
   const filteredItems = items.filter((item) => listingFilter === "all" || item.status === listingFilter);
+  const dashboardViews = items.reduce((total, item) => total + (item.view_count || 0), 0);
+  const dashboardLive = items.filter((item) => item.status === "published").length;
+  const dashboardLeads = enquiries.length;
   const statusFilters = [
     { id: "all" as const, label: "All", count: items.length },
     { id: "draft" as const, label: "Drafts", count: items.filter((item) => item.status === "draft").length },
@@ -2872,6 +2806,21 @@ function Dashboard({
           </button>
         </div>
       </header>
+      <section className="dashboard-weekly-impact" aria-label="Weekly impact">
+        <div className="dashboard-impact-heading"><div><span className="eyebrow">Your performance</span><h2>Portfolio Impact</h2></div><span>Updated from your listings</span></div>
+        <div className="dashboard-impact-grid">
+          <article><small>Total views</small><b>{dashboardViews.toLocaleString("en-IN")}</b><span><Eye /> Across your listings</span></article>
+          <article><small>Buyer enquiries</small><b>{dashboardLeads.toLocaleString("en-IN")}</b><span><MessageCircle /> Direct leads</span></article>
+          <article><small>Active listings</small><b>{String(dashboardLive).padStart(2,"0")}</b><span><Building2 /> Published</span></article>
+        </div>
+      </section>
+      {items.filter((item) => item.status === "rejected").length > 0 && <section className="publisher-alerts" aria-label="Listings requiring updates">
+        <div className="publisher-alert-heading"><span><CircleAlert /> Action required</span><small>{items.filter((item) => item.status === "rejected").length} listing{items.filter((item) => item.status === "rejected").length === 1 ? "" : "s"} need an update</small></div>
+        {items.filter((item) => item.status === "rejected").map((item) => <article key={item.id}>
+          <div><b>{item.title}</b><p>{item.rejection_note || "Review the listing and update the details before resubmitting."}</p></div>
+          <button type="button" className="primary" onClick={() => onEdit(item)}>Edit &amp; resubmit</button>
+        </article>)}
+      </section>}
       {instagramOpen && (
         <InstagramReelPicker
           onClose={() => setInstagramOpen(false)}
@@ -3036,6 +2985,15 @@ function Admin({
   const [selected, setSelected] = useState<Listing | null>(items[0] || null);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState("");
+  const [selectedReasons, setSelectedReasons] = useState<string[]>([]);
+  const [queueSearch, setQueueSearch] = useState("");
+  const filteredQueue = items.filter((item) =>
+    `${item.title} ${item.locality} ${item.city} ${item.property_type}`
+      .toLowerCase()
+      .includes(queueSearch.trim().toLowerCase()),
+  );
+  const rejectionNote = [...selectedReasons, note.trim()].filter(Boolean).join("\n\n");
+  const rejectionReasons = ["Poor video quality", "Third-party watermark", "Unverified RERA details", "Unrealistic pricing", "Incomplete property details"];
   async function decide(decision: "approve" | "reject") {
     if (!selected) return;
     setBusy(true);
@@ -3043,13 +3001,14 @@ function Admin({
       body: {
         listing_id: selected.id,
         decision,
-        note: note || null,
+        note: decision === "reject" ? rejectionNote : null,
       },
     });
     setBusy(false);
     if (!error) {
       setSelected(null);
       setNote("");
+      setSelectedReasons([]);
       onDecision();
     }
   }
@@ -3102,10 +3061,10 @@ function Admin({
           <div className="queue-tools">
             <label>
               <Search />
-              <input placeholder="Search listings" />
+              <input aria-label="Search review queue" placeholder="Search listings" value={queueSearch} onChange={(event) => setQueueSearch(event.target.value)} />
             </label>
           </div>
-          {items.map((x) => (
+          {filteredQueue.map((x) => (
             <button
               key={x.id}
               className={selected?.id === x.id ? "selected" : ""}
@@ -3124,6 +3083,7 @@ function Admin({
               <ChevronUp />
             </button>
           ))}
+          {filteredQueue.length === 0 && <p className="queue-empty">No listings match this search.</p>}
         </div>
         <div className="review-pane">
           {!selected ? (
@@ -3159,21 +3119,25 @@ function Admin({
                   {money(selected.price_minor, selected.currency)}
                 </div>
                 <p>{selected.description}</p>
+                <div className="review-issue-picker">
+                  <b>Common review issues</b>
+                  <div>{rejectionReasons.map((reason) => <button type="button" key={reason} className={selectedReasons.includes(reason) ? "selected" : ""} aria-pressed={selectedReasons.includes(reason)} onClick={() => setSelectedReasons((current) => current.includes(reason) ? current.filter((item) => item !== reason) : [...current, reason])}>{selectedReasons.includes(reason) ? "✓ " : "+ "}{reason}</button>)}</div>
+                </div>
                 <label>
-                  Rejection note (required when rejecting)
+                  Notes for publisher
                   <textarea
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
-                    placeholder="Tell the poster exactly what needs to be corrected."
+                    placeholder="Add clear instructions so the publisher can correct and resubmit the listing."
                   />
                 </label>
                 <div className="decision-row">
                   <button
                     className="reject"
-                    disabled={busy || !note.trim()}
+                    disabled={busy || rejectionNote.trim().length < 10}
                     onClick={() => decide("reject")}
                   >
-                    <X /> Reject
+                    <X /> Reject &amp; request changes
                   </button>
                   <button
                     className="approve"
@@ -3195,6 +3159,7 @@ function Admin({
 
 export default function Portal() {
   const [view, setView] = useState<View>("feed");
+  const [activeFeedTab, setActiveFeedTab] = useState<"home" | "explore">("home");
   const [session, setSession] = useState<Session | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -3391,7 +3356,7 @@ export default function Portal() {
   return (
     <main className="app-shell">
       <header className="topbar">
-        <button className="logo" onClick={() => setView("feed")}>
+        <button className="logo" onClick={() => { setActiveFeedTab("home"); setView("feed"); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
           <span>
             <Building2 />
           </span>
@@ -3531,6 +3496,7 @@ export default function Portal() {
           <PublisherJourney
             onDirect={() => setPublisherSource("direct")}
             onInstagram={() => setPublisherSource("instagram")}
+            contactPhone={profile?.phone_e164 || session.user.phone || ""}
           />
         )
       ) : view === "dashboard" && session ? (
@@ -3557,16 +3523,11 @@ export default function Portal() {
         <Marketplace onRequireLogin={() => setLogin(true)} />
       )}
       <nav className="bottom-nav">
-        {nav.map((n) => (
-          <button
-            key={n.id}
-            className={view === n.id ? "active" : ""}
-            onClick={() => (n.id === "feed" ? setView("feed") : guarded(n.id))}
-          >
-            <n.icon />
-            <span>{n.label}</span>
-          </button>
-        ))}
+        <button className={view === "feed" && activeFeedTab === "home" ? "active" : ""} onClick={() => { setActiveFeedTab("home"); setView("feed"); window.scrollTo({ top: 0, behavior: "smooth" }); }}><Home /><span>Home</span></button>
+        <button className={view === "feed" && activeFeedTab === "explore" ? "active" : ""} onClick={() => { setActiveFeedTab("explore"); setView("feed"); window.setTimeout(() => document.getElementById("property-reels")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0); }}><Search /><span>Explore</span></button>
+        <button className="mobile-post-action" onClick={() => guarded("post")}><Plus /><span>Post Free</span></button>
+        <button className={view === "dashboard" ? "active" : ""} onClick={() => guarded("dashboard")}><Building2 /><span>My Listings</span></button>
+        <button onClick={() => { if (!session) setLogin(true); else if (profile) setShowProfile(true); else guarded("dashboard"); }}><UserRound /><span>Account</span></button>
       </nav>
       {login && <LoginModal onClose={() => setLogin(false)} />}
       {showProfile && profile && (

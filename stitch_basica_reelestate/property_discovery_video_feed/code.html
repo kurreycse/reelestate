@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "outline": "#7a7583", "surface-tint": "#674cb1", "surface-container-high": "#ebe5ff", "secondary-container": "#b188ff", "primary-fixed-dim": "#cfbdff", "tertiary-fixed": "#ffdbd1", "primary-fixed": "#e8ddff", "background": "#fdf8ff", "on-secondary-container": "#44118d", "on-surface": "#1c1831", "tertiary-container": "#5a1400", "surface-container-low": "#f7f1ff", "secondary-fixed-dim": "#d3bbff", "on-secondary": "#ffffff", "surface-variant": "#e6deff", "on-tertiary-container": "#ff6131", "inverse-surface": "#312d48", "surface-dim": "#ddd6f8", "surface-container-highest": "#e6deff", "on-error": "#ffffff", "on-secondary-fixed-variant": "#572ba0", "secondary": "#6f46b9", "on-error-container": "#93000a", "on-tertiary-fixed": "#3b0900", "secondary-fixed": "#ebdcff", "inverse-on-surface": "#f4eeff", "tertiary-fixed-dim": "#ffb5a0", "primary": "#1e0056", "surface-bright": "#fdf8ff", "on-primary-fixed-variant": "#4f3397", "tertiary": "#360800", "on-primary-fixed": "#21005d", "on-tertiary-fixed-variant": "#862200", "inverse-primary": "#cfbdff", "on-primary": "#ffffff", "on-surface-variant": "#494552", "on-tertiary": "#ffffff", "outline-variant": "#cac4d3", "primary-container": "#35127d", "surface": "#fdf8ff", "error": "#ba1a1a", "error-container": "#ffdad6", "surface-container": "#f1ebff", "on-primary-container": "#9f84ed", "on-secondary-fixed": "#260059", "surface-container-lowest": "#ffffff", "on-background": "#1c1831" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-xs": "0.25rem", "gutter-md": "1.5rem", "margin": "1rem", "margin-lg": "3rem", "space-sm": "0.5rem", "gutter-lg": "2rem", "margin-md": "2rem", "space-xl": "2.5rem", "gutter": "1rem", "space-md": "1rem", "space-lg": "1.5rem" }, "fontFamily": { "display-hero": ["Plus Jakarta Sans"], "title-md": ["Plus Jakarta Sans"], "label-md": ["Plus Jakarta Sans"], "body-lg": ["Plus Jakarta Sans"], "label-lg": ["Plus Jakarta Sans"], "price-numeric": ["Plus Jakarta Sans"], "headline-lg": ["Plus Jakarta Sans"], "label-sm": ["Plus Jakarta Sans"], "headline-lg-mobile": ["Plus Jakarta Sans"], "headline-sm": ["Plus Jakarta Sans"], "display-hero-mobile": ["Plus Jakarta Sans"], "body-sm": ["Plus Jakarta Sans"], "headline-md": ["Plus Jakarta Sans"], "body-md": ["Plus Jakarta Sans"] }, "fontSize": { "display-hero": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.03em", "fontWeight": "800"}], "title-md": ["16px", {"lineHeight": "24px", "fontWeight": "600"}], "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600"}], "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}], "label-lg": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600"}], "price-numeric": ["22px", {"lineHeight": "28px", "letterSpacing": "-0.02em", "fontWeight": "800"}], "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}], "label-sm": ["11px", {"lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "700"}], "headline-lg-mobile": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700"}], "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}], "display-hero-mobile": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "800"}], "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}], "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}], "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-background font-body-md text-on-surface flex flex-col min-h-screen"><header class="fixed top-0 inset-x-0 z-50 bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(53,18,125,0.05)] pt-safe"><div class="h-16 px-margin flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-xs"><img alt="ReelEstate Brand Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/ALJJyrDfM_98G993X-ciHwaBXC0wAaSVGB1vtsi2E0YP89-TE-JO_NjCZufTNccFsj8hNOqjpgcZ-_w7tZ3Nc551PUKrKe6CF8FHVe5x9rnlMHn-V558fKi-ZSZi8FJCEt8IkvmCGtPNO7ErFOlpOIuVgodvDmuuypM1oTxxmSWAB-Ms7DiFlO-CluUzswz7DOdgn1ma4KSJeYDEtao2eBzoCNwNNNuXngePS9qBfR4OkPBc"/><button class="flex items-center gap-1 py-1 px-2.5 rounded-full bg-surface-container text-primary-container font-label-md text-label-md min-h-[44px]" type="button"><span class="material-symbols-outlined text-[18px]">location_on</span><span>Mumbai</span><span class="material-symbols-outlined text-[16px]">expand_more</span></button></div><div class="flex items-center gap-space-xs"><button aria-label="Notifications" class="w-11 h-11 flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors rounded-full" type="button"><span class="material-symbols-outlined">notifications</span></button><button aria-label="Account profile" class="w-11 h-11 flex items-center justify-center rounded-full" type="button"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDRa3aqK7M5XjTyh1bQnL-w9pxhsHYNmqzK-OKcsvZXKrqvU8nlusuZT_TU4Qi0YHWSN6-J57yznt7UQA4tCfUeSE_8E8k6WL3_H4pKGHNvfqSP8R592ZqGSxhajvtVY3SrM_3mEFcxgvs0Y0QjC4F9c303b-YflnDJS35--Jt3QsLh8A8RGBpkVo5mrbile5DrGA3740d4UQrcIm7lTZ-rSqWiSRbM0PZytFjakPIB"/></button></div></div></header><main class="flex flex-col relative w-full pt-16 pb-24 bg-background min-h-screen"><div class="flex flex-col w-full px-margin pb-24">
+<!-- Search & Filter Area (Sticky micro-island) -->
+<div class="sticky top-0 z-30 pt-space-xs pb-space-sm bg-background/95 backdrop-blur-md">
+<!-- Search Bar with Location Quick Access -->
+<div class="flex items-center gap-space-xs bg-surface-container-lowest rounded-full p-1.5 shadow-[0_4px_20px_-2px_rgba(53,18,125,0.06)]">
+<div class="flex items-center justify-center w-9 h-9 rounded-full bg-surface-container text-primary-container">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</div>
+<input class="flex-1 bg-transparent border-0 outline-none font-body-md text-on-surface placeholder:text-on-surface-variant/60 min-w-0" placeholder="Search Mumbai, Whitefield, 3BHK..." type="text" value="Worli &amp; Bengaluru"/>
+<button aria-label="Filter Options" class="w-9 h-9 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed hover:bg-primary-fixed-dim transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+</button>
+<button aria-label="Toggle Map View" class="w-9 h-9 rounded-full bg-surface-container text-on-surface-variant flex items-center justify-center hover:text-primary transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">map</span>
+</button>
+</div>
+<!-- Filter Pills Scroller -->
+<div class="flex items-center gap-space-xs overflow-x-auto pt-space-sm pb-1 no-scrollbar -mx-margin px-margin">
+<!-- Buy/Rent Active Switcher Pill -->
+<div class="inline-flex items-center p-0.5 rounded-full bg-surface-container shrink-0">
+<button class="px-3 py-1 rounded-full bg-primary-container text-on-primary font-label-md text-label-md shadow-sm" type="button">
+          Buy
+        </button>
+<button class="px-3 py-1 rounded-full text-on-surface-variant font-label-md text-label-md" type="button">
+          Rent
+        </button>
+</div>
+<!-- Price Chip -->
+<button class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-surface-container-high text-primary font-label-md text-label-md shrink-0" type="button">
+<span>Under ₹4 Cr</span>
+<span class="material-symbols-outlined text-[14px]">expand_more</span>
+</button>
+<!-- BHK Chip -->
+<button class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-surface-container-lowest text-on-surface font-label-md text-label-md shadow-sm shrink-0" type="button">
+<span>3 BHK</span>
+<span class="material-symbols-outlined text-[14px]">expand_more</span>
+</button>
+<!-- Verified Only Active Chip -->
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container text-primary-container font-label-md text-label-md shrink-0" type="button">
+<span class="w-1.5 h-1.5 rounded-full bg-on-tertiary-container animate-pulse"></span>
+<span>Verified Video</span>
+</button>
+<!-- Furnished Chip -->
+<button class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-surface-container-lowest text-on-surface-variant font-label-md text-label-md shadow-sm shrink-0" type="button">
+<span>Furnished</span>
+</button>
+</div>
+</div>
+<!-- Discovery Feed View Mode Switcher & Stats Header -->
+<div class="flex items-center justify-between mt-space-sm mb-space-md">
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface font-extrabold tracking-tight">Discover Reels</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Real walk-throughs &amp; verified owners</span>
+</div>
+<!-- Feed / Grid Toggle Segment -->
+<div class="flex items-center p-1 rounded-full bg-surface-container-low shadow-sm">
+<button aria-label="Feed View" class="flex items-center gap-1 px-2.5 py-1 rounded-full text-on-surface-variant font-label-md text-label-md transition-all" id="btnFeedMode" onclick="switchLayout('feed')" type="button">
+<span class="material-symbols-outlined text-[16px]">view_day</span>
+<span>Feed</span>
+</button>
+<button aria-label="Grid View" class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary-container text-on-primary font-label-md text-label-md shadow-sm transition-all" id="btnGridMode" onclick="switchLayout('grid')" type="button">
+<span class="material-symbols-outlined text-[16px]">grid_view</span>
+<span>Grid</span>
+</button>
+</div>
+</div>
+<!-- Video Property 2-Column Responsive Dynamic Grid -->
+<div class="grid grid-cols-2 gap-space-sm" id="propertyGrid">
+<!-- Card 1: Worli Skyline Serenity -->
+<div class="flex flex-col bg-surface-container-lowest rounded-2xl overflow-hidden shadow-[0_4px_20px_-2px_rgba(53,18,125,0.04)] group">
+<!-- 9:16 Media Viewport Frame -->
+<div class="relative w-full aspect-[9/14] bg-surface-dim overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Cinematic luxury high-rise condominium interior in Mumbai Worli with golden hour sun spilling across marble floors, high ceilings, expansive ocean panorama glass balcony, warm lavender-tinted architectural accents, crisp 4k architectural videography still" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBH_z_7XUwnAeLK3RcrD-XPJ18FSjPkT3j-bwhnAJv98mj8WA1UMDBGDL-g_tGw2P-Vr_SUJonFFIQSZKA4pgVJXV0KT3lA0h4Z8k4ZcWIH-FjBVt1djLxddyUGDAoqHhd54BNGB-GI4joipcLKd52cy1TCi-ln9zNNsFKet1hVcIgDNkQVYYHpOiSi58e9T1dMBbviATEa9M1KSbigDHLMzfkzQYXx4z8MGMTEUZZI"/>
+<!-- In-Video Frosted Badges Top Bar -->
+<div class="absolute top-2 inset-x-2 flex items-center justify-between pointer-events-none">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/70 backdrop-blur-md text-on-primary font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+            Direct Owner
+          </span>
+<button aria-label="Save Property" class="pointer-events-auto w-7 h-7 rounded-full bg-on-surface/40 backdrop-blur-md text-on-secondary flex items-center justify-center hover:bg-on-tertiary-container transition-colors" onclick="toggleHeart(this)" type="button">
+<span class="material-symbols-outlined text-[16px]">favorite</span>
+</button>
+</div>
+<!-- Center Play Glyphs Overlay -->
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+<div class="w-10 h-10 rounded-full bg-on-surface/50 backdrop-blur-md flex items-center justify-center text-on-secondary shadow-lg">
+<span class="material-symbols-outlined text-[24px] text-on-tertiary-container" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+<!-- Gradient Scrim at Bottom of Reel -->
+<div class="absolute inset-x-0 bottom-0 pt-10 pb-2 px-2.5 bg-gradient-to-t from-on-surface/90 via-on-surface/50 to-transparent flex items-end justify-between">
+<div class="flex items-center gap-1 text-on-secondary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">visibility</span>
+<span>4.8k views</span>
+</div>
+<span class="px-1.5 py-0.5 rounded bg-on-surface/60 backdrop-blur-sm text-on-secondary font-label-sm text-label-sm">
+            0:42
+          </span>
+</div>
+</div>
+<!-- Card Details Bottom Stack -->
+<div class="p-2.5 flex flex-col gap-1.5">
+<div class="flex items-baseline justify-between">
+<span class="font-price-numeric text-price-numeric text-primary-container tracking-tight">₹3.45 Cr</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">1,650 sq.ft</span>
+</div>
+<div class="flex flex-col">
+<h3 class="font-title-md text-title-md text-on-surface truncate">Skyline Serenity</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[14px] text-on-tertiary-container">location_on</span>
+            Worli, South Mumbai
+          </p>
+</div>
+<!-- Quick Spec Tags -->
+<div class="flex flex-wrap gap-1 mt-0.5">
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-secondary font-label-md text-label-md">3 BHK</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-primary font-label-md text-label-md">Sea Facing</span>
+</div>
+<!-- Micro Actions -->
+<div class="flex items-center justify-between pt-1 mt-0.5">
+<span class="font-label-sm text-label-sm text-outline">24h ago</span>
+<div class="flex items-center gap-1">
+<button aria-label="WhatsApp Share" class="w-7 h-7 rounded-full bg-surface-container-high flex items-center justify-center text-primary-container hover:bg-surface-variant transition-colors" type="button">
+<span class="material-symbols-outlined text-[15px]">share</span>
+</button>
+<button class="px-2.5 py-1 rounded-full bg-primary text-on-primary font-label-sm text-label-sm flex items-center gap-0.5 shadow-sm" type="button">
+<span>Watch</span>
+<span class="material-symbols-outlined text-[12px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 2: Palm Meadows Villa -->
+<div class="flex flex-col bg-surface-container-lowest rounded-2xl overflow-hidden shadow-[0_4px_20px_-2px_rgba(53,18,125,0.04)] group">
+<!-- 9:16 Media Viewport Frame -->
+<div class="relative w-full aspect-[9/14] bg-surface-dim overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Lush contemporary modern tropical villa with private plunge pool and manicured garden in Whitefield Bengaluru, expansive floor-to-ceiling glass doors, warm wooden deck patio, natural ambient evening lighting, professional architectural real estate drone video still" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDyU4wbmihhbz4j7pLyllXTRTC9kUo8Rn79i9w3C7HkwaiqxagX3WwsyKRIjE_uc3rLYmy0pewl5O38ncB4-T1kOXaETZIEVT7OWBBFF_znEQNyL4VwzZbSJu5rcUBQQBxdV7ElnuaXcfIUJShGcpUxoxDLEi521zNVzko5R05RwhpbEI5ub3YRR77n06vQ4_ZjuanJqmsNQlyrOSQyReiIjl11Gk7rWGCU_hP6CFj_"/>
+<!-- Badges Top Bar -->
+<div class="absolute top-2 inset-x-2 flex items-center justify-between pointer-events-none">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-on-tertiary-container text-on-tertiary font-label-sm text-label-sm shadow-sm">
+<span class="material-symbols-outlined text-[12px]">videocam</span>
+            Exclusive Tour
+          </span>
+<button aria-label="Save Property" class="pointer-events-auto w-7 h-7 rounded-full bg-on-surface/40 backdrop-blur-md text-on-secondary flex items-center justify-center hover:bg-on-tertiary-container transition-colors" onclick="toggleHeart(this)" type="button">
+<span class="material-symbols-outlined text-[16px]">favorite</span>
+</button>
+</div>
+<!-- Center Play Glyphs Overlay -->
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+<div class="w-10 h-10 rounded-full bg-on-surface/50 backdrop-blur-md flex items-center justify-center text-on-secondary shadow-lg">
+<span class="material-symbols-outlined text-[24px] text-on-tertiary-container" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+<!-- Gradient Scrim at Bottom of Reel -->
+<div class="absolute inset-x-0 bottom-0 pt-10 pb-2 px-2.5 bg-gradient-to-t from-on-surface/90 via-on-surface/50 to-transparent flex items-end justify-between">
+<div class="flex items-center gap-1 text-on-secondary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">verified</span>
+<span>Verified Spec</span>
+</div>
+<span class="px-1.5 py-0.5 rounded bg-on-surface/60 backdrop-blur-sm text-on-secondary font-label-sm text-label-sm">
+            1:15
+          </span>
+</div>
+</div>
+<!-- Card Details Bottom Stack -->
+<div class="p-2.5 flex flex-col gap-1.5">
+<div class="flex items-baseline justify-between">
+<span class="font-price-numeric text-price-numeric text-primary-container tracking-tight">₹2.10 Cr</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">2,400 sq.ft</span>
+</div>
+<div class="flex flex-col">
+<h3 class="font-title-md text-title-md text-on-surface truncate">Palm Meadows</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[14px] text-on-tertiary-container">location_on</span>
+            Whitefield, Bengaluru
+          </p>
+</div>
+<!-- Quick Spec Tags -->
+<div class="flex flex-wrap gap-1 mt-0.5">
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-secondary font-label-md text-label-md">4 BHK</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-primary font-label-md text-label-md">Gated Villa</span>
+</div>
+<!-- Micro Actions -->
+<div class="flex items-center justify-between pt-1 mt-0.5">
+<span class="font-label-sm text-label-sm text-outline">2d ago</span>
+<div class="flex items-center gap-1">
+<button aria-label="WhatsApp Share" class="w-7 h-7 rounded-full bg-surface-container-high flex items-center justify-center text-primary-container hover:bg-surface-variant transition-colors" type="button">
+<span class="material-symbols-outlined text-[15px]">share</span>
+</button>
+<button class="px-2.5 py-1 rounded-full bg-primary text-on-primary font-label-sm text-label-sm flex items-center gap-0.5 shadow-sm" type="button">
+<span>Watch</span>
+<span class="material-symbols-outlined text-[12px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 3: Modern Studio Suite -->
+<div class="flex flex-col bg-surface-container-lowest rounded-2xl overflow-hidden shadow-[0_4px_20px_-2px_rgba(53,18,125,0.04)] group">
+<!-- 9:16 Media Viewport Frame -->
+<div class="relative w-full aspect-[9/14] bg-surface-dim overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Chic Japanese-Scandinavian inspired modern rental studio apartment in HSR Layout Bangalore with modular kitchenette, smart ambient strip lighting, acoustic felt panels, and warm minimalist aesthetic, crisp 4k vertical interior tour photo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBzD7kanKPzqmScRzSYp2W7rGw9vHxyyd0uTzppc6OsQRpc1zhSdRi-Q4VG_MOocGqWSMfPt4--wP4B-AQPVI5qE_9jb0HTvdFMExCy9Qi8TfxBMUzsqXr2r78CnesipWjdPzmxsAUm8FAG1zEuqL89itsKGIAOpIA7A3Qc0Gt1-NqrLHhllaNRsBphjqKzt-DrUHJDpQF2QN8yOIXGLIZAVtBSEW-JRgjrcPpnjQUb"/>
+<!-- Badges Top Bar -->
+<div class="absolute top-2 inset-x-2 flex items-center justify-between pointer-events-none">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-tint text-on-primary font-label-sm text-label-sm shadow-sm">
+<span class="material-symbols-outlined text-[12px]">bolt</span>
+            Instant Tour
+          </span>
+<button aria-label="Save Property" class="pointer-events-auto w-7 h-7 rounded-full bg-on-surface/40 backdrop-blur-md text-on-secondary flex items-center justify-center hover:bg-on-tertiary-container transition-colors" onclick="toggleHeart(this)" type="button">
+<span class="material-symbols-outlined text-[16px]">favorite</span>
+</button>
+</div>
+<!-- Center Play Glyphs Overlay -->
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+<div class="w-10 h-10 rounded-full bg-on-surface/50 backdrop-blur-md flex items-center justify-center text-on-secondary shadow-lg">
+<span class="material-symbols-outlined text-[24px] text-on-tertiary-container" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+<!-- Gradient Scrim at Bottom of Reel -->
+<div class="absolute inset-x-0 bottom-0 pt-10 pb-2 px-2.5 bg-gradient-to-t from-on-surface/90 via-on-surface/50 to-transparent flex items-end justify-between">
+<div class="flex items-center gap-1 text-on-secondary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">key</span>
+<span>Ready to Move</span>
+</div>
+<span class="px-1.5 py-0.5 rounded bg-on-surface/60 backdrop-blur-sm text-on-secondary font-label-sm text-label-sm">
+            0:28
+          </span>
+</div>
+</div>
+<!-- Card Details Bottom Stack -->
+<div class="p-2.5 flex flex-col gap-1.5">
+<div class="flex items-baseline justify-between">
+<span class="font-price-numeric text-price-numeric text-primary-container tracking-tight">₹38,000<span class="font-label-sm text-label-sm text-on-surface-variant font-normal">/mo</span></span>
+<span class="font-label-sm text-label-sm text-on-tertiary-container font-semibold">Rent</span>
+</div>
+<div class="flex flex-col">
+<h3 class="font-title-md text-title-md text-on-surface truncate">Modern Studio Suite</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[14px] text-on-tertiary-container">location_on</span>
+            HSR Layout, Bengaluru
+          </p>
+</div>
+<!-- Quick Spec Tags -->
+<div class="flex flex-wrap gap-1 mt-0.5">
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-secondary font-label-md text-label-md">1 RK / Studio</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-primary font-label-md text-label-md">Furnished</span>
+</div>
+<!-- Micro Actions -->
+<div class="flex items-center justify-between pt-1 mt-0.5">
+<span class="font-label-sm text-label-sm text-outline">5h ago</span>
+<div class="flex items-center gap-1">
+<button aria-label="WhatsApp Share" class="w-7 h-7 rounded-full bg-surface-container-high flex items-center justify-center text-primary-container hover:bg-surface-variant transition-colors" type="button">
+<span class="material-symbols-outlined text-[15px]">share</span>
+</button>
+<button class="px-2.5 py-1 rounded-full bg-primary text-on-primary font-label-sm text-label-sm flex items-center gap-0.5 shadow-sm" type="button">
+<span>Watch</span>
+<span class="material-symbols-outlined text-[12px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 4: Sea-facing Penthouse -->
+<div class="flex flex-col bg-surface-container-lowest rounded-2xl overflow-hidden shadow-[0_4px_20px_-2px_rgba(53,18,125,0.04)] group">
+<!-- 9:16 Media Viewport Frame -->
+<div class="relative w-full aspect-[9/14] bg-surface-dim overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Spectacular ultra-luxury double-height penthouse salon overlooking the Arabian Sea at Marine Lines Mumbai, polished Italian marble, crystal chandelier, wrap-around sunset view terrace, cinematic architectural lighting, 8k vertical video still frame" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBe-yXIZfOuCkM58R8nkKPWUVA0jIATitWSAfz4bTW6pOFbqDNVhT1InFICYZWk5DX0QSlHeO1nGHFqCYAYeVAMcrGuFN-_TzBl6b3mXOAdLHW9Jwj9si3i5TUDaofxL00G-nzVYroKYIjxvADyY2lJqm-FdM3jzO0Qw6fLTJvO7UGswIxMhwFCVhszRD1y0DbDJRfeZJGO23ZgOhIggFZXpJEOEeFCl0IUmUGeXE6O"/>
+<!-- Badges Top Bar -->
+<div class="absolute top-2 inset-x-2 flex items-center justify-between pointer-events-none">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-tertiary-container text-tertiary-fixed font-label-sm text-label-sm shadow-sm">
+<span class="material-symbols-outlined text-[12px]" style="font-variation-settings: 'FILL' 1;">star</span>
+            Luxury Collection
+          </span>
+<button aria-label="Save Property" class="pointer-events-auto w-7 h-7 rounded-full bg-on-surface/40 backdrop-blur-md text-on-secondary flex items-center justify-center hover:bg-on-tertiary-container transition-colors" onclick="toggleHeart(this)" type="button">
+<span class="material-symbols-outlined text-[16px]">favorite</span>
+</button>
+</div>
+<!-- Center Play Glyphs Overlay -->
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+<div class="w-10 h-10 rounded-full bg-on-surface/50 backdrop-blur-md flex items-center justify-center text-on-secondary shadow-lg">
+<span class="material-symbols-outlined text-[24px] text-on-tertiary-container" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+<!-- Gradient Scrim at Bottom of Reel -->
+<div class="absolute inset-x-0 bottom-0 pt-10 pb-2 px-2.5 bg-gradient-to-t from-on-surface/90 via-on-surface/50 to-transparent flex items-end justify-between">
+<div class="flex items-center gap-1 text-on-secondary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">workspace_premium</span>
+<span>RERA Certified</span>
+</div>
+<span class="px-1.5 py-0.5 rounded bg-on-surface/60 backdrop-blur-sm text-on-secondary font-label-sm text-label-sm">
+            2:04
+          </span>
+</div>
+</div>
+<!-- Card Details Bottom Stack -->
+<div class="p-2.5 flex flex-col gap-1.5">
+<div class="flex items-baseline justify-between">
+<span class="font-price-numeric text-price-numeric text-primary-container tracking-tight">₹7.20 Cr</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">3,800 sq.ft</span>
+</div>
+<div class="flex flex-col">
+<h3 class="font-title-md text-title-md text-on-surface truncate">Sea Penthouse</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[14px] text-on-tertiary-container">location_on</span>
+            Marine Lines, Mumbai
+          </p>
+</div>
+<!-- Quick Spec Tags -->
+<div class="flex flex-wrap gap-1 mt-0.5">
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-secondary font-label-md text-label-md">5 BHK Duplex</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-primary font-label-md text-label-md">Private Pool</span>
+</div>
+<!-- Micro Actions -->
+<div class="flex items-center justify-between pt-1 mt-0.5">
+<span class="font-label-sm text-label-sm text-outline">1d ago</span>
+<div class="flex items-center gap-1">
+<button aria-label="WhatsApp Share" class="w-7 h-7 rounded-full bg-surface-container-high flex items-center justify-center text-primary-container hover:bg-surface-variant transition-colors" type="button">
+<span class="material-symbols-outlined text-[15px]">share</span>
+</button>
+<button class="px-2.5 py-1 rounded-full bg-primary text-on-primary font-label-sm text-label-sm flex items-center gap-0.5 shadow-sm" type="button">
+<span>Watch</span>
+<span class="material-symbols-outlined text-[12px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Neighborhood Pulse Micro-Card (Moments of Delight / Local Context) -->
+<div class="mt-space-md p-space-md rounded-2xl bg-surface-container-low flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">explore_nearby</span>
+</div>
+<div class="flex flex-col">
+<span class="font-title-md text-title-md text-on-surface">Worli Coastal Road Zone</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Avg. ROI +14.2% YoY • 28 Live Walkthroughs</span>
+</div>
+</div>
+<button class="w-8 h-8 rounded-full bg-surface-container-lowest flex items-center justify-center text-primary shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+<!-- Floating Results & Sort Capsule (Fixed above persistent app bottom nav) -->
+<div class="fixed bottom-20 inset-x-0 flex justify-center z-40 pointer-events-none px-margin">
+<div class="pointer-events-auto flex items-center gap-2 p-1.5 pl-4 rounded-full bg-inverse-surface/95 text-inverse-on-surface backdrop-blur-xl shadow-[0_8px_32px_rgba(30,0,86,0.3)]">
+<span class="inline-flex items-center gap-1.5 font-label-md text-label-md">
+<span class="w-2 h-2 rounded-full bg-on-tertiary-container animate-ping"></span>
+<span>142 Properties Found</span>
+</span>
+<div class="w-[1px] h-4 bg-outline-variant/30"></div>
+<button class="flex items-center gap-1 px-3 py-1.5 rounded-full bg-on-secondary/10 hover:bg-on-secondary/20 font-label-md text-label-md transition-colors" id="btnSort" onclick="toggleSortMenu()" type="button">
+<span class="material-symbols-outlined text-[16px]">swap_vert</span>
+<span id="sortLabel">Newest</span>
+</button>
+</div>
+</div>
+<!-- Interactive JavaScript logic for micro-interactions -->
+<script>
+    function toggleHeart(button) {
+      const icon = button.querySelector('.material-symbols-outlined');
+      const isFilled = icon.style.fontVariationSettings?.includes("'FILL' 1");
+      if (isFilled) {
+        icon.style.fontVariationSettings = "'FILL' 0";
+        button.classList.remove('text-on-tertiary-container');
+        button.classList.add('text-on-secondary');
+      } else {
+        icon.style.fontVariationSettings = "'FILL' 1";
+        button.classList.remove('text-on-secondary');
+        button.classList.add('text-on-tertiary-container');
+      }
+    }
+
+    function switchLayout(mode) {
+      const grid = document.getElementById('propertyGrid');
+      const btnFeed = document.getElementById('btnFeedMode');
+      const btnGrid = document.getElementById('btnGridMode');
+
+      if (mode === 'feed') {
+        grid.className = 'grid grid-cols-1 gap-space-md';
+        btnFeed.className = 'flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary-container text-on-primary font-label-md text-label-md shadow-sm transition-all';
+        btnGrid.className = 'flex items-center gap-1 px-2.5 py-1 rounded-full text-on-surface-variant font-label-md text-label-md transition-all';
+      } else {
+        grid.className = 'grid grid-cols-2 gap-space-sm';
+        btnGrid.className = 'flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary-container text-on-primary font-label-md text-label-md shadow-sm transition-all';
+        btnFeed.className = 'flex items-center gap-1 px-2.5 py-1 rounded-full text-on-surface-variant font-label-md text-label-md transition-all';
+      }
+    }
+
+    const sortOptions = ['Newest', 'Price: Low-High', 'Verified Only', 'High ROI'];
+    let currentSortIdx = 0;
+    function toggleSortMenu() {
+      currentSortIdx = (currentSortIdx + 1) % sortOptions.length;
+      document.getElementById('sortLabel').textContent = sortOptions[currentSortIdx];
+    }
+  </script>
+</div></main><nav class="fixed bottom-0 inset-x-0 z-50 pb-safe bg-surface/90 backdrop-blur-xl shadow-[0_-4px_24px_rgba(17,13,38,0.06)]" data-active-classes="text-primary font-bold"><div class="flex items-center justify-around h-16 px-space-xs"><a class="flex flex-col items-center justify-center min-w-[56px] min-h-[44px] text-on-surface-variant transition-colors" data-path="home" href="#"><span class="material-symbols-outlined text-[24px]">home</span><span class="font-label-sm text-label-sm mt-0.5">Home</span></a><a aria-current="page" class="flex flex-col items-center justify-center min-w-[56px] min-h-[44px] transition-colors text-primary font-bold" data-path="explore" href="#"><span class="material-symbols-outlined text-[24px]">explore</span><span class="font-label-sm text-label-sm mt-0.5">Explore</span></a><a class="flex items-center justify-center min-w-[56px] min-h-[44px] -mt-5" data-path="post-free" href="#"><span class="flex items-center justify-center gap-1 px-3.5 py-2 rounded-full bg-on-tertiary-container text-on-tertiary shadow-lg shadow-on-tertiary-container/30 font-label-md text-label-md"><span class="material-symbols-outlined text-[20px]">add</span><span>Post Free</span></span></a><a class="flex flex-col items-center justify-center min-w-[56px] min-h-[44px] text-on-surface-variant transition-colors" data-path="my-listings" href="#"><span class="material-symbols-outlined text-[24px]">apartment</span><span class="font-label-sm text-label-sm mt-0.5">My Listings</span></a><a class="flex flex-col items-center justify-center min-w-[56px] min-h-[44px] text-on-surface-variant transition-colors" data-path="account" href="#"><span class="material-symbols-outlined text-[24px]">person</span><span class="font-label-sm text-label-sm mt-0.5">Account</span></a></div></nav></body></html>

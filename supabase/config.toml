@@ -1,0 +1,29 @@
+[functions.send-whatsapp-otp]
+verify_jwt = false
+
+# Production Auth values were restored with a targeted Management API patch.
+# Do not run `supabase config push` until provider credentials are synced here.
+[auth]
+site_url = "https://reelestate.co.in/**"
+additional_redirect_urls = ["https://reelestate.co.in/**"]
+
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true
+
+[auth.email]
+enable_signup = false
+double_confirm_changes = false
+enable_confirmations = true
+max_frequency = "1m0s"
+otp_length = 8
+
+[auth.sms]
+enable_signup = true
+max_frequency = "5s"
+otp_length = 6
+
+[auth.hook.send_sms]
+enabled = true
+uri = "https://uyizcipakauppzhmeqxu.supabase.co/functions/v1/send-whatsapp-otp"
+secrets = "env(SEND_SMS_HOOK_SECRET)"

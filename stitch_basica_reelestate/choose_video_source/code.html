@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "surface": "#fdf8ff", "on-secondary-container": "#44118d", "on-primary": "#ffffff", "surface-container-high": "#ebe5ff", "error-container": "#ffdad6", "outline": "#7a7583", "on-surface": "#1c1831", "on-secondary-fixed": "#260059", "secondary-container": "#b188ff", "on-primary-fixed": "#21005d", "inverse-on-surface": "#f4eeff", "surface-container-lowest": "#ffffff", "secondary-fixed": "#ebdcff", "tertiary-container": "#5a1400", "on-primary-fixed-variant": "#4f3397", "primary": "#1e0056", "background": "#fdf8ff", "primary-fixed-dim": "#cfbdff", "on-tertiary-fixed": "#3b0900", "surface-container": "#f1ebff", "on-primary-container": "#9f84ed", "surface-bright": "#fdf8ff", "inverse-surface": "#312d48", "on-secondary": "#ffffff", "error": "#ba1a1a", "secondary": "#6f46b9", "tertiary": "#360800", "on-secondary-fixed-variant": "#572ba0", "tertiary-fixed": "#ffdbd1", "surface-container-highest": "#e6deff", "primary-fixed": "#e8ddff", "primary-container": "#35127d", "on-error-container": "#93000a", "on-surface-variant": "#494552", "outline-variant": "#cac4d3", "surface-tint": "#674cb1", "on-tertiary": "#ffffff", "inverse-primary": "#cfbdff", "surface-variant": "#e6deff", "surface-container-low": "#f7f1ff", "on-background": "#1c1831", "secondary-fixed-dim": "#d3bbff", "on-error": "#ffffff", "tertiary-fixed-dim": "#ffb5a0", "on-tertiary-container": "#ff6131", "on-tertiary-fixed-variant": "#862200", "surface-dim": "#ddd6f8" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "margin": "1rem", "gutter-md": "1.5rem", "margin-lg": "3rem", "gutter-lg": "2rem", "space-lg": "1.5rem", "space-sm": "0.5rem", "gutter": "1rem", "margin-md": "2rem", "space-xs": "0.25rem", "space-xl": "2.5rem", "space-md": "1rem" }, fontFamily: { "label-sm": ["Plus Jakarta Sans"], "body-lg": ["Plus Jakarta Sans"], "headline-lg": ["Plus Jakarta Sans"], "label-md": ["Plus Jakarta Sans"], "body-md": ["Plus Jakarta Sans"], "price-numeric": ["Plus Jakarta Sans"], "label-lg": ["Plus Jakarta Sans"], "headline-lg-mobile": ["Plus Jakarta Sans"], "display-hero": ["Plus Jakarta Sans"], "body-sm": ["Plus Jakarta Sans"], "title-md": ["Plus Jakarta Sans"], "headline-md": ["Plus Jakarta Sans"], "display-hero-mobile": ["Plus Jakarta Sans"], "headline-sm": ["Plus Jakarta Sans"] }, fontSize: { "label-sm": ["11px", { lineHeight: "14px", letterSpacing: "0.04em", fontWeight: "700" }], "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }], "headline-lg": ["32px", { lineHeight: "40px", letterSpacing: "-0.02em", fontWeight: "700" }], "label-md": ["12px", { lineHeight: "16px", letterSpacing: "0.02em", fontWeight: "600" }], "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }], "price-numeric": ["22px", { lineHeight: "28px", letterSpacing: "-0.02em", fontWeight: "800" }], "label-lg": ["14px", { lineHeight: "20px", letterSpacing: "0.01em", fontWeight: "600" }], "headline-lg-mobile": ["24px", { lineHeight: "32px", letterSpacing: "-0.01em", fontWeight: "700" }], "display-hero": ["48px", { lineHeight: "56px", letterSpacing: "-0.03em", fontWeight: "800" }], "body-sm": ["12px", { lineHeight: "16px", fontWeight: "400" }], "title-md": ["16px", { lineHeight: "24px", fontWeight: "600" }], "headline-md": ["24px", { lineHeight: "32px", letterSpacing: "-0.01em", fontWeight: "600" }], "display-hero-mobile": ["32px", { lineHeight: "40px", letterSpacing: "-0.02em", fontWeight: "800" }], "headline-sm": ["20px", { lineHeight: "28px", fontWeight: "600" }] } } } };</script><style>@layer base { html, body { width: 100vw; margin: 0; padding: 0; } body { overscroll-behavior-y: none; } .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); } .pt-safe { padding-top: env(safe-area-inset-top, 0px); } main > :first-child { margin-top: 0 !important; } main > :last-child { margin-bottom: 0 !important; } } ::-webkit-scrollbar { display: none; }</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-on-surface antialiased flex flex-col min-h-screen selection:bg-secondary-fixed"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(53,18,125,0.06)]"><div class="h-16 px-gutter flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-xs"><button aria-label="Go back" class="min-w-[44px] min-h-[44px] -ml-2 rounded-full flex items-center justify-center text-on-surface hover:bg-surface-container-high transition-colors" onclick="window.history.back()" type="button"><span class="material-symbols-outlined text-[24px]">arrow_back</span></button><div class="flex flex-col"><h1 class="font-title-md text-title-md text-primary tracking-tight truncate max-w-[180px]">Choose Video Source</h1><span class="font-label-sm text-label-sm text-on-surface-variant">Post Property Flow</span></div></div><div class="flex items-center gap-space-xs"><div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container border border-surface-container-highest"><span class="w-2 h-2 rounded-full bg-on-tertiary-container animate-pulse"></span><span class="font-label-sm text-label-sm text-primary font-bold">Step 2/3</span></div><button aria-label="Cancel or close" class="min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors" onclick="window.history.back()" type="button"><span class="material-symbols-outlined text-[20px]">close</span></button></div></div></header><main class="flex-1 flex flex-col relative w-full pt-16 bg-surface"><div class="flex flex-col w-full pb-32">
+<!-- Top Progress & Context Banner -->
+<div class="px-gutter pt-space-md pb-space-sm">
+<div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-fixed text-on-secondary-fixed shadow-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Step 1 of 3 • Video Upload</span>
+</div>
+<h2 class="mt-space-sm font-headline-lg-mobile text-headline-lg-mobile text-primary tracking-tight">
+      How would you like to add your property reel?
+    </h2>
+<p class="mt-space-xs font-body-md text-body-md text-on-surface-variant">
+      Bring your listing to life with vertical 9:16 video tours that get <span class="font-title-md text-on-tertiary-container font-bold">5x more verified buyer inquiries</span>.
+    </p>
+</div>
+<!-- Source Options Stack -->
+<div class="px-gutter flex flex-col gap-space-md mt-space-sm">
+<!-- Option 1: Instagram Sync (Recommended) -->
+<div class="relative overflow-hidden rounded-xl bg-surface-container-lowest p-space-md shadow-md transition-all duration-200 cursor-pointer hover:shadow-lg" id="card-instagram" onclick="selectSource('instagram')">
+<!-- Glow & Accent Corner Indicator -->
+<div class="absolute -top-12 -right-12 w-28 h-28 rounded-full bg-secondary-fixed-dim/40 blur-xl pointer-events-none"></div>
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-3">
+<!-- Instagram Iconic Icon Badge -->
+<div class="w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-tr from-[#FF5722] via-[#B188FF] to-[#35127D] text-on-primary shadow-sm">
+<span class="material-symbols-outlined text-[26px]">video_library</span>
+</div>
+<div>
+<div class="flex items-center gap-1.5">
+<span class="font-title-md text-title-md text-primary font-bold">Import from Instagram</span>
+</div>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Direct sync from public creator profile</p>
+</div>
+</div>
+<!-- Recommended Pill -->
+<div class="px-2.5 py-1 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm flex items-center gap-1 shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[13px] text-on-tertiary-container" style="font-variation-settings: 'FILL' 1;">bolt</span>
+<span>Fastest</span>
+</div>
+</div>
+<p class="mt-space-sm font-body-sm text-body-sm text-on-surface-variant">
+        Fetch Reels directly from your @handle with captions, views, and high-res audio automatically imported.
+      </p>
+<!-- Checklist -->
+<div class="mt-space-sm flex flex-col gap-1.5 bg-surface-container-low rounded-lg p-space-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-secondary font-bold">check_circle</span>
+<span class="font-label-md text-label-md text-on-surface">1-Click sync from verified creator account</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-secondary font-bold">check_circle</span>
+<span class="font-label-md text-label-md text-on-surface">No local file export or re-upload needed</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-secondary font-bold">check_circle</span>
+<span class="font-label-md text-label-md text-on-surface">Instant retention of native voice &amp; ambient sound</span>
+</div>
+</div>
+<!-- Connected Account Preview Badge -->
+<div class="mt-space-sm flex items-center justify-between p-2.5 rounded-lg bg-surface-container-high/60">
+<div class="flex items-center gap-2 min-w-0">
+<div class="w-8 h-8 rounded-full overflow-hidden shrink-0 bg-surface-variant">
+<img class="w-full h-full object-cover" data-alt="Portrait photo of a professional male real estate advisor in navy blazer with city skyline backdrop, cinematic lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBKsoQFuyXQda-UUI6fi2h3c2juOFPk9-sRXvjxM8xPu4Xdv7T8OW5jRiGEZVn8Beb72JbUBEEzxBbSByHMfEbg6zA8v0Xltc7SPJ1GkFstseMHWQw1lKcRfgTQjSOC0k381aGSmdVStE_Mfr25oJ1Q8rWaxLNYQ50o0OiLz2GA046Val5izqxyP9ha0zhrzBTnSN4ygJhyoYHaObgXVOPP0YZrOfdpWEHTvn9uoF79"/>
+</div>
+<div class="min-w-0">
+<p class="font-label-md text-label-md text-primary font-bold truncate">@vikram_luxuryrealty</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">24 Eligible Reels Available</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-[18px] text-secondary shrink-0">verified</span>
+</div>
+<!-- Action Button inside card -->
+<button class="mt-space-sm w-full py-2.5 px-space-md rounded-lg bg-primary-container text-on-primary font-label-lg text-label-lg flex items-center justify-center gap-2 shadow-sm transition-transform active:scale-[0.99]" id="btn-ig-select" type="button">
+<span class="material-symbols-outlined text-[18px]">cached</span>
+<span>Select from @vikram_luxuryrealty</span>
+</button>
+</div>
+<!-- Option 2: Direct Video Upload -->
+<div class="relative overflow-hidden rounded-xl bg-surface-container-lowest p-space-md shadow-md transition-all duration-200 cursor-pointer hover:shadow-lg" id="card-upload" onclick="selectSource('upload')">
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-3">
+<div class="w-12 h-12 rounded-xl flex items-center justify-center bg-secondary-fixed text-primary shadow-sm">
+<span class="material-symbols-outlined text-[26px]">upload_file</span>
+</div>
+<div>
+<h3 class="font-title-md text-title-md text-primary font-bold">Upload from Device</h3>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Original 9:16 portrait video files</p>
+</div>
+</div>
+<div class="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm shrink-0">
+          4K Ready
+        </div>
+</div>
+<p class="mt-space-sm font-body-sm text-body-sm text-on-surface-variant">
+        Upload high-bitrate vertical camera footage or produced walkthroughs directly from your phone gallery or files.
+      </p>
+<!-- Dropzone Interactive Area -->
+<div class="mt-space-sm rounded-xl p-space-md bg-surface-container-low flex flex-col items-center justify-center text-center transition-colors hover:bg-surface-container">
+<div class="w-12 h-16 rounded-lg bg-surface-container-highest flex flex-col items-center justify-center text-primary shadow-inner">
+<span class="material-symbols-outlined text-[24px]">crop_portrait</span>
+<span class="font-label-sm text-label-sm font-bold">9:16</span>
+</div>
+<p class="mt-2 font-label-md text-label-md text-primary font-semibold">Tap to select property walkthrough</p>
+<span class="mt-0.5 font-label-sm text-label-sm text-on-surface-variant">Files will be auto-optimized for fast playback</span>
+<!-- Specs Badge -->
+<div class="mt-space-sm inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-highest text-on-surface font-label-sm text-label-sm">
+<span>MP4, MOV</span>
+<span>•</span>
+<span>Up to 250MB</span>
+<span>•</span>
+<span>15s to 90s</span>
+</div>
+</div>
+<button class="mt-space-sm w-full py-2.5 px-space-md rounded-lg bg-surface-container-highest text-primary font-label-lg text-label-lg flex items-center justify-center gap-2 transition-colors" id="btn-file-select" type="button">
+<span class="material-symbols-outlined text-[18px]">add_circle</span>
+<span>Choose Video File</span>
+</button>
+</div>
+<!-- Visual Reel Inspo Strip -->
+<div class="rounded-xl bg-surface-container p-space-md shadow-sm">
+<div class="flex items-center justify-between mb-space-xs">
+<span class="font-label-lg text-label-lg text-primary font-bold">Recent Top Performing Reels</span>
+<span class="font-label-sm text-label-sm text-secondary font-semibold">Avg 3.8k views</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-sm">See how cinematic lighting and crisp staging boost buyer engagement.</p>
+<div class="grid grid-cols-3 gap-space-xs">
+<div class="relative aspect-[9/14] rounded-lg overflow-hidden bg-surface-variant shadow-sm">
+<img class="w-full h-full object-cover" data-alt="Vertical mobile frame of sunlit minimalist living room with high ceiling, warm daylight, luxury sofa, and marble floor in luxury apartment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBaJj-uA68iLG4I_wrW7ih_Xzf747N6JpaAbJw0YmU2_lI6N_X1o6y8c9iAqt6QEIM8Y8q67Q6sE-E_tOOMKJ6jZ454UVYzZx5eFPECHVMfAqMbp01Nk7kKxuWhqNI6ThRlqifrJ14L8Rxz6jiAVd89yyCC80Gpsx675FfbTEuuk6J8pPoDfE8WcOAHt5flwbJQABmIaKFGIxKB9YkB0nfqZExe5qnHcXOrF4VUIxit"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/80 via-transparent to-transparent flex items-end p-1.5">
+<span class="font-label-sm text-label-sm text-on-primary font-bold truncate">3BHK Penthouse</span>
+</div>
+</div>
+<div class="relative aspect-[9/14] rounded-lg overflow-hidden bg-surface-variant shadow-sm">
+<img class="w-full h-full object-cover" data-alt="Vertical view of an infinity pool balcony with sunset panoramic horizon, luxury outdoor deck furniture and glass railings" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBYvMjccmVtxN2KbodfiuYLFCx-PqDVQ-8RifJ7EWYtGSJxnEHGizdFcvDXl2FSMmAZGU6NApnieSln-HaiwdPcVM9oXr08LIlHMtcwGcydiHXtJ8AnWyt0lJOiBmwFdMusUVT2WCnlPlV55UR0HzQzYLgi_EbTmatP-wLFlLIvPWqUqnr7EF0vt6bwO9e2-wtgkS3VSGfT-p78ZcmfLQFO39dCTXFaxvPZefJk0Zl9"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/80 via-transparent to-transparent flex items-end p-1.5">
+<span class="font-label-sm text-label-sm text-on-primary font-bold truncate">Sky Deck Villa</span>
+</div>
+</div>
+<div class="relative aspect-[9/14] rounded-lg overflow-hidden bg-surface-variant shadow-sm">
+<img class="w-full h-full object-cover" data-alt="Vertical interior walkthrough of modern designer kitchen with quartz island, recessed gold light fixtures, and Italian wood cabinetry" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCCHuSAHo5kxvhWyH3XvAyV_tumYn1JPRMFIKWHg6l2x8CM_lcwRRZp5rucdh4xd6zXupGx7X5UxlO-4tGccsfMuVJzt_gTJSG_kAPXoZjMXMXS5tRLoTSvydixR5EeJUgvZztoyIGbLlrjLXje22rpi1PrDxZwgtutbVzZEd_7cf0dMKY1yRztCHZEBmNUFOXSBrt5-lxbJ6bRwKw1dXFEphsxb_YVA701CxV_S3bl"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/80 via-transparent to-transparent flex items-end p-1.5">
+<span class="font-label-sm text-label-sm text-on-primary font-bold truncate">Chef's Suite</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Guidelines & Tips Card -->
+<div class="rounded-xl bg-surface-container-low p-space-md shadow-sm">
+<div class="flex items-center gap-2 text-primary font-title-md text-title-md font-bold mb-space-xs">
+<div class="w-7 h-7 rounded-full bg-secondary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">lightbulb</span>
+</div>
+<span>Tips for Maximum Buyer Inquiries</span>
+</div>
+<ul class="flex flex-col gap-2 mt-space-xs text-on-surface-variant">
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-[16px] text-on-tertiary-container mt-0.5">sunny</span>
+<span class="font-body-sm text-body-sm"><strong class="text-on-surface font-semibold">Natural Daylighting:</strong> Film mid-morning or golden hour with blinds wide open.</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-[16px] text-on-tertiary-container mt-0.5">directions_walk</span>
+<span class="font-body-sm text-body-sm"><strong class="text-on-surface font-semibold">Slow Paced Pathing:</strong> Walk steadily from entrance through main balcony to establish real room depth.</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-[16px] text-on-tertiary-container mt-0.5">mic</span>
+<span class="font-body-sm text-body-sm"><strong class="text-on-surface font-semibold">Audio Clarity:</strong> Friendly voiceover explaining carpet area or quiet ambient acoustic tracks perform best.</span>
+</li>
+</ul>
+</div>
+</div>
+<!-- Sticky Bottom Action Bar -->
+<div class="fixed bottom-0 inset-x-0 z-40 bg-surface-container-lowest/95 backdrop-blur-md px-gutter py-space-sm pb-safe shadow-[0_-4px_24px_rgba(53,18,125,0.08)]">
+<div class="flex items-center justify-between gap-space-sm max-w-md mx-auto">
+<button class="px-space-md py-3 rounded-lg text-on-surface-variant font-label-lg text-label-lg hover:bg-surface-container transition-colors shrink-0" type="button">
+        Save Draft
+      </button>
+<button class="flex-1 py-3.5 px-space-md rounded-lg bg-gradient-to-r from-[#FF5722] to-[#ff784e] text-on-primary font-label-lg text-label-lg font-bold flex items-center justify-center gap-1.5 shadow-md active:scale-[0.99] transition-all" id="cta-continue" type="button">
+<span>Continue to Details</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<script>
+    let selectedMode = 'instagram';
+
+    function selectSource(mode) {
+      selectedMode = mode;
+      const cardIg = document.getElementById('card-instagram');
+      const cardUp = document.getElementById('card-upload');
+      const btnIg = document.getElementById('btn-ig-select');
+      const btnUp = document.getElementById('btn-file-select');
+      const ctaBtn = document.getElementById('cta-continue');
+
+      if (mode === 'instagram') {
+        cardIg.classList.add('ring-2', 'ring-secondary');
+        cardUp.classList.remove('ring-2', 'ring-secondary');
+        btnIg.className = "mt-space-sm w-full py-2.5 px-space-md rounded-lg bg-primary-container text-on-primary font-label-lg text-label-lg flex items-center justify-center gap-2 shadow-sm";
+        btnUp.className = "mt-space-sm w-full py-2.5 px-space-md rounded-lg bg-surface-container-highest text-primary font-label-lg text-label-lg flex items-center justify-center gap-2 transition-colors";
+        ctaBtn.innerHTML = '<span>Continue with Instagram</span><span class="material-symbols-outlined text-[18px]">arrow_forward</span>';
+      } else {
+        cardUp.classList.add('ring-2', 'ring-secondary');
+        cardIg.classList.remove('ring-2', 'ring-secondary');
+        btnUp.className = "mt-space-sm w-full py-2.5 px-space-md rounded-lg bg-primary-container text-on-primary font-label-lg text-label-lg flex items-center justify-center gap-2 shadow-sm";
+        btnIg.className = "mt-space-sm w-full py-2.5 px-space-md rounded-lg bg-surface-container-highest text-primary font-label-lg text-label-lg flex items-center justify-center gap-2 transition-colors";
+        ctaBtn.innerHTML = '<span>Upload & Continue</span><span class="material-symbols-outlined text-[18px]">arrow_forward</span>';
+      }
+    }
+
+    // Default selection initialized
+    selectSource('instagram');
+  </script>
+</div></main></body></html>

@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, DM_Sans } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
-const sans = DM_Sans({ variable: "--font-sans", subsets: ["latin"] });
-const serif = Cormorant_Garamond({ variable: "--font-serif", subsets: ["latin"], weight:["500","600","700"] });
+const sans = Plus_Jakarta_Sans({ variable: "--font-sans", subsets: ["latin"] });
 
 export function generateMetadata(): Metadata {
   const origin = process.env.NEXT_PUBLIC_SITE_URL ?? "https://reelestate.co.in";
@@ -21,5 +20,5 @@ export function generateMetadata(): Metadata {
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body className={`${sans.variable} ${serif.variable}`}>{children}</body></html>;
+  return <html lang="en"><body className={sans.variable}>{children}</body></html>;
 }

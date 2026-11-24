@@ -770,131 +770,73 @@
 
 .authModalContent form { margin: 0; }
 
-.mobileOptionHeading {
-  display: grid;
-  grid-template-columns: 42px 1fr;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 14px;
-}
-
-.mobileOptionHeading > span {
-  width: 42px;
-  height: 42px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: #f1ecf8;
-  color: var(--ink);
-}
-
-.mobileOptionHeading svg { width: 20px; }
-
-.mobileOptionHeading div {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.mobileOptionHeading strong { font-size: 14px; }
-.mobileOptionHeading small { color: var(--muted); }
-
-.mobileInputLabel { margin-bottom: 16px; }
+.mobileInputLabel { margin-bottom: 18px; }
 
 .mobileInputRow {
-  height: 52px;
+  height: 58px;
   display: grid;
-  grid-template-columns: 74px 1fr;
-  border: 1.5px solid #cfc4dd;
-  border-radius: 12px;
+  grid-template-columns: 76px 1fr;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 14px;
   background: #fff;
   overflow: hidden;
-}
-
-.mobileInputRow:focus-within {
-  border-color: var(--ink);
-  box-shadow: 0 0 0 3px rgba(50, 16, 120, 0.08);
 }
 
 .countryCode {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
+  display: grid;
+  place-items: center;
   border-right: 1px solid var(--line);
+  background: #f8fafc;
   color: var(--ink);
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 800;
 }
 
-.countryCode svg { width: 14px; }
-
-.mobileInputRow input {
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-  padding: 13px 14px;
-}
-
+.mobileInputRow input { border: 0; border-radius: 0; box-shadow: none; }
 .mobileInputRow input:focus { box-shadow: none; }
 
-.authModalContent :global(.secondary.full),
-.facebookAuthButton {
-  width: 100%;
-  min-height: 52px;
+.otpSentTo {
+  margin: 20px 0;
+  text-align: center;
+  color: var(--muted);
+  line-height: 1.5;
 }
 
-.authModalContent form > button.primary {
-  min-height: 52px;
-  border-radius: 12px;
-  background: linear-gradient(120deg, #ff5a1f, #ff7a32);
-  box-shadow: 0 10px 24px rgba(240, 75, 22, 0.18);
-}
-
-.authDivider {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 14px;
-  margin: 18px 0;
-  color: #8f8a95;
-}
-
-.authDivider span { height: 1px; background: var(--line); }
-.authDivider b { font-size: 11px; }
-
-.facebookAuthButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: #fff;
+.changePhoneButton, .resendOtpButton {
+  display: block;
+  border: 0;
+  background: none;
   color: var(--ink);
-  font-size: 14px;
-  font-weight: 800;
+  font-weight: 750;
+  margin: 16px auto 0;
+  padding: 8px;
 }
 
-.facebookAuthButton:disabled { opacity: 0.55; cursor: not-allowed; }
-
-.facebookMark {
-  width: 32px;
-  height: 32px;
-  display: grid;
-  place-items: end center;
-  overflow: hidden;
-  border-radius: 50%;
-  background: #1877f2;
-  color: #fff;
-  font-family: Arial, sans-serif;
-  font-size: 27px;
-  font-weight: 800;
-  line-height: 29px;
+.resendOtpButton { margin-top: 2px; color: var(--coral); font-size: 12px; }
+.changePhoneButton:disabled, .resendOtpButton:disabled { opacity: .55; cursor: not-allowed; }
+.authModalContent form > button.primary:disabled { opacity: .55; cursor: not-allowed; }
+.authModalContent :global(.otp) { font-size: 26px; letter-spacing: .35em; text-align: center; font-weight: 800; }
+.authModalContent form > button.primary {
+  width: 100%;
+  min-height: 56px;
+  border-radius: 14px;
+  background: linear-gradient(110deg, #ffe889, #ffb477);
+  color: #4c4b4a;
+  box-shadow: none;
 }
 
-.authModalContent :global(.otp) { text-align: center; }
-.authModalContent :global(.back-link) { margin-top: 10px; }
+/* Stitch auth and publisher surfaces */
+.authModalSplit { border-color: #eae5f5; border-radius: 22px; }
+.authPromo { background: linear-gradient(145deg, rgba(53,18,125,.9), rgba(76,29,149,.94)), url('/og.png') center / cover; }
+.authPromo h2,.authModalContent h2 { font-family: var(--font-sans), sans-serif; font-weight: 800; letter-spacing: -.04em; }
+.authPromo h2 em { color: #cfbdff; }
+.authModalContent form > button.primary { background: #ff5722; color: #fff; box-shadow: 0 8px 20px rgba(255,87,34,.2); }
+.authModalContent form > button.primary:hover { background: #f4511e; }
+.mobileInputRow { border-color: #eae5f5; border-radius: 10px; }
+.countryCode { background: #f3f0fa; color: #35127d; }
+.changePhoneButton,.loginConsentBottom a { color: #35127d; }
+.resendOtpButton { color: #6d28d9; }
+.loginConsentBottom input { accent-color: #6d28d9; }
 
 .loginConsentBottom {
   display: flex;
@@ -925,19 +867,6 @@
   text-decoration: underline;
   text-underline-offset: 2px;
   font-weight: 800;
-}
-
-.authOtpActions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin: 4px 0 12px;
-}
-
-.authOtpActions .back-link {
-  margin: 0;
-  padding: 12px 0;
 }
 
 @media (max-width: 760px) {

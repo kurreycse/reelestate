@@ -5,7 +5,7 @@ import test from "node:test";
 const read = (path) =>
   readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 
-test("authentication errors are mapped and sessions are refresh-safe but tab-scoped", () => {
+test("WhatsApp phone OTP uses Supabase Auth and sessions are tab-scoped", () => {
   const portal = read("app/Portal.tsx");
   const client = read("lib/supabase.ts");
   assert.doesNotMatch(portal, /setError\(error\.message\)/);
@@ -14,9 +14,13 @@ test("authentication errors are mapped and sessions are refresh-safe but tab-sco
   assert.match(client, /flowType: "pkce"/);
   assert.match(client, /detectSessionInUrl: false/);
   assert.doesNotMatch(client, /storage:\s*window\.localStorage/);
-  assert.match(portal, /provider: "facebook"/);
-  assert.match(portal, /Continue with Facebook/);
+  assert.match(portal, /auth\.signInWithOtp/);
+  assert.match(portal, /channel: "sms"/);
+  assert.match(portal, /auth\.verifyOtp/);
+  assert.match(portal, /Change mobile number/);
+  assert.doesNotMatch(portal, /Continue with Facebook|request-phone-otp/);
   assert.doesNotMatch(portal, /signInWithPassword|request-phone-otp|New user\? Create account|Forgot password/);
+  const callback = read("app/auth/facebook/page.tsx");
   assert.match(callback, /exchangeCodeForSession/);
   assert.match(callback, /history\.replaceState/);
   assert.match(callback, /complete_facebook_registration/);
