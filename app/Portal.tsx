@@ -234,7 +234,8 @@ function LoginModal({ onClose }: { onClose: () => void }) {
       if (!isSupabaseConfigured) throw new Error("Authentication is not configured");
       const { error: otpError } = await supabase.auth.signInWithOtp({
         phone,
-        options: { channel: "sms", shouldCreateUser: false },
+        // New visitors can create their account by verifying their phone.
+        options: { channel: "sms", shouldCreateUser: true },
       });
       if (otpError) throw otpError;
       setOtpSent(true);
@@ -242,7 +243,7 @@ function LoginModal({ onClose }: { onClose: () => void }) {
       const code = (requestError as { code?: string })?.code;
       console.warn("WhatsApp login OTP request failed", { code });
       const sendErrors: Record<string, string> = {
-        user_not_found: "No account is registered with this number. Use a registered ReelEstate number.",
+        signup_disabled: "New account registration is currently unavailable. Please try again later or contact support.",
         over_sms_send_rate_limit: "Too many codes were requested. Wait a few minutes and try again.",
         sms_send_failed: "WhatsApp OTP delivery is not configured on this project yet. The Supabase Send SMS hook and provider credentials must be enabled.",
       };

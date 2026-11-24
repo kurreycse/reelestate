@@ -28,6 +28,6 @@ The login modal uses Supabase Auth to create and verify six-digit phone OTPs. Th
 4. In Supabase Authentication > Hooks, enable Send SMS as an HTTP hook and set its URL to `https://uyizcipakauppzhmeqxu.supabase.co/functions/v1/send-whatsapp-otp`; use the same signing secret configured above.
 5. Configure OTP expiry and rate limits for the launch country. The UI currently accepts Indian mobile numbers only.
 
-The function validates Supabase's signed hook request, then forwards the Supabase-generated OTP to Renflair. Phone sign-in is restricted to existing Supabase phone accounts (`shouldCreateUser: false`). Verified phone data remains part of profiles and property contact flows.
+The function validates Supabase's signed hook request, then forwards the Supabase-generated OTP to Renflair. Phone OTP login creates a new account when the phone number is not registered (`shouldCreateUser: true`); the account is usable only after the user verifies the code. Keep phone signup enabled in the live Supabase project's Auth settings. Verified phone data remains part of profiles and property contact flows.
 
 See [Supabase Send SMS Hook](https://supabase.com/docs/guides/auth/auth-hooks/send-sms-hook) and [phone sign-in](https://supabase.com/docs/guides/auth/phone-login).
