@@ -212,7 +212,11 @@ Deno.serve(async (request) => {
     }
     return json({ accepted: true, listing_id: listingId, status: requestedStatus }, 201, origin);
   } catch (error) {
-    const detail = error instanceof Error ? error.message : "listing_submission_failed";
+    const detail = error instanceof Error
+      ? error.message
+      : error && typeof error === "object" && "message" in error && typeof error.message === "string"
+        ? error.message
+        : "listing_submission_failed";
     console.error("Instagram listing save failed", detail);
     if (detail.includes("INSTAGRAM_REEL_ALREADY_LISTED_BY_ANOTHER_OWNER")) {
       return json({ error: "instagram_reel_already_listed" }, 409, origin);

@@ -187,7 +187,7 @@ async function submissionError(error: unknown, fallback = "The property could no
     case "instagram_reel_verification_failed":
       return "Instagram could not verify this reel. Reconnect the Instagram account and fetch reels again.";
     case "instagram_reel_already_listed":
-      return "This reel is already listed. Fetch reels again to refresh the list.";
+      return "This reel is already listed by another ReelEstate account, so it can't be added here. Select a different reel.";
     case "invalid_instagram_reel":
       return "This reel could not be verified. Fetch your Instagram reels again and retry.";
     case "listing_database_not_ready":
