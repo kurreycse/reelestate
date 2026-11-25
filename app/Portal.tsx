@@ -214,13 +214,17 @@ async function submissionError(error: unknown, fallback = "The property could no
       return fallback;
   }
 }
-function LoginModal({ onClose }: { onClose: () => void }) {
+function LoginModal({ onClose, onProfileComplete }: { onClose: () => void; onProfileComplete: (profile: Profile) => void }) {
   const [busyAction, setBusyAction] = useState<"none" | "send" | "verify">("none");
   const [consentAccepted, setConsentAccepted] = useState(false);
   const [error, setError] = useState("");
   const [mobile, setMobile] = useState("");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
+  const [profileSetup, setProfileSetup] = useState(false);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
   const busy = busyAction !== "none";
 
   const digits = mobile.replace(/\D/g, "").slice(-10);
@@ -259,14 +263,47 @@ function LoginModal({ onClose }: { onClose: () => void }) {
     setBusyAction("verify");
     setError("");
     try {
-      const { error: verifyError } = await supabase.auth.verifyOtp({ phone, token: otp, type: "sms" });
+      const { data, error: verifyError } = await supabase.auth.verifyOtp({ phone, token: otp, type: "sms" });
       if (verifyError) throw verifyError;
-      onClose();
+      if (!data.user) throw new Error("Verified account was not returned");
+      const { data: existingProfile, error: profileError } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("id", data.user.id)
+        .maybeSingle();
+      if (profileError) throw profileError;
+      if (existingProfile) {
+        onClose();
+      } else {
+        setProfileSetup(true);
+        setError("");
+      }
     } catch (verifyError) {
       console.warn("WhatsApp login OTP verification failed", { code: (verifyError as { code?: string })?.code });
-      setError("That code is incorrect or expired. Check it and try again.");
+      setError("That code is incorrect or expired, or we couldn't load your account. Check the code and try again.");
       setBusyAction("none");
     }
+    setBusyAction("none");
+  }
+
+  async function completeProfile(event: FormEvent) {
+    event.preventDefault();
+    setBusyAction("verify");
+    setError("");
+    const { data, error: registrationError } = await supabase.rpc("complete_phone_registration", {
+      p_first_name: firstName.trim(),
+      p_last_name: lastName.trim(),
+      p_email: email.trim(),
+      p_instagram_id: null,
+    });
+    if (registrationError || !data) {
+      console.warn("Phone profile onboarding failed", { code: registrationError?.code });
+      setError("We couldn't finish setting up your profile. Check your details and try again.");
+      setBusyAction("none");
+      return;
+    }
+    onProfileComplete(data as Profile);
+    onClose();
   }
 
   return (
@@ -280,12 +317,20 @@ function LoginModal({ onClose }: { onClose: () => void }) {
         <main className="login-content">
           <div className="login-intro">
             <span className="login-kicker"><Sparkles /> Video-First Real Estate</span>
-            <h1 id="auth-title">{otpSent ? "Verify your number" : "Welcome to ReelEstate"}</h1>
-            <p>{otpSent ? `Enter the 6-digit code sent to ${phone}.` : "Discover verified homes through immersive video tours or showcase your own listings for free."}</p>
+            <h1 id="auth-title">{profileSetup ? "Set up your profile" : otpSent ? "Verify your number" : "Welcome to ReelEstate"}</h1>
+            <p>{profileSetup ? "Your number is verified. Add a few details to finish creating your ReelEstate account." : otpSent ? `Enter the 6-digit code sent to ${phone}.` : "Discover verified homes through immersive video tours or showcase your own listings for free."}</p>
             <span className="login-live"><i /> 4.8k Live Video Tours Today</span>
           </div>
           <div className="login-card">
-            {!otpSent ? <form onSubmit={sendOtp}>
+            {profileSetup ? <form onSubmit={completeProfile}>
+              <div className="login-onboarding-fields">
+                <label>First name<input autoComplete="given-name" value={firstName} onChange={(event) => setFirstName(event.target.value)} maxLength={80} required /></label>
+                <label>Last name<input autoComplete="family-name" value={lastName} onChange={(event) => setLastName(event.target.value)} maxLength={80} required /></label>
+                <label>Email address<input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} maxLength={254} required /></label>
+              </div>
+              <p className="login-delivery"><ShieldCheck /> Your verified mobile number {phone} will be linked to this profile.</p>
+              <button type="submit" className="login-otp-button" disabled={busy}>{busy ? <Loader2 className="spin" /> : <Check />}{busy ? "Saving profile…" : "Finish setup"}<span aria-hidden="true">→</span></button>
+            </form> : !otpSent ? <form onSubmit={sendOtp}>
               <div className="login-field-heading"><label htmlFor="login-mobile">Mobile Number</label><span>One Login for Buyers &amp; Creators</span></div>
               <div className="login-phone-row"><span className="login-country"><span aria-hidden="true">🇮🇳</span> +91 <ChevronDown /></span><input id="login-mobile" type="tel" inputMode="numeric" autoComplete="tel-national" value={mobile} onChange={(event) => setMobile(event.target.value.replace(/\D/g, "").slice(0, 10))} placeholder="98765 43210" minLength={10} maxLength={10} required /></div>
               <p className="login-delivery"><ShieldCheck /> We&apos;ll send a 6-digit verification code via SMS &amp; WhatsApp.</p>
@@ -299,7 +344,7 @@ function LoginModal({ onClose }: { onClose: () => void }) {
             {!isSupabaseConfigured && <p role="alert">Sign-in is temporarily unavailable.</p>}
             {error && <div className="form-error" role="alert"><CircleAlert size={16} />{error}</div>}
           </div>
-          {!otpSent && <>
+          {!otpSent && !profileSetup && <>
             <div className="login-benefits"><div><span><Zap /></span><b>Instant Access</b></div><div><span><LockKeyhole /></span><b>100% Secure</b></div><div><span><CalendarPlus /></span><b>Free Publishing</b></div></div>
             <button type="button" className="login-trending" onClick={onClose}><span className="login-trend-thumb"><Play fill="currentColor" /></span><span><b>TRENDING REEL</b><strong>Sky Villa duplex in Worli · 4 BHK</strong><small>Verified Broker Direct · 1.2k views</small></span><ChevronDown /></button>
           </>}
@@ -3530,7 +3575,7 @@ export default function Portal() {
         <button className={view === "dashboard" ? "active" : ""} onClick={() => guarded("dashboard")}><Building2 /><span>My Listings</span></button>
         <button onClick={() => { if (!session) setLogin(true); else if (profile) setShowProfile(true); else guarded("dashboard"); }}><UserRound /><span>Account</span></button>
       </nav>
-      {login && <LoginModal onClose={() => setLogin(false)} />}
+      {login && <LoginModal onClose={() => setLogin(false)} onProfileComplete={setProfile} />}
       {showProfile && profile && (
         <ProfileModal
           profile={profile}
