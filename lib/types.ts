@@ -14,6 +14,8 @@ export interface Profile {
   email: string;
   instagram_id?: string;
   phone_e164?: string;
+  account_type?: "buyer" | "owner" | "broker" | "builder";
+  operating_city?: string | null;
   role: "poster" | "moderator" | "admin";
 }
 

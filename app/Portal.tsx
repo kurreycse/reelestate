@@ -225,6 +225,8 @@ function LoginModal({ onClose, onProfileComplete }: { onClose: () => void; onPro
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [accountType, setAccountType] = useState<"buyer" | "owner" | "broker" | "builder">("buyer");
+  const [operatingCity, setOperatingCity] = useState<SupportedCity>("Raipur");
   const busy = busyAction !== "none";
 
   const digits = mobile.replace(/\D/g, "").slice(-10);
@@ -295,6 +297,8 @@ function LoginModal({ onClose, onProfileComplete }: { onClose: () => void; onPro
       p_last_name: lastName.trim(),
       p_email: email.trim(),
       p_instagram_id: null,
+      p_account_type: accountType,
+      p_operating_city: accountType === "buyer" ? null : operatingCity,
     });
     if (registrationError || !data) {
       console.warn("Phone profile onboarding failed", { code: registrationError?.code });
@@ -328,6 +332,10 @@ function LoginModal({ onClose, onProfileComplete }: { onClose: () => void; onPro
                 <label>Last name<input autoComplete="family-name" value={lastName} onChange={(event) => setLastName(event.target.value)} maxLength={80} required /></label>
                 <label>Email address<input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} maxLength={254} required /></label>
               </div>
+              <label className="login-onboarding-role">How will you use ReelEstate?
+                <div className="login-onboarding-role-grid">{([ ["buyer", "Browse homes"], ["owner", "Property owner"], ["broker", "Broker / agent"], ["builder", "Builder"] ] as const).map(([value, label]) => <button type="button" key={value} className={accountType === value ? "selected" : ""} onClick={() => setAccountType(value)}>{label}</button>)}</div>
+              </label>
+              {accountType !== "buyer" && <label className="login-onboarding-city">Operating city<select value={operatingCity} onChange={(event) => setOperatingCity(event.target.value as SupportedCity)}>{(Object.keys(CITY_LOCALITIES) as SupportedCity[]).map((city) => <option key={city}>{city}</option>)}</select></label>}
               <p className="login-delivery"><ShieldCheck /> Your verified mobile number {phone} will be linked to this profile.</p>
               <button type="submit" className="login-otp-button" disabled={busy}>{busy ? <Loader2 className="spin" /> : <Check />}{busy ? "Saving profile…" : "Finish setup"}<span aria-hidden="true">→</span></button>
             </form> : !otpSent ? <form onSubmit={sendOtp}>
@@ -355,7 +363,7 @@ function LoginModal({ onClose, onProfileComplete }: { onClose: () => void; onPro
   );
 }
 
-function ProfileModal({ profile, onClose, onSaved, onDeleted }: { profile: Profile; onClose: () => void; onSaved: (profile: Profile) => void; onDeleted: () => void }) {
+function ProfileModal({ profile, onClose, onSaved, onDeleted, onReviewApprovals, pendingApprovals }: { profile: Profile; onClose: () => void; onSaved: (profile: Profile) => void; onDeleted: () => void; onReviewApprovals: () => void; pendingApprovals: number }) {
   const [firstName, setFirstName] = useState(profile.first_name);
   const [lastName, setLastName] = useState(profile.last_name);
   const [email, setEmail] = useState(profile.email);
@@ -380,6 +388,7 @@ function ProfileModal({ profile, onClose, onSaved, onDeleted }: { profile: Profi
     </div><label>Email address<input type="email" value={email} onChange={(e)=>setEmail(e.target.value)} disabled={!editing} required maxLength={254}/></label>
     <label>Instagram ID<input value={instagram} onChange={(e)=>setInstagram(e.target.value)} disabled={!editing} placeholder="Not provided" maxLength={31} pattern="@?[A-Za-z0-9._]{1,30}"/></label>
     <label>Verified phone<input value={profile.phone_e164 || "Not available"} disabled/></label><label>Account type<input value={profile.role === "poster" ? "Property user" : profile.role} disabled/></label>
+    {!editing && ["moderator", "admin"].includes(profile.role) && <button type="button" className="profile-review-approvals" onClick={onReviewApprovals}><ShieldCheck/><span>Review approvals</span><b>{pendingApprovals}</b></button>}
     {error&&<div className="form-error" role="alert"><CircleAlert size={16}/>{error}</div>}{saved&&<div className="form-success" role="status"><Check size={16}/>Profile updated successfully.</div>}
     {editing?<div className="profile-actions"><button type="button" className="back-link" disabled={busy} onClick={()=>setEditing(false)}>Cancel</button><button className="primary" disabled={busy}>{busy?<Loader2 className="spin"/>:<Check size={18}/>} Save changes</button></div>:<button type="button" className="primary full" onClick={()=>{setEditing(true);setSaved(false)}}>Edit profile</button>}
     {!editing && !deletingAccount && <button type="button" className="account-delete-link" onClick={()=>setDeletingAccount(true)}>Delete account</button>}
@@ -1137,14 +1146,14 @@ function Marketplace({ onRequireLogin }: { onRequireLogin: () => void }) {
   );
 }
 
-function PublisherJourney({ onDirect, onInstagram, contactPhone }: { onDirect: () => void; onInstagram: () => void; contactPhone: string }) {
+function PublisherJourney({ onDirect, onInstagram, contactPhone, profile }: { onDirect: () => void; onInstagram: () => void; contactPhone: string; profile: Profile | null }) {
   const [step, setStep] = useState<"account" | "profile" | "source">(() => {
     try { return localStorage.getItem("reelestate-publisher-profile") ? "source" : "account"; } catch { return "account"; }
   });
-  const [accountType, setAccountType] = useState("owner");
-  const [fullName, setFullName] = useState("");
-  const [city, setCity] = useState("Raipur");
-  const [email, setEmail] = useState("");
+  const [accountType, setAccountType] = useState(profile?.account_type && profile.account_type !== "buyer" ? profile.account_type : "owner");
+  const [fullName, setFullName] = useState([profile?.first_name, profile?.last_name].filter(Boolean).join(" "));
+  const [city, setCity] = useState(profile?.operating_city && profile.operating_city in CITY_LOCALITIES ? profile.operating_city : "Raipur");
+  const [email, setEmail] = useState(profile?.email || "");
 
   function saveProfile(event: FormEvent) {
     event.preventDefault();
@@ -3033,6 +3042,7 @@ function Admin({
   const [note, setNote] = useState("");
   const [selectedReasons, setSelectedReasons] = useState<string[]>([]);
   const [queueSearch, setQueueSearch] = useState("");
+  const [confirmReject, setConfirmReject] = useState(false);
   const filteredQueue = items.filter((item) =>
     `${item.title} ${item.locality} ${item.city} ${item.property_type}`
       .toLowerCase()
@@ -3055,6 +3065,7 @@ function Admin({
       setSelected(null);
       setNote("");
       setSelectedReasons([]);
+      setConfirmReject(false);
       onDecision();
     }
   }
@@ -3181,7 +3192,7 @@ function Admin({
                   <button
                     className="reject"
                     disabled={busy || rejectionNote.trim().length < 10}
-                    onClick={() => decide("reject")}
+                    onClick={() => setConfirmReject(true)}
                   >
                     <X /> Reject &amp; request changes
                   </button>
@@ -3199,6 +3210,7 @@ function Admin({
           )}
         </div>
       </div>
+      {confirmReject && selected && <div className="modal-backdrop" role="presentation"><section className="auth-modal admin-reject-modal" role="dialog" aria-modal="true" aria-labelledby="reject-title"><button type="button" className="icon-btn close" onClick={() => setConfirmReject(false)} aria-label="Close"><X /></button><div className="brand-mark"><MessageSquare /></div><span className="eyebrow">Request edits</span><h2 id="reject-title">Send clear revision notes</h2><p><b>{selected.title}</b> will move to rejected until the publisher updates and resubmits it.</p><div className="admin-reject-summary">{selectedReasons.length ? selectedReasons.map((reason) => <span key={reason}>{reason}</span>) : <span>General listing improvements</span>}</div><label>Message to publisher<textarea value={note} onChange={(event) => setNote(event.target.value)} minLength={10} maxLength={1200} placeholder="Explain what needs to change and how to fix it." required /></label>{rejectionNote.trim().length < 10 && <small className="admin-reject-hint">Add at least 10 characters of useful feedback.</small>}<div className="profile-actions"><button type="button" className="back-link" disabled={busy} onClick={() => setConfirmReject(false)}>Go back</button><button type="button" className="primary" disabled={busy || rejectionNote.trim().length < 10} onClick={() => void decide("reject")}>{busy ? <Loader2 className="spin" /> : <Send />} Send revision request</button></div></section></div>}
     </section>
   );
 }
@@ -3543,6 +3555,7 @@ export default function Portal() {
             onDirect={() => setPublisherSource("direct")}
             onInstagram={() => setPublisherSource("instagram")}
             contactPhone={profile?.phone_e164 || session.user.phone || ""}
+            profile={profile}
           />
         )
       ) : view === "dashboard" && session ? (
@@ -3582,6 +3595,8 @@ export default function Portal() {
           onClose={() => setShowProfile(false)}
           onSaved={setProfile}
           onDeleted={() => setShowProfile(false)}
+          pendingApprovals={queue.length}
+          onReviewApprovals={() => { setShowProfile(false); setMenu(false); setView("admin"); }}
         />
       )}
       {showFeedback && <FeedbackModal onClose={() => setShowFeedback(false)} />}

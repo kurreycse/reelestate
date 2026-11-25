@@ -167,6 +167,7 @@ body{font-feature-settings:"ss01" on}
 /* Publisher dashboard and moderation details use real project data. */
 .login-onboarding-fields{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:4px}.login-onboarding-fields label{display:flex;flex-direction:column;gap:6px;color:#1c1831;font-size:13px;font-weight:750}.login-onboarding-fields label:last-child{grid-column:1/-1}.login-onboarding-fields input{width:100%;height:52px;margin:0;padding:0 14px;border:1px solid #eae5f5;border-radius:13px;background:#f7f1ff;color:#1c1831;font-size:15px;box-shadow:none}.login-onboarding-fields input:focus{border-color:#6d28d9;outline:0;box-shadow:0 0 0 3px rgba(109,40,217,.12)}
 @media(max-width:480px){.login-onboarding-fields{grid-template-columns:1fr;gap:10px}.login-onboarding-fields label:last-child{grid-column:auto}.login-onboarding-fields input{height:48px}}
+.profile-review-approvals{width:100%;display:flex;align-items:center;gap:10px;margin:4px 0 12px;padding:13px 14px;border:1px solid #e7dcf7;border-radius:13px;background:#f7f1ff;color:#35127d;text-align:left;font-size:13px;font-weight:750}.profile-review-approvals svg{width:18px;height:18px}.profile-review-approvals span{flex:1}.profile-review-approvals b{min-width:25px;padding:4px 7px;border-radius:999px;background:#35127d;color:white;text-align:center;font-size:11px}
 .dashboard-weekly-impact{margin:8px 0 22px;padding:18px;border:1px solid #eae5f5;border-radius:18px;background:#f3f0fa}
 .dashboard-impact-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:13px}.dashboard-impact-heading h2{margin:3px 0 0;color:#1c1831;font-size:22px;letter-spacing:-.03em}.dashboard-impact-heading>span{color:#6b6878;font-size:11px}
 .dashboard-impact-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.dashboard-impact-grid article{display:flex;flex-direction:column;gap:5px;padding:14px;border:1px solid #eae5f5;border-radius:14px;background:#fff}.dashboard-impact-grid small{color:#6b6878;font-size:11px}.dashboard-impact-grid b{color:#21005d;font-size:24px;letter-spacing:-.04em;font-variant-numeric:tabular-nums}.dashboard-impact-grid span{display:flex;align-items:center;gap:5px;color:#6b6878;font-size:10px}.dashboard-impact-grid svg{width:14px;height:14px;color:#6d28d9}
@@ -276,3 +277,25 @@ body{font-feature-settings:"ss01" on}
 .login-card .login-consent input{width:15px;height:15px;flex:0 0 15px;margin:0;accent-color:#ff5722}
 .login-card .login-consent a{color:#e64a19;font-weight:500;text-decoration:none}
 @media(max-width:600px){.login-card .login-consent{flex-wrap:nowrap;gap:6px;padding:0;font-size:clamp(8px,2.4vw,10px)}.login-card .login-consent input{width:14px;height:14px;flex-basis:14px}}
+
+/* Shared Stitch onboarding and review controls. */
+.login-onboarding-fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.login-onboarding-fields label,.login-onboarding-role,.login-onboarding-city{display:grid;gap:6px;color:#1c1831;font-size:12px;font-weight:750}
+.login-onboarding-fields label:last-child{grid-column:1/-1}
+.login-onboarding-fields input,.login-onboarding-city select{width:100%;height:44px;padding:0 12px;border:1px solid #eae5f5;border-radius:10px;background:#fff;color:#1c1831}
+.login-onboarding-role{margin-top:16px}
+.login-onboarding-role-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.login-onboarding-role-grid button{min-height:42px;border:1px solid #eae5f5;border-radius:12px;background:#fff;color:#494552;font-size:12px;font-weight:700}
+.login-onboarding-role-grid button.selected{border-color:#6d28d9;background:#f7f1ff;color:#35127d}
+.login-onboarding-city{margin-top:12px}
+.login-onboarding-city select{font:inherit;font-weight:500}
+.login-card .login-onboarding-fields+.login-onboarding-role+.login-delivery{margin-top:14px}
+.admin-reject-modal{width:min(560px,calc(100vw - 28px));max-height:90svh;overflow:auto}
+.admin-reject-modal>p{color:#6b6878;line-height:1.55}
+.admin-reject-summary{display:flex;flex-wrap:wrap;gap:7px;margin:14px 0}
+.admin-reject-summary span{padding:7px 10px;border-radius:999px;background:#f7f1ff;color:#4c1d95;font-size:11px;font-weight:700}
+.admin-reject-modal textarea{width:100%;min-height:120px;margin-top:8px;padding:12px;border:1px solid #eae5f5;border-radius:12px;resize:vertical}
+.admin-reject-hint{display:block;margin-top:6px;color:#a53826}
+.topbar .logo>span{background:#35127d;color:#fff}
+.topbar .sign-in,.topbar .user-chip{border-color:#eae5f5}
+@media(max-width:600px){.login-onboarding-fields{gap:8px}.login-onboarding-fields label,.login-onboarding-role,.login-onboarding-city{font-size:11px}.login-onboarding-fields input,.login-onboarding-city select{height:40px}.admin-reject-modal .profile-actions{align-items:stretch;flex-direction:column-reverse}.admin-reject-modal .profile-actions button{width:100%}}
